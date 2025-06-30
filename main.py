@@ -500,10 +500,34 @@ class AnnotationTool(QMainWindow):
         self.thickness_label.setText(f"粗细: {value}")
 
     def pick_color(self):
-        color = QColorDialog.getColor(self.canvas.current_color) # Pass current color as initial color
-        if color.isValid():
-            self.canvas.set_current_color(color)
-            self.update_color_button()  # 更新颜色按钮显示
+        """选择颜色并应用到画布"""
+        # 创建一个独立的颜色选择对话框
+        dialog = QColorDialog(self.canvas.current_color, self.toolbar_window)
+        
+        # 设置对话框选项，确保它总是在最前面
+        dialog.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.Dialog)
+        dialog.setOption(QColorDialog.ShowAlphaChannel, True)
+        
+        # 临时隐藏主窗口来避免遮挡对话框
+        main_visible = self.isVisible()
+        if main_visible and not self.passthrough_state:
+            self.hide()
+        
+        # 显示对话框并等待用户选择
+        if dialog.exec_() == QColorDialog.Accepted:
+            color = dialog.currentColor()
+            if color.isValid():
+                self.canvas.set_current_color(color)
+                self.update_color_button()
+        
+        # 恢复主窗口可见性
+        if main_visible:
+            self.show()
+            self.activateWindow()
+            self.raise_()
+        
+        # 确保工具栏在最前面
+        self.ensure_toolbar_on_top()
 
     def change_drawing_opacity(self, value):
         opacity = value / 100.0
