@@ -117,6 +117,7 @@
 欢迎提交问题报告、功能请求或代码贡献。
 
 ## 致谢
-
+- manus
+- claude sonnet 4
 - 感谢PyQt5提供的强大GUI库
 - 感谢pynput库提供的全局热键支持
