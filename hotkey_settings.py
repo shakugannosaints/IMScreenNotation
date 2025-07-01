@@ -45,6 +45,38 @@ class HotkeySettingsDialog(QDialog):
         
         scroll_layout.addWidget(app_group)
         
+        # 特殊功能说明
+        special_group = QGroupBox("特殊功能")
+        special_layout = QVBoxLayout(special_group)
+        
+        toolbar_hide_label = QLabel("🔸 工具栏完全隐藏: F12 (固定快捷键)")
+        toolbar_hide_label.setStyleSheet("""
+            QLabel {
+                color: #0078d4;
+                font-weight: bold;
+                padding: 8px;
+                background-color: #f0f7ff;
+                border: 1px solid #b3d7ff;
+                border-radius: 4px;
+            }
+        """)
+        special_layout.addWidget(toolbar_hide_label)
+        
+        note_label = QLabel("注意: 工具栏完全隐藏后只能通过 F12 快捷键重新显示，\n此快捷键不可修改且不会保存到配置文件中。")
+        note_label.setStyleSheet("""
+            QLabel {
+                color: #666;
+                font-size: 11px;
+                padding: 5px;
+                background-color: #fff9e6;
+                border: 1px solid #ffd700;
+                border-radius: 4px;
+            }
+        """)
+        special_layout.addWidget(note_label)
+        
+        scroll_layout.addWidget(special_group)
+        
         # 绘制控制组
         draw_group = QGroupBox("绘制控制")
         draw_layout = QGridLayout(draw_group)
@@ -125,11 +157,12 @@ class HotkeySettingsDialog(QDialog):
         for key, input_field in self.hotkey_inputs.items():
             input_field.setText(hotkeys.get(key, ""))
     def reset_to_defaults(self):
-        """重置为默认热键"""
+        """重置为默认热键""" 
         default_hotkeys = {
             "toggle_visibility": "<ctrl>+<alt>+h",
             "toggle_passthrough": "<ctrl>+<alt>+p",
             "toggle_canvas_visibility": "<ctrl>+<alt>+v",
+            "toggle_toolbar_collapse": "<ctrl>+<alt>+t",
             "clear_canvas": "<ctrl>+<alt>+c",
             "undo": "<ctrl>+z",
             "redo": "<ctrl>+y",

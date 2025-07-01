@@ -27,9 +27,11 @@ class AnnotationTool(QMainWindow):
         self.canvas.set_canvas_color(self.config["canvas_color"])
         self.canvas.set_canvas_opacity(self.config["canvas_opacity"])
         self.main_layout.addWidget(self.canvas)
-        
-        # 初始化热键管理器
+          # 初始化热键管理器
         self.hotkey_manager = HotkeyManager(self)
+
+        # 工具栏完全隐藏状态（不保存到配置文件）
+        self.toolbar_completely_hidden = False
 
         self.setup_menubar()
         self.setup_toolbar()
@@ -731,7 +733,6 @@ class AnnotationTool(QMainWindow):
         self.config["non_passthrough_opacity"] = self.user_non_passthrough_opacity
         save_config(self.config)
         self.statusBar().showMessage("配置已保存", 2000)
-
     def toggle_toolbar_collapse(self):
         """切换工具栏折叠/展开状态"""
         # 定义工具栏的折叠高度和展开高度
@@ -761,13 +762,29 @@ class AnnotationTool(QMainWindow):
                 if widget:
                     widget.show()
             self.statusBar().showMessage("工具栏已展开", 1000)
-            
-        # 确保工具栏始终在最前面
+              # 确保工具栏始终在最前面
         self.ensure_toolbar_on_top()
+
+    def toggle_toolbar_complete_hide(self):
+        """完全隐藏/显示工具栏"""
+        if self.toolbar_completely_hidden:
+            # 当前完全隐藏，需要显示
+            self.toolbar_window.show()
+            self.toolbar_completely_hidden = False
+            self.statusBar().showMessage("工具栏已显示", 2000)
+            print("工具栏已显示")
+            # 确保工具栏在最前面
+            self.ensure_toolbar_on_top()
+        else:
+            # 当前显示，需要完全隐藏
+            self.toolbar_window.hide()
+            self.toolbar_completely_hidden = True
+            self.statusBar().showMessage("工具栏已完全隐藏", 2000)
+            print("工具栏已完全隐藏")
 
     def ensure_toolbar_on_top(self):
         """确保工具栏始终显示在最前面"""
-        if hasattr(self, 'toolbar_window') and self.toolbar_window:
+        if hasattr(self, 'toolbar_window') and self.toolbar_window and not self.toolbar_completely_hidden:
             self.toolbar_window.raise_()
             self.toolbar_window.activateWindow()
             self.toolbar_window.show()
@@ -795,8 +812,7 @@ class AnnotationTool(QMainWindow):
         
         hotkeys = self.config["hotkeys"]
         print(f"设置热键配置: {hotkeys}")
-        
-        # 注册所有热键
+          # 注册所有热键
         if hotkeys.get("toggle_visibility"):
             self.hotkey_manager.register_hotkey(hotkeys["toggle_visibility"], self.toggle_visibility)
         if hotkeys.get("toggle_passthrough"):
@@ -805,6 +821,8 @@ class AnnotationTool(QMainWindow):
             self.hotkey_manager.register_hotkey(hotkeys["toggle_canvas_visibility"], self.toggle_canvas_visibility)
         if hotkeys.get("toggle_toolbar_collapse"):
             self.hotkey_manager.register_hotkey(hotkeys["toggle_toolbar_collapse"], self.toggle_toolbar_collapse)
+        # 添加工具栏完全隐藏热键（固定为 F12，不保存到配置文件）
+        self.hotkey_manager.register_hotkey("f12", self.toggle_toolbar_complete_hide)
         if hotkeys.get("clear_canvas"):
             self.hotkey_manager.register_hotkey(hotkeys["clear_canvas"], self.canvas.clear_canvas)
         if hotkeys.get("undo"):
