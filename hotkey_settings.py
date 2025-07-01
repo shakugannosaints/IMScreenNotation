@@ -230,10 +230,14 @@ class HotkeySettingsDialog(QDialog):
         save_config(self.config)
         
         # 重新注册热键
-        self.main_window.hotkey_manager.stop_listening()
+        if hasattr(self.main_window, 'hotkey_manager') and self.main_window.hotkey_manager:
+            self.main_window.hotkey_manager.stop_listening()
         self.main_window.hotkey_manager = None
         self.main_window.setup_hotkeys()
-        self.main_window.hotkey_manager.start_listening()
+        
+        # 确保hotkey_manager已创建后再启动监听
+        if hasattr(self.main_window, 'hotkey_manager') and self.main_window.hotkey_manager:
+            self.main_window.hotkey_manager.start_listening()
         
         QMessageBox.information(self, "设置已保存", "热键设置已成功保存并应用。")
         self.accept()
