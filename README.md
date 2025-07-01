@@ -111,9 +111,9 @@
 - `config.py`：配置文件处理
 - `config.json`：用户配置文件
 
-## 许可证
+## 许可
 
-[MIT许可证](LICENSE)
+AGPL-3.0
 
 ## 贡献
 
