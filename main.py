@@ -1,13 +1,49 @@
 import sys
 import json
+import os
 from typing import Dict, Any, Optional, Callable
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QColorDialog, QSlider, QLabel, QFileDialog, QStatusBar, QMenuBar, QAction, QSystemTrayIcon, QMenu
-from PyQt5.QtGui import QColor, QIcon, QCloseEvent
+from PyQt5.QtGui import QColor, QIcon, QCloseEvent, QPixmap, QPainter
 from PyQt5.QtCore import Qt, QTimer, QPoint, QEvent
 from gui import DrawingCanvas
 from hotkey_manager import HotkeyManager
 from config import load_config, save_config
 from hotkey_settings import HotkeySettingsDialog
+
+def get_resource_path(relative_path: str) -> str:
+    """获取资源文件的绝对路径，支持打包后的exe运行"""
+    try:
+        # PyInstaller创建临时文件夹并将路径存储在_MEIPASS中
+        base_path = sys._MEIPASS
+    except AttributeError:
+        # 如果不是打包的exe，使用脚本所在目录
+        base_path = os.path.dirname(os.path.abspath(__file__))
+    
+    return os.path.join(base_path, relative_path)
+
+def create_default_icon() -> QIcon:
+    """创建一个默认的托盘图标"""
+    # 创建一个16x16的像素图
+    pixmap = QPixmap(16, 16)
+    pixmap.fill(Qt.transparent)
+    
+    # 在像素图上绘制一个简单的图标
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.Antialiasing)
+    
+    # 绘制一个蓝色圆形作为图标
+    painter.setBrush(QColor(0, 120, 212))  # Windows蓝色
+    painter.setPen(QColor(0, 90, 158))
+    painter.drawEllipse(2, 2, 12, 12)
+    
+    # 在圆形中间绘制一个白色的"A"字母
+    painter.setPen(QColor(255, 255, 255))
+    painter.setFont(painter.font())
+    painter.drawText(6, 11, "A")
+    
+    painter.end()
+    
+    return QIcon(pixmap)
 
 class AnnotationTool(QMainWindow):
     def __init__(self) -> None:
@@ -824,17 +860,60 @@ class AnnotationTool(QMainWindow):
         # 创建系统托盘图标
         self.tray_icon = QSystemTrayIcon(self)
         
+        # 断言确保 tray_icon 不为 None
+        assert self.tray_icon is not None
+        
         # 设置托盘图标（使用现有的ico文件）
+        icon = None
         try:
-            icon: QIcon = QIcon("1.ico")
-            if icon.isNull():
-                # 如果图标文件不存在，创建一个简单的图标
+            # 尝试使用绝对路径加载图标文件
+            icon_path = get_resource_path("1.ico")
+            print(f"尝试加载图标文件: {icon_path}")
+            
+            if os.path.exists(icon_path):
+                icon = QIcon(icon_path)
+                print(f"图标文件存在，加载结果: isNull={icon.isNull()}")
+                if not icon.isNull():
+                    print(f"图标可用尺寸: {icon.availableSizes()}")
+            else:
+                print(f"图标文件不存在: {icon_path}")
+                # 尝试查找当前目录和几个可能的位置
+                possible_paths = [
+                    "1.ico",  # 相对路径
+                    os.path.join(os.getcwd(), "1.ico"),  # 当前工作目录
+                    os.path.join(os.path.dirname(sys.argv[0]), "1.ico"),  # exe所在目录
+                ]
+                
+                for path in possible_paths:
+                    print(f"尝试路径: {path}")
+                    if os.path.exists(path):
+                        icon = QIcon(path)
+                        if not icon.isNull():
+                            print(f"在路径 {path} 找到有效图标")
+                            break
+                        
+            # 检查图标是否有效
+            if icon is None or icon.isNull():
+                print("图标文件无效或不存在，创建默认图标")
+                icon = create_default_icon()
+                
+        except Exception as e:
+            print(f"加载图标文件失败: {e}")
+            # 如果创建默认图标也失败，使用系统标准图标
+            try:
+                icon = create_default_icon()
+                print("使用自定义默认图标")
+            except Exception as e2:
+                print(f"创建默认图标失败: {e2}，使用系统图标")
                 icon = self.style().standardIcon(self.style().SP_ComputerIcon)
-            self.tray_icon.setIcon(icon)
-        except:
-            # 如果加载图标失败，使用默认图标
+        
+        # 最后检查，确保有可用的图标
+        if icon is None or icon.isNull():
+            print("使用系统默认图标作为最后备选")
             icon = self.style().standardIcon(self.style().SP_ComputerIcon)
-            self.tray_icon.setIcon(icon)
+            
+        self.tray_icon.setIcon(icon)
+        print(f"托盘图标设置完成，图标有效性: {not icon.isNull()}")
         
         # 设置托盘提示
         self.tray_icon.setToolTip("屏幕标注工具 - 点击恢复窗口")
@@ -878,7 +957,7 @@ class AnnotationTool(QMainWindow):
             self.ensure_toolbar_on_top()
         
         # 隐藏托盘图标
-        if hasattr(self, 'tray_icon'):
+        if hasattr(self, 'tray_icon') and self.tray_icon is not None:
             self.tray_icon.hide()
             self.tray_icon_visible = False
         
@@ -909,7 +988,7 @@ class AnnotationTool(QMainWindow):
             self.toolbar_completely_hidden = True
             
             # 显示托盘图标
-            if hasattr(self, 'tray_icon') and QSystemTrayIcon.isSystemTrayAvailable():
+            if hasattr(self, 'tray_icon') and self.tray_icon is not None and QSystemTrayIcon.isSystemTrayAvailable():
                 self.tray_icon.show()
                 self.tray_icon_visible = True
                 # 显示托盘通知
@@ -941,7 +1020,7 @@ class AnnotationTool(QMainWindow):
         if hasattr(self, 'toolbar_window'):
             self.toolbar_window.close()
         # 清理托盘图标
-        if hasattr(self, 'tray_icon'):
+        if hasattr(self, 'tray_icon') and self.tray_icon is not None:
             self.tray_icon.hide()
         event.accept()
 

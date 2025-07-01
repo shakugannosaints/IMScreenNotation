@@ -12,3 +12,4 @@ build/main/warn-main.txt
 build/main/xref-main.html
 dist/main.exe
 main.spec
+build.py
