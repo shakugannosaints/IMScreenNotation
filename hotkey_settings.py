@@ -33,7 +33,8 @@ class HotkeySettingsDialog(QDialog):
             ("toggle_visibility", "显示/隐藏窗口"),
             ("toggle_passthrough", "切换鼠标穿透"),
             ("toggle_canvas_visibility", "显示/隐藏画布"),
-            ("toggle_toolbar_collapse", "折叠/展开工具栏")
+            ("toggle_toolbar_collapse", "折叠/展开工具栏"),
+            ("toggle_complete_hide", "完全隐藏窗口(可自定义)")
         ]
         
         for i, (key, label) in enumerate(app_hotkeys):
@@ -49,7 +50,7 @@ class HotkeySettingsDialog(QDialog):
         special_group = QGroupBox("特殊功能")
         special_layout = QVBoxLayout(special_group)
         
-        toolbar_hide_label = QLabel("🔸 工具栏完全隐藏: F12 (固定快捷键)")
+        toolbar_hide_label = QLabel("🔸 工具栏完全隐藏: F12 (固定快捷键) + 上面的可自定义快捷键")
         toolbar_hide_label.setStyleSheet("""
             QLabel {
                 color: #0078d4;
@@ -62,7 +63,7 @@ class HotkeySettingsDialog(QDialog):
         """)
         special_layout.addWidget(toolbar_hide_label)
         
-        note_label = QLabel("注意: 工具栏完全隐藏后只能通过 F12 快捷键重新显示，\n此快捷键不可修改且不会保存到配置文件中。")
+        note_label = QLabel("注意: 工具栏完全隐藏后可以通过以下方式重新显示：\n1. F12 快捷键（固定，不可修改）\n2. 上面设置的可自定义快捷键\n3. 点击系统托盘图标")
         note_label.setStyleSheet("""
             QLabel {
                 color: #666;
