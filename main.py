@@ -1,7 +1,7 @@
 import sys
 import json
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QColorDialog, QSlider, QLabel, QFileDialog, QStatusBar, QMenuBar, QAction
-from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QColorDialog, QSlider, QLabel, QFileDialog, QStatusBar, QMenuBar, QAction, QSystemTrayIcon, QMenu
+from PyQt5.QtGui import QColor, QIcon
 from PyQt5.QtCore import Qt, QTimer
 from gui import DrawingCanvas
 from hotkey_manager import HotkeyManager
@@ -52,6 +52,9 @@ class AnnotationTool(QMainWindow):
         self.toolbar_timer = QTimer()
         self.toolbar_timer.timeout.connect(self.ensure_toolbar_on_top)
         self.toolbar_timer.start(1000)  # 每秒检查一次
+        
+        # 初始化系统托盘
+        self.setup_system_tray()
     def toggle_visibility(self):
         """切换主窗口显示/隐藏"""
         print("热键 toggle_visibility 被触发!")
@@ -765,22 +768,113 @@ class AnnotationTool(QMainWindow):
               # 确保工具栏始终在最前面
         self.ensure_toolbar_on_top()
 
-    def toggle_toolbar_complete_hide(self):
-        """完全隐藏/显示工具栏"""
-        if self.toolbar_completely_hidden:
-            # 当前完全隐藏，需要显示
+    def setup_system_tray(self):
+        """设置系统托盘"""
+        # 检查系统是否支持系统托盘
+        if not QSystemTrayIcon.isSystemTrayAvailable():
+            print("系统托盘不可用")
+            return
+        
+        # 创建系统托盘图标
+        self.tray_icon = QSystemTrayIcon(self)
+        
+        # 设置托盘图标（使用现有的ico文件）
+        try:
+            icon = QIcon("1.ico")
+            if icon.isNull():
+                # 如果图标文件不存在，创建一个简单的图标
+                icon = self.style().standardIcon(self.style().SP_ComputerIcon)
+            self.tray_icon.setIcon(icon)
+        except:
+            # 如果加载图标失败，使用默认图标
+            icon = self.style().standardIcon(self.style().SP_ComputerIcon)
+            self.tray_icon.setIcon(icon)
+        
+        # 设置托盘提示
+        self.tray_icon.setToolTip("屏幕标注工具 - 点击恢复窗口")
+        
+        # 创建托盘菜单
+        tray_menu = QMenu()
+        
+        # 显示主窗口动作
+        show_action = QAction("显示主窗口", self)
+        show_action.triggered.connect(self.show_from_tray)
+        tray_menu.addAction(show_action)
+        
+        # 分隔符
+        tray_menu.addSeparator()
+        
+        # 退出动作
+        quit_action = QAction("退出程序", self)
+        quit_action.triggered.connect(self.close_application)
+        tray_menu.addAction(quit_action)
+        
+        # 设置托盘菜单
+        self.tray_icon.setContextMenu(tray_menu)
+        
+        # 托盘图标单击事件
+        self.tray_icon.activated.connect(self.tray_icon_activated)
+        
+        # 默认不显示托盘图标
+        self.tray_icon_visible = False
+
+    def show_from_tray(self):
+        """从托盘恢复窗口显示"""
+        # 显示主窗口和工具栏
+        self.show()
+        self.activateWindow()
+        self.raise_()
+        
+        # 显示工具栏
+        if hasattr(self, 'toolbar_window'):
             self.toolbar_window.show()
             self.toolbar_completely_hidden = False
-            self.statusBar().showMessage("工具栏已显示", 2000)
-            print("工具栏已显示")
-            # 确保工具栏在最前面
             self.ensure_toolbar_on_top()
+        
+        # 隐藏托盘图标
+        if hasattr(self, 'tray_icon'):
+            self.tray_icon.hide()
+            self.tray_icon_visible = False
+        
+        self.statusBar().showMessage("窗口已从托盘恢复", 2000)
+        print("窗口已从托盘恢复")
+
+    def tray_icon_activated(self, reason):
+        """托盘图标被点击"""
+        if reason == QSystemTrayIcon.Trigger:  # 左键单击
+            self.show_from_tray()
+        elif reason == QSystemTrayIcon.DoubleClick:  # 双击
+            self.show_from_tray()
+
+    def toggle_toolbar_complete_hide(self):
+        """完全隐藏/显示工具栏和主窗口"""
+        if self.toolbar_completely_hidden:
+            # 当前完全隐藏，需要显示 - 从托盘恢复
+            self.show_from_tray()
         else:
-            # 当前显示，需要完全隐藏
-            self.toolbar_window.hide()
+            # 当前显示，需要完全隐藏到托盘
+            # 隐藏主窗口
+            self.hide()
+            
+            # 隐藏工具栏
+            if hasattr(self, 'toolbar_window'):
+                self.toolbar_window.hide()
+            
             self.toolbar_completely_hidden = True
-            self.statusBar().showMessage("工具栏已完全隐藏", 2000)
-            print("工具栏已完全隐藏")
+            
+            # 显示托盘图标
+            if hasattr(self, 'tray_icon') and QSystemTrayIcon.isSystemTrayAvailable():
+                self.tray_icon.show()
+                self.tray_icon_visible = True
+                # 显示托盘通知
+                self.tray_icon.showMessage(
+                    "屏幕标注工具",
+                    "程序已最小化到系统托盘\n点击托盘图标恢复窗口",
+                    QSystemTrayIcon.Information,
+                    3000
+                )
+            
+            print("程序已隐藏到系统托盘")
 
     def ensure_toolbar_on_top(self):
         """确保工具栏始终显示在最前面"""
@@ -800,6 +894,9 @@ class AnnotationTool(QMainWindow):
             self.hotkey_manager.stop_listening()
         if hasattr(self, 'toolbar_window'):
             self.toolbar_window.close()
+        # 清理托盘图标
+        if hasattr(self, 'tray_icon'):
+            self.tray_icon.hide()
         event.accept()
 
     def setup_hotkeys(self):
