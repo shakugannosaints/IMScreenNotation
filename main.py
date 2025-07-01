@@ -1,26 +1,27 @@
 import sys
 import json
+from typing import Dict, Any, Optional, Callable
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QColorDialog, QSlider, QLabel, QFileDialog, QStatusBar, QMenuBar, QAction, QSystemTrayIcon, QMenu
-from PyQt5.QtGui import QColor, QIcon
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtGui import QColor, QIcon, QCloseEvent
+from PyQt5.QtCore import Qt, QTimer, QPoint, QEvent
 from gui import DrawingCanvas
 from hotkey_manager import HotkeyManager
 from config import load_config, save_config
 from hotkey_settings import HotkeySettingsDialog
 
 class AnnotationTool(QMainWindow):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle("屏幕标注工具")
         self.setGeometry(100, 100, 1000, 800)
 
-        self.central_widget = QWidget()
+        self.central_widget: QWidget = QWidget()
         self.setCentralWidget(self.central_widget)
-        self.main_layout = QVBoxLayout(self.central_widget)
+        self.main_layout: QVBoxLayout = QVBoxLayout(self.central_widget)
 
-        self.config = load_config()
+        self.config: Dict[str, Any] = load_config()
 
-        self.canvas = DrawingCanvas()
+        self.canvas: DrawingCanvas = DrawingCanvas()
         self.canvas.set_current_color(self.config["current_color"])
         self.canvas.set_current_thickness(self.config["current_thickness"])
         self.canvas.set_current_opacity(self.config["current_opacity"])
@@ -28,10 +29,53 @@ class AnnotationTool(QMainWindow):
         self.canvas.set_canvas_opacity(self.config["canvas_opacity"])
         self.main_layout.addWidget(self.canvas)
           # 初始化热键管理器
-        self.hotkey_manager = HotkeyManager(self)
+        self.hotkey_manager: HotkeyManager = HotkeyManager(self)
 
         # 工具栏完全隐藏状态（不保存到配置文件）
-        self.toolbar_completely_hidden = False
+        self.toolbar_completely_hidden: bool = False
+
+        # 工具栏相关属性类型定义（将在setup方法中初始化）
+        self.toolbar_window: QWidget
+        self.toolbar_drag_position: Optional[QPoint] = None
+        self.toolbar_dragging: bool = False
+        self.toolbar_timer: QTimer
+        
+        # 按钮相关属性类型定义（将在setup方法中初始化）
+        self.tool_button_group: Dict[str, QPushButton] = {}
+        self.color_btn: QPushButton
+        self.thickness_slider: QSlider
+        self.thickness_label: QLabel
+        self.drawing_opacity_slider: QSlider
+        self.drawing_opacity_label: QLabel
+        self.canvas_opacity_slider: QSlider
+        self.canvas_opacity_label: QLabel
+        self.toggle_passthrough_btn: QPushButton
+        self.toggle_visibility_btn: QPushButton
+        self.single_draw_mode_btn: QPushButton
+        self.toggle_collapse_btn: QPushButton
+        self.title_container: QWidget
+        self.title_label: QLabel
+        
+        # 操作按钮
+        self.undo_btn: QPushButton
+        self.redo_btn: QPushButton
+        self.clear_btn: QPushButton
+        self.import_btn: QPushButton
+        self.export_btn: QPushButton
+        self.exit_btn: QPushButton
+        self.settings_btn: QPushButton
+        self.save_config_btn: QPushButton
+        
+        # 透明度相关属性
+        self.passthrough_opacity: float
+        self.non_passthrough_opacity: float
+        self.passthrough_state: bool
+        self.user_passthrough_opacity: float
+        self.user_non_passthrough_opacity: float
+        
+        # 系统托盘相关属性
+        self.tray_icon: Optional[QSystemTrayIcon] = None
+        self.tray_icon_visible: bool = False
 
         self.setup_menubar()
         self.setup_toolbar()
@@ -55,7 +99,7 @@ class AnnotationTool(QMainWindow):
         
         # 初始化系统托盘
         self.setup_system_tray()
-    def toggle_visibility(self):
+    def toggle_visibility(self) -> None:
         """切换主窗口显示/隐藏"""
         print("热键 toggle_visibility 被触发!")
         if self.isVisible():
@@ -64,7 +108,8 @@ class AnnotationTool(QMainWindow):
         else:
             self.show()
             print("主窗口已显示")
-    def setup_toolbar(self):
+            
+    def setup_toolbar(self) -> None:
         # 创建浮动工具栏窗口
         self.toolbar_window = QWidget()
         self.toolbar_window.setWindowTitle("标注工具")
@@ -437,9 +482,9 @@ class AnnotationTool(QMainWindow):
         # 确保工具栏始终在最前面
         self.ensure_toolbar_on_top()
 
-    def update_color_button(self):
+    def update_color_button(self) -> None:
         """更新颜色按钮的显示"""
-        color = self.canvas.current_color
+        color: QColor = self.canvas.current_color
         self.color_btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: rgba({color.red()}, {color.green()}, {color.blue()}, {color.alpha()});
@@ -453,11 +498,11 @@ class AnnotationTool(QMainWindow):
             }}
         """)
 
-    def close_application(self):
+    def close_application(self) -> None:
         """关闭应用程序"""
         self.close()
 
-    def select_tool(self, tool):
+    def select_tool(self, tool: str) -> None:
         """选择工具并更新按钮状态"""
         print(f"select_tool 被调用，工具名称: {tool}")
         
@@ -499,28 +544,28 @@ class AnnotationTool(QMainWindow):
         else:
             print(f"错误: 找不到工具 '{tool}' 对应的按钮")
 
-    def change_thickness(self, value):
+    def change_thickness(self, value: int) -> None:
         """改变线条粗细"""
         self.canvas.set_current_thickness(value)
         self.thickness_label.setText(f"粗细: {value}")
 
-    def pick_color(self):
+    def pick_color(self) -> None:
         """选择颜色并应用到画布"""
         # 创建一个独立的颜色选择对话框
-        dialog = QColorDialog(self.canvas.current_color, self.toolbar_window)
+        dialog: QColorDialog = QColorDialog(self.canvas.current_color, self.toolbar_window)
         
         # 设置对话框选项，确保它总是在最前面
         dialog.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.Dialog)
         dialog.setOption(QColorDialog.ShowAlphaChannel, True)
         
         # 临时隐藏主窗口来避免遮挡对话框
-        main_visible = self.isVisible()
+        main_visible: bool = self.isVisible()
         if main_visible and not self.passthrough_state:
             self.hide()
         
         # 显示对话框并等待用户选择
         if dialog.exec_() == QColorDialog.Accepted:
-            color = dialog.currentColor()
+            color: QColor = dialog.currentColor()
             if color.isValid():
                 self.canvas.set_current_color(color)
                 self.update_color_button()
@@ -534,13 +579,13 @@ class AnnotationTool(QMainWindow):
         # 确保工具栏在最前面
         self.ensure_toolbar_on_top()
 
-    def change_drawing_opacity(self, value):
-        opacity = value / 100.0
+    def change_drawing_opacity(self, value: int) -> None:
+        opacity: float = value / 100.0
         self.canvas.set_current_opacity(opacity)
         self.drawing_opacity_label.setText(f"绘制: {value}%")
 
-    def change_canvas_opacity(self, value):
-        opacity = value / 100.0
+    def change_canvas_opacity(self, value: int) -> None:
+        opacity: float = value / 100.0
         self.canvas.set_canvas_opacity(opacity)
         
         # 记住当前模式下的用户设置
@@ -553,10 +598,10 @@ class AnnotationTool(QMainWindow):
         # self.setWindowOpacity(opacity)  # 注释掉这一行
         self.canvas_opacity_label.setText(f"画布: {value}%")
 
-    def update_canvas_opacity_ui(self):
+    def update_canvas_opacity_ui(self) -> None:
         """更新GUI上的画布透明度显示，确保与实际画布透明度一致"""
-        current_opacity = self.canvas.canvas_opacity
-        percentage = int(current_opacity * 100)
+        current_opacity: float = self.canvas.canvas_opacity
+        percentage: int = int(current_opacity * 100)
         
         # 更新滑动条值（防止触发信号循环）
         self.canvas_opacity_slider.blockSignals(True)
@@ -566,7 +611,7 @@ class AnnotationTool(QMainWindow):
         # 更新标签显示
         self.canvas_opacity_label.setText(f"画布: {percentage}%")
 
-    def toggle_mouse_passthrough(self):
+    def toggle_mouse_passthrough(self) -> None:
         current_flags = self.windowFlags()
         if self.passthrough_state:
             # Currently in pass-through mode, switch to non-pass-through
@@ -609,7 +654,7 @@ class AnnotationTool(QMainWindow):
         # 确保工具栏在主窗口之上
         self.ensure_toolbar_on_top()
 
-    def toggle_canvas_visibility(self):
+    def toggle_canvas_visibility(self) -> None:
         if self.canvas.isVisible():
             self.canvas.hide()
             self.toggle_visibility_btn.setText("👁️ 显示")
@@ -626,7 +671,7 @@ class AnnotationTool(QMainWindow):
         # 刷新按钮样式
         self.toggle_visibility_btn.style().polish(self.toggle_visibility_btn)
 
-    def toggle_single_draw_mode(self, checked):
+    def toggle_single_draw_mode(self, checked: bool) -> None:
         self.canvas.single_draw_mode = checked
         if checked:
             self.single_draw_mode_btn.setProperty("class", "active")
@@ -638,29 +683,29 @@ class AnnotationTool(QMainWindow):
         # 刷新按钮样式
         self.single_draw_mode_btn.style().polish(self.single_draw_mode_btn)
 
-    def import_canvas_content(self):
+    def import_canvas_content(self) -> None:
         file_name, _ = QFileDialog.getOpenFileName(self, "导入标注", "", "JSON Files (*.json)")
         if file_name:
             try:
                 with open(file_name, "r") as f:
-                    json_data = f.read()
+                    json_data: str = f.read()
                 self.canvas.from_json_data(json_data)
                 self.statusBar().showMessage("标注导入成功", 2000)
             except Exception as e:
                 self.statusBar().showMessage(f"导入失败: {e}", 2000)
 
-    def export_canvas_content(self):
+    def export_canvas_content(self) -> None:
         file_name, _ = QFileDialog.getSaveFileName(self, "导出标注", "", "JSON Files (*.json)")
         if file_name:
             try:
-                json_data = self.canvas.to_json_data()
+                json_data: str = self.canvas.to_json_data()
                 with open(file_name, "w") as f:
                     f.write(json_data)
                 self.statusBar().showMessage("标注导出成功", 2000)
             except Exception as e:
                 self.statusBar().showMessage(f"导出失败: {e}", 2000)
 
-    def setup_window_properties(self):
+    def setup_window_properties(self) -> None:
         # 获取屏幕尺寸
         screen = QApplication.primaryScreen().geometry()
         
@@ -713,18 +758,18 @@ class AnnotationTool(QMainWindow):
         # 添加状态栏
         self.statusBar()
 
-    def setup_menubar(self):
+    def setup_menubar(self) -> None:
         """设置菜单栏 - 在无边框模式下隐藏菜单栏"""
         # 隐藏菜单栏以确保真正的无边框体验
         self.menuBar().setVisible(False)
         self.menuBar().setMaximumHeight(0)
 
-    def open_hotkey_settings(self):
+    def open_hotkey_settings(self) -> None:
         """打开热键设置对话框"""
-        dialog = HotkeySettingsDialog(self, self.config)
+        dialog: HotkeySettingsDialog = HotkeySettingsDialog(self, self.config)
         dialog.exec_()
 
-    def save_current_config(self):
+    def save_current_config(self) -> None:
         """保存当前配置"""
         self.config["current_color"] = self.canvas.current_color
         self.config["current_thickness"] = self.canvas.current_thickness
@@ -736,14 +781,15 @@ class AnnotationTool(QMainWindow):
         self.config["non_passthrough_opacity"] = self.user_non_passthrough_opacity
         save_config(self.config)
         self.statusBar().showMessage("配置已保存", 2000)
-    def toggle_toolbar_collapse(self):
+        
+    def toggle_toolbar_collapse(self) -> None:
         """切换工具栏折叠/展开状态"""
         # 定义工具栏的折叠高度和展开高度
-        collapsed_height = 36  # 标题栏的高度
-        expanded_height = 520  # 完全展开的高度
+        collapsed_height: int = 36  # 标题栏的高度
+        expanded_height: int = 520  # 完全展开的高度
         
         # 获取当前高度
-        current_height = self.toolbar_window.height()
+        current_height: int = self.toolbar_window.height()
         
         if current_height > collapsed_height:
             # 当前是展开状态，需要折叠
@@ -768,7 +814,7 @@ class AnnotationTool(QMainWindow):
               # 确保工具栏始终在最前面
         self.ensure_toolbar_on_top()
 
-    def setup_system_tray(self):
+    def setup_system_tray(self) -> None:
         """设置系统托盘"""
         # 检查系统是否支持系统托盘
         if not QSystemTrayIcon.isSystemTrayAvailable():
@@ -780,7 +826,7 @@ class AnnotationTool(QMainWindow):
         
         # 设置托盘图标（使用现有的ico文件）
         try:
-            icon = QIcon("1.ico")
+            icon: QIcon = QIcon("1.ico")
             if icon.isNull():
                 # 如果图标文件不存在，创建一个简单的图标
                 icon = self.style().standardIcon(self.style().SP_ComputerIcon)
@@ -794,10 +840,10 @@ class AnnotationTool(QMainWindow):
         self.tray_icon.setToolTip("屏幕标注工具 - 点击恢复窗口")
         
         # 创建托盘菜单
-        tray_menu = QMenu()
+        tray_menu: QMenu = QMenu()
         
         # 显示主窗口动作
-        show_action = QAction("显示主窗口", self)
+        show_action: QAction = QAction("显示主窗口", self)
         show_action.triggered.connect(self.show_from_tray)
         tray_menu.addAction(show_action)
         
@@ -805,7 +851,7 @@ class AnnotationTool(QMainWindow):
         tray_menu.addSeparator()
         
         # 退出动作
-        quit_action = QAction("退出程序", self)
+        quit_action: QAction = QAction("退出程序", self)
         quit_action.triggered.connect(self.close_application)
         tray_menu.addAction(quit_action)
         
@@ -818,7 +864,7 @@ class AnnotationTool(QMainWindow):
         # 默认不显示托盘图标
         self.tray_icon_visible = False
 
-    def show_from_tray(self):
+    def show_from_tray(self) -> None:
         """从托盘恢复窗口显示"""
         # 显示主窗口和工具栏
         self.show()
@@ -839,14 +885,14 @@ class AnnotationTool(QMainWindow):
         self.statusBar().showMessage("窗口已从托盘恢复", 2000)
         print("窗口已从托盘恢复")
 
-    def tray_icon_activated(self, reason):
+    def tray_icon_activated(self, reason: QSystemTrayIcon.ActivationReason) -> None:
         """托盘图标被点击"""
         if reason == QSystemTrayIcon.Trigger:  # 左键单击
             self.show_from_tray()
         elif reason == QSystemTrayIcon.DoubleClick:  # 双击
             self.show_from_tray()
 
-    def toggle_toolbar_complete_hide(self):
+    def toggle_toolbar_complete_hide(self) -> None:
         """完全隐藏/显示工具栏和主窗口"""
         if self.toolbar_completely_hidden:
             # 当前完全隐藏，需要显示 - 从托盘恢复
@@ -876,14 +922,14 @@ class AnnotationTool(QMainWindow):
             
             print("程序已隐藏到系统托盘")
 
-    def ensure_toolbar_on_top(self):
+    def ensure_toolbar_on_top(self) -> None:
         """确保工具栏始终显示在最前面"""
         if hasattr(self, 'toolbar_window') and self.toolbar_window and not self.toolbar_completely_hidden:
             self.toolbar_window.raise_()
             self.toolbar_window.activateWindow()
             self.toolbar_window.show()
 
-    def closeEvent(self, event):
+    def closeEvent(self, event: QCloseEvent) -> None:
         """关闭事件处理"""
         # 在退出前自动保存当前配置
         self.save_current_config()
@@ -899,7 +945,7 @@ class AnnotationTool(QMainWindow):
             self.tray_icon.hide()
         event.accept()
 
-    def setup_hotkeys(self):
+    def setup_hotkeys(self) -> None:
         """设置热键"""
         # 清空现有热键
         if hasattr(self, 'hotkey_manager') and self.hotkey_manager:
@@ -957,17 +1003,17 @@ class AnnotationTool(QMainWindow):
         
         print(f"热键设置完成，共注册 {len(self.hotkey_manager.hotkeys)} 个热键")
 
-    def test_hotkey_function(self):
+    def test_hotkey_function(self) -> None:
         """测试热键功能"""
         print("测试热键被触发!")
         self.statusBar().showMessage("热键测试成功！", 3000)
         
-    def add_tool_hotkey(self, hotkey_str, tool_name):
+    def add_tool_hotkey(self, hotkey_str: str, tool_name: str) -> None:
         """添加工具切换热键"""
         # 为了避免闭包问题，创建一个副本
-        tool_name_copy = str(tool_name)
+        tool_name_copy: str = str(tool_name)
         
-        def tool_callback():
+        def tool_callback() -> None:
             # 确保工具名称正确传递
             print(f"触发工具热键：{hotkey_str} -> {tool_name_copy}")
             
@@ -983,7 +1029,7 @@ class AnnotationTool(QMainWindow):
         
         self.hotkey_manager.register_hotkey(hotkey_str, tool_callback)
 
-    def eventFilter(self, obj, event):
+    def eventFilter(self, obj: QWidget, event: QEvent) -> bool:
         """事件过滤器，用于处理工具栏的拖动"""
         # 处理工具栏拖动
         if hasattr(self, 'toolbar_window') and hasattr(self, 'title_container') and obj == self.title_container:
@@ -996,7 +1042,7 @@ class AnnotationTool(QMainWindow):
             elif event.type() == event.MouseMove:
                 if hasattr(self, 'toolbar_dragging') and self.toolbar_dragging and event.buttons() & Qt.LeftButton:
                     # 计算新位置并移动工具栏
-                    new_pos = event.globalPos() - self.toolbar_drag_position
+                    new_pos: QPoint = event.globalPos() - self.toolbar_drag_position
                     self.toolbar_window.move(new_pos)
                     return True
             elif event.type() == event.MouseButtonRelease:
@@ -1010,8 +1056,8 @@ class AnnotationTool(QMainWindow):
 
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    tool = AnnotationTool()
+    app: QApplication = QApplication(sys.argv)
+    tool: AnnotationTool = AnnotationTool()
     tool.show()
     sys.exit(app.exec_())
 
