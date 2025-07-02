@@ -196,7 +196,7 @@ class AnnotationTool(QMainWindow):
             # self.setWindowOpacity(self.user_non_passthrough_opacity)
             self.toolbar.toggle_passthrough_btn.setChecked(False)
             self.toolbar.toggle_passthrough_btn.setText("🖱️ 穿透")
-            self.toolbar.toggle_passthrough_btn.setProperty("class", "")
+            self.toolbar.toggle_passthrough_btn.setProperty("class", "action")
             self.statusBar().showMessage("鼠标非穿透模式", 2000)
         else:
             # Currently in non-pass-through mode, switch to pass-through
@@ -209,7 +209,7 @@ class AnnotationTool(QMainWindow):
             # self.setWindowOpacity(self.user_passthrough_opacity)
             self.toolbar.toggle_passthrough_btn.setChecked(True)
             self.toolbar.toggle_passthrough_btn.setText("🖱️ 非穿透")
-            self.toolbar.toggle_passthrough_btn.setProperty("class", "active")
+            self.toolbar.toggle_passthrough_btn.setProperty("class", "action active")
             self.statusBar().showMessage("鼠标穿透模式", 2000)
         
         # 更新GUI滑动条以同步画布透明度
@@ -231,13 +231,13 @@ class AnnotationTool(QMainWindow):
             self.canvas.hide()
             self.toolbar.toggle_visibility_btn.setText("👁️ 显示")
             self.toolbar.toggle_visibility_btn.setChecked(True)
-            self.toolbar.toggle_visibility_btn.setProperty("class", "active")
+            self.toolbar.toggle_visibility_btn.setProperty("class", "action active")
             self.statusBar().showMessage("画布已隐藏", 2000)
         else:
             self.canvas.show()
             self.toolbar.toggle_visibility_btn.setText("👁️ 隐藏")
             self.toolbar.toggle_visibility_btn.setChecked(False)
-            self.toolbar.toggle_visibility_btn.setProperty("class", "")
+            self.toolbar.toggle_visibility_btn.setProperty("class", "action")
             self.statusBar().showMessage("画布已显示", 2000)
         
         # 刷新按钮样式
@@ -246,10 +246,10 @@ class AnnotationTool(QMainWindow):
     def toggle_single_draw_mode(self, checked: bool) -> None:
         self.canvas.single_draw_mode = checked
         if checked:
-            self.toolbar.single_draw_mode_btn.setProperty("class", "active")
+            self.toolbar.single_draw_mode_btn.setProperty("class", "action active")
             self.statusBar().showMessage("已开启单次绘制模式", 2000)
         else:
-            self.toolbar.single_draw_mode_btn.setProperty("class", "")
+            self.toolbar.single_draw_mode_btn.setProperty("class", "action")
             self.statusBar().showMessage("已关闭单次绘制模式", 2000)
         
         # 刷新按钮样式

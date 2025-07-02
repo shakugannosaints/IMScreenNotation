@@ -466,16 +466,16 @@ class AnnotationToolbar(QWidget):
             }
             QPushButton.tool:hover {
                 background-color: #4a4a4a;
-                border-color: #0078d4;
+                border: 1px solid #0078d4;
                 color: #ffffff;
             }
             QPushButton.tool:pressed {
                 background-color: #2a2a2a;
-                border-color: #0078d4;
+                border: 1px solid #0078d4;
             }
             QPushButton.tool:checked {
                 background-color: #0078d4;
-                border-color: #106ebe;
+                border: 1px solid #106ebe;
                 color: #ffffff;
                 font-weight: 600;
             }
@@ -494,21 +494,36 @@ class AnnotationToolbar(QWidget):
             }
             QPushButton.action:hover {
                 background-color: #3a3a3a;
-                border-color: #0078d4;
+                border: 1px solid #0078d4;
             }
             QPushButton.action:pressed {
                 background-color: #1a1a1a;
+                border: 1px solid #3a3a3a;
+                border-radius: 6px;
             }
             QPushButton.action:checked {
                 background-color: #0078d4;
-                border-color: #106ebe;
+                border: 1px solid #106ebe;
+                border-radius: 6px;
                 color: #ffffff;
+            }
+            
+            /* 激活状态按钮样式 */
+            QPushButton.action.active {
+                background-color: #0078d4;
+                border: 1px solid #106ebe;
+                color: #ffffff;
+                font-weight: 600;
+            }
+            QPushButton.action.active:hover {
+                background-color: #106ebe;
+                border: 1px solid #005a9e;
             }
             
             /* 特殊按钮样式 */
             QPushButton.primary {
                 background-color: #0078d4;
-                border-color: #106ebe;
+                border: 1px solid #106ebe;
             }
             QPushButton.primary:hover {
                 background-color: #106ebe;
@@ -516,7 +531,7 @@ class AnnotationToolbar(QWidget):
             
             QPushButton.success {
                 background-color: #28a745;
-                border-color: #1e7e34;
+                border: 1px solid #1e7e34;
             }
             QPushButton.success:hover {
                 background-color: #1e7e34;
@@ -524,7 +539,7 @@ class AnnotationToolbar(QWidget):
             
             QPushButton.warning {
                 background-color: #fd7e14;
-                border-color: #e8590c;
+                border: 1px solid #e8590c;
             }
             QPushButton.warning:hover {
                 background-color: #e8590c;
@@ -532,7 +547,7 @@ class AnnotationToolbar(QWidget):
             
             QPushButton.danger {
                 background-color: #dc3545;
-                border-color: #bd2130;
+                border: 1px solid #bd2130;
             }
             QPushButton.danger:hover {
                 background-color: #bd2130;
@@ -549,7 +564,7 @@ class AnnotationToolbar(QWidget):
                 font-size: 9px;
             }
             QPushButton#colorButton:hover {
-                border-color: #0078d4;
+                border: 1px solid #0078d4;
             }
             
             /* 标签样式 */
@@ -607,7 +622,7 @@ class AnnotationToolbar(QWidget):
             }
             QPushButton#collapseButton:hover {
                 background-color: #4a4a4a;
-                border-color: #0078d4;
+                border: 1px solid #0078d4;
             }
             
             /* 主题切换按钮样式 */
@@ -624,7 +639,7 @@ class AnnotationToolbar(QWidget):
             }
             QPushButton#themeToggleButton:hover {
                 background-color: #4a4a4a;
-                border-color: #0078d4;
+                border: 1px solid #0078d4;
             }
         """
     
@@ -681,17 +696,17 @@ class AnnotationToolbar(QWidget):
             }
             QPushButton.tool:hover {
                 background-color: #d8d8d8;
-                border-color: #0078d4;
+                border: 1px solid #0078d4;
                 color: #333333;
             }
             QPushButton.tool:pressed {
                 background-color: #c8c8c8;
-                border-color: #0078d4;
+                border: 1px solid #0078d4;
                 color: #333333;
             }
             QPushButton.tool:checked {
                 background-color: #0078d4;
-                border-color: #106ebe;
+                border: 1px solid #106ebe;
                 color: #333333;
                 font-weight: 600;
             }
@@ -710,21 +725,36 @@ class AnnotationToolbar(QWidget):
             }
             QPushButton.action:hover {
                 background-color: #e0e0e0;
-                border-color: #0078d4;
+                border: 1px solid #0078d4;
             }
             QPushButton.action:pressed {
                 background-color: #d0d0d0;
+                border: 1px solid #d0d0d0;
+                border-radius: 6px;
             }
             QPushButton.action:checked {
                 background-color: #0078d4;
-                border-color: #106ebe;
+                border: 1px solid #106ebe;
+                border-radius: 6px;
                 color: #333333;
+            }
+            
+            /* 激活状态按钮样式 */
+            QPushButton.action.active {
+                background-color: #0078d4;
+                border: 1px solid #106ebe;
+                color: #333333;
+                font-weight: 600;
+            }
+            QPushButton.action.active:hover {
+                background-color: #106ebe;
+                border: 1px solid #005a9e;
             }
             
             /* 特殊按钮样式 */
             QPushButton.primary {
                 background-color: #0078d4;
-                border-color: #106ebe;
+                border: 1px solid #106ebe;
                 color: #333333;
             }
             QPushButton.primary:hover {
@@ -733,7 +763,7 @@ class AnnotationToolbar(QWidget):
             
             QPushButton.success {
                 background-color: #28a745;
-                border-color: #1e7e34;
+                border: 1px solid #1e7e34;
                 color: #333333;
             }
             QPushButton.success:hover {
@@ -742,7 +772,7 @@ class AnnotationToolbar(QWidget):
             
             QPushButton.warning {
                 background-color: #fd7e14;
-                border-color: #e8590c;
+                border: 1px solid #e8590c;
                 color: #333333;
             }
             QPushButton.warning:hover {
@@ -751,7 +781,7 @@ class AnnotationToolbar(QWidget):
             
             QPushButton.danger {
                 background-color: #dc3545;
-                border-color: #bd2130;
+                border: 1px solid #bd2130;
                 color: #333333;
             }
             QPushButton.danger:hover {
@@ -769,7 +799,7 @@ class AnnotationToolbar(QWidget):
                 font-size: 9px;
             }
             QPushButton#colorButton:hover {
-                border-color: #0078d4;
+                border: 1px solid #0078d4;
             }
             
             /* 标签样式 */
@@ -827,7 +857,7 @@ class AnnotationToolbar(QWidget):
             }
             QPushButton#collapseButton:hover {
                 background-color: #d8d8d8;
-                border-color: #0078d4;
+                border: 1px solid #0078d4;
             }
             
             /* 主题切换按钮样式 */
@@ -844,7 +874,7 @@ class AnnotationToolbar(QWidget):
             }
             QPushButton#themeToggleButton:hover {
                 background-color: #d8d8d8;
-                border-color: #0078d4;
+                border: 1px solid #0078d4;
             }
         """
     
@@ -889,7 +919,7 @@ class AnnotationToolbar(QWidget):
                 min-width: 80px;
             }}
             QPushButton#colorButton:hover {{
-                border-color: #0078d4;
+                border: 1px solid #0078d4;
             }}
         """)
 
