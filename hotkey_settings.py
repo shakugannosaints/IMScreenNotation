@@ -111,7 +111,8 @@ class HotkeySettingsDialog(QDialog):
             ("tool_freehand", "自由绘制"),
             ("tool_filled_freehand", "填充绘制"),
             ("tool_point", "点工具"),
-            ("tool_laser_pointer", "激光笔")
+            ("tool_laser_pointer", "激光笔"),
+            ("tool_text", "文本工具")
         ]
         
         for i, (key, label) in enumerate(tool_hotkeys):
