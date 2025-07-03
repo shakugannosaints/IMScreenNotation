@@ -387,29 +387,56 @@ class DrawingCanvas(QWidget):
     def open_text_style_dialog(self):
         """打开文本样式配置对话框"""
         try:
-            # 确保在主线程中执行
+            # 尝试使用打包修复模块
+            try:
+                import packaging_fix
+                dialog = packaging_fix.create_safe_dialog(self, self)
+                if dialog:
+                    return dialog
+            except ImportError:
+                pass
+            
+            # 回退到原始方法
             from PyQt5.QtCore import QTimer, QCoreApplication
-            from text_style_dialog import TextStyleDialog
+            from PyQt5.QtWidgets import QApplication
+            
+            # 动态导入，确保在打包环境中正常工作
+            try:
+                from text_style_dialog import TextStyleDialog
+            except ImportError:
+                # 如果直接导入失败，尝试从当前目录导入
+                import sys
+                import os
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                if current_dir not in sys.path:
+                    sys.path.insert(0, current_dir)
+                from text_style_dialog import TextStyleDialog
             
             # 强制处理所有待处理的事件
             QCoreApplication.processEvents()
             
             # 创建对话框
-            dialog = TextStyleDialog(self)
+            dialog = TextStyleDialog(self, self)
             
             # 设置对话框属性以确保正常显示
             dialog.setWindowModality(Qt.ApplicationModal)
             dialog.setAttribute(Qt.WA_DeleteOnClose)
+            dialog.setWindowFlags(Qt.Dialog | Qt.WindowCloseButtonHint)
             dialog.raise_()
             dialog.activateWindow()
             
-            # 确保对话框在主线程中执行
-            result = dialog.exec_()
+            # 使用非阻塞方式显示对话框
+            dialog.show()
             
-            # 强制处理所有待处理的事件
-            QCoreApplication.processEvents()
+            # 手动处理对话框的模态行为
+            def on_dialog_finished():
+                QCoreApplication.processEvents()
+                
+            dialog.finished.connect(on_dialog_finished)
             
-            return result
+            # 在打包环境中使用 show() 而不是 exec_()
+            # 因为 exec_() 可能导致事件循环阻塞
+            return dialog
             
         except Exception as e:
             print(f"Error opening text style dialog: {e}")

@@ -26,3 +26,4 @@ build/IMScreenNotation/warn-IMScreenNotation.txt
 build/IMScreenNotation/xref-IMScreenNotation.html
 dist/IMScreenNotation.exe
 IMScreenNotation.spec
+packaging_fix.py

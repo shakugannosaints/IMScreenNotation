@@ -22,11 +22,14 @@ class TextStyleDialog(QDialog):
         self.setFixedSize(450, 720)  # 增加对话框高度
         
         # 设置窗口标志以确保对话框正常显示
-        self.setWindowFlags(Qt.Dialog | Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(Qt.Dialog | Qt.WindowCloseButtonHint)
         
         # 设置窗口属性
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowModality(Qt.ApplicationModal)
+        
+        # 确保对话框在屏幕中央显示
+        self.move_to_center()
         
         try:
             # 初始化界面
@@ -42,6 +45,18 @@ class TextStyleDialog(QDialog):
             print(f"Error initializing TextStyleDialog: {e}")
             import traceback
             traceback.print_exc()
+            
+    def move_to_center(self):
+        """将对话框移动到屏幕中央"""
+        try:
+            from PyQt5.QtWidgets import QApplication
+            desktop = QApplication.desktop()
+            screen_geometry = desktop.availableGeometry()
+            x = (screen_geometry.width() - self.width()) // 2
+            y = (screen_geometry.height() - self.height()) // 2
+            self.move(x, y)
+        except Exception as e:
+            print(f"Error moving dialog to center: {e}")
         
     def setup_ui(self):
         """设置界面布局"""
@@ -182,7 +197,7 @@ class TextStyleDialog(QDialog):
         self.cancel_btn = QPushButton("❌ 取消")
         self.cancel_btn.setMinimumHeight(40)  # 增加按钮高度
         self.cancel_btn.setMinimumWidth(100)  # 增加按钮宽度
-        self.cancel_btn.clicked.connect(self.reject)
+        self.cancel_btn.clicked.connect(self.close)
         
         button_layout.addStretch()
         button_layout.addWidget(self.ok_btn)
@@ -195,35 +210,60 @@ class TextStyleDialog(QDialog):
         
     def load_current_settings(self):
         """加载当前画布的文本设置"""
-        # 字体设置
-        font_family_index = self.font_family_combo.findText(self.canvas.text_font_family)
-        if font_family_index >= 0:
-            self.font_family_combo.setCurrentIndex(font_family_index)
-        
-        self.font_size_spin.setValue(self.canvas.text_font_size)
-        self.font_bold_check.setChecked(self.canvas.text_font_bold)
-        self.font_italic_check.setChecked(self.canvas.text_font_italic)
-        
-        # 颜色设置
-        self.update_color_button(self.text_color_btn, self.canvas.text_color)
-        
-        if self.canvas.text_background_color:
-            self.update_color_button(self.bg_color_btn, self.canvas.text_background_color)
-            self.bg_transparent_check.setChecked(False)
-        else:
-            self.bg_transparent_check.setChecked(True)
-        
-        # 边框设置
-        if self.canvas.text_border_color:
-            self.border_enable_check.setChecked(True)
-            self.update_color_button(self.border_color_btn, self.canvas.text_border_color)
-        else:
-            self.border_enable_check.setChecked(False)
+        try:
+            # 字体设置 - 使用 getattr 提供默认值
+            font_family = getattr(self.canvas, 'text_font_family', 'Arial')
+            font_family_index = self.font_family_combo.findText(font_family)
+            if font_family_index >= 0:
+                self.font_family_combo.setCurrentIndex(font_family_index)
             
-        self.border_width_spin.setValue(self.canvas.text_border_width)
-        
-        # 其他设置
-        self.padding_spin.setValue(self.canvas.text_padding)
+            font_size = getattr(self.canvas, 'text_font_size', 12)
+            self.font_size_spin.setValue(font_size)
+            
+            font_bold = getattr(self.canvas, 'text_font_bold', False)
+            self.font_bold_check.setChecked(font_bold)
+            
+            font_italic = getattr(self.canvas, 'text_font_italic', False)
+            self.font_italic_check.setChecked(font_italic)
+            
+            # 颜色设置
+            text_color = getattr(self.canvas, 'text_color', QColor(0, 0, 0))
+            self.update_color_button(self.text_color_btn, text_color)
+            
+            # 背景色设置
+            bg_color = getattr(self.canvas, 'text_background_color', None)
+            if bg_color:
+                self.update_color_button(self.bg_color_btn, bg_color)
+                self.bg_transparent_check.setChecked(False)
+            else:
+                self.bg_transparent_check.setChecked(True)
+            
+            # 边框设置
+            border_color = getattr(self.canvas, 'text_border_color', None)
+            if border_color:
+                self.border_enable_check.setChecked(True)
+                self.update_color_button(self.border_color_btn, border_color)
+            else:
+                self.border_enable_check.setChecked(False)
+                
+            border_width = getattr(self.canvas, 'text_border_width', 1)
+            self.border_width_spin.setValue(border_width)
+            
+            # 其他设置
+            padding = getattr(self.canvas, 'text_padding', 5)
+            self.padding_spin.setValue(padding)
+            
+        except Exception as e:
+            print(f"Error loading current settings: {e}")
+            # 如果加载失败，使用默认值
+            self.font_family_combo.setCurrentIndex(0)
+            self.font_size_spin.setValue(12)
+            self.font_bold_check.setChecked(False)
+            self.font_italic_check.setChecked(False)
+            self.bg_transparent_check.setChecked(True)
+            self.border_enable_check.setChecked(False)
+            self.border_width_spin.setValue(1)
+            self.padding_spin.setValue(5)
         
     def update_color_button(self, button, color):
         """更新颜色按钮的样式"""
@@ -345,30 +385,38 @@ class TextStyleDialog(QDialog):
         self.border_width_spin.setEnabled(enabled)
         
         if enabled:
-            if not self.canvas.text_border_color:
-                self.canvas.text_border_color = QColor(0, 0, 0)
-                self.update_color_button(self.border_color_btn, self.canvas.text_border_color)
+            current_border_color = getattr(self.canvas, 'text_border_color', None)
+            if not current_border_color:
+                border_color = QColor(0, 0, 0)
+                setattr(self.canvas, 'text_border_color', border_color)
+                self.update_color_button(self.border_color_btn, border_color)
         else:
-            self.canvas.text_border_color = None
+            setattr(self.canvas, 'text_border_color', None)
             self.border_color_btn.setStyleSheet("")
             
         
     def apply_settings(self):
         """应用设置到画布"""
-        # 字体设置
-        self.canvas.text_font_family = self.font_family_combo.currentText()
-        self.canvas.text_font_size = self.font_size_spin.value()
-        self.canvas.text_font_bold = self.font_bold_check.isChecked()
-        self.canvas.text_font_italic = self.font_italic_check.isChecked()
-        
-        # 边框设置
-        if self.border_enable_check.isChecked():
-            self.canvas.text_border_width = self.border_width_spin.value()
-        else:
-            self.canvas.text_border_color = None
+        try:
+            # 字体设置 - 使用 setattr 安全设置属性
+            setattr(self.canvas, 'text_font_family', self.font_family_combo.currentText())
+            setattr(self.canvas, 'text_font_size', self.font_size_spin.value())
+            setattr(self.canvas, 'text_font_bold', self.font_bold_check.isChecked())
+            setattr(self.canvas, 'text_font_italic', self.font_italic_check.isChecked())
             
-        # 其他设置
-        self.canvas.text_padding = self.padding_spin.value()
+            # 边框设置
+            if self.border_enable_check.isChecked():
+                setattr(self.canvas, 'text_border_width', self.border_width_spin.value())
+            else:
+                setattr(self.canvas, 'text_border_color', None)
+                
+            # 其他设置
+            setattr(self.canvas, 'text_padding', self.padding_spin.value())
+            
+        except Exception as e:
+            print(f"Error applying settings: {e}")
+            import traceback
+            traceback.print_exc()
         
     def accept_settings(self):
         """接受设置并关闭对话框"""
@@ -383,13 +431,15 @@ class TextStyleDialog(QDialog):
             # 强制处理所有待处理的事件
             QCoreApplication.processEvents()
             
-            self.accept()
+            # 在打包环境中使用 close() 而不是 accept()
+            # 因为 accept() 可能导致事件循环问题
+            self.close()
             
         except Exception as e:
             print(f"Error accepting settings: {e}")
             import traceback
             traceback.print_exc()
-            self.reject()
+            self.close()
         
     def get_parent_theme(self):
         """获取父窗口的主题状态"""
@@ -766,4 +816,13 @@ class TextStyleDialog(QDialog):
         
     def closeEvent(self, event):
         """重写关闭事件"""
-        super().closeEvent(event)
+        try:
+            from PyQt5.QtCore import QCoreApplication
+            # 确保所有事件都被处理
+            QCoreApplication.processEvents()
+            super().closeEvent(event)
+            # 强制清理资源
+            self.deleteLater()
+        except Exception as e:
+            print(f"Error in closeEvent: {e}")
+            super().closeEvent(event)

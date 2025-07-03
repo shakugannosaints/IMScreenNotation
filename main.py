@@ -16,6 +16,14 @@ from toolbar import AnnotationToolbar
 
 # 显式导入所有必需的模块确保PyInstaller能正确打包
 try:
+    # 导入打包修复模块
+    import packaging_fix
+    packaging_fix.init_packaging_fix()
+    print("Packaging fix initialized")
+except ImportError as e:
+    print(f"Warning: packaging_fix module not found: {e}")
+
+try:
     import text_style_dialog
     print("Successfully imported text_style_dialog")
 except ImportError as e:
