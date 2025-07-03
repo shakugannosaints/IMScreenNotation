@@ -9,8 +9,8 @@ class DrawingCanvas(QWidget):
         super().__init__(parent)
         self.setMouseTracking(True) # Enable mouse tracking even when no button is pressed
         self.shapes = [] # List to store all drawn shapes
-        self.undo_stack = [] # For undo functionality
-        self.redo_stack = [] # For redo functionality
+        self.undo_stack = [] # For undo functionality - stores canvas states
+        self.redo_stack = [] # For redo functionality - stores canvas states
         self.current_shape = None
         self.drawing = False
         self.start_point = QPoint()
@@ -22,6 +22,22 @@ class DrawingCanvas(QWidget):
         self.canvas_color = QColor(0, 0, 0, 0) # Default transparent background
         self.canvas_opacity = 0.0 # Default fully transparent
         self.single_draw_mode = False # New attribute for single draw mode
+
+    def save_state_to_undo_stack(self):
+        """保存当前画布状态到撤销栈"""
+        # 将shapes序列化为字典列表，避免深拷贝PyQt对象
+        serialized_shapes = []
+        for shape in self.shapes:
+            serialized_shapes.append(shape.to_dict())
+        
+        self.undo_stack.append(serialized_shapes)
+        
+        # 限制撤销栈的大小，避免内存过度使用
+        if len(self.undo_stack) > 50:  # 最多保存50个状态
+            self.undo_stack.pop(0)
+        
+        # 清空重做栈，因为有新的操作
+        self.redo_stack.clear()
 
     def set_canvas_color(self, color):
         # 确保color是QColor对象
@@ -90,21 +106,27 @@ class DrawingCanvas(QWidget):
             self.start_point = event.pos()
             self.end_point = event.pos()
             if self.current_tool == 'freehand':
+                # 保存状态到撤销栈（在创建新shape前）
+                self.save_state_to_undo_stack()
                 self.current_shape = Freehand([self.start_point], color=self.current_color, thickness=self.current_thickness, opacity=self.current_opacity)
             elif self.current_tool == 'filled_freehand':
+                # 保存状态到撤销栈（在创建新shape前）
+                self.save_state_to_undo_stack()
                 self.current_shape = FilledFreehand([self.start_point], color=self.current_color, thickness=self.current_thickness, opacity=self.current_opacity)
             elif self.current_tool == 'point':
+                # 保存状态到撤销栈（在创建新shape前）
+                self.save_state_to_undo_stack()
                 self.current_shape = Point(self.start_point, color=self.current_color, thickness=self.current_thickness, opacity=self.current_opacity)
                 self.shapes.append(self.current_shape)
-                self.undo_stack.append(self.current_shape)
-                self.redo_stack.clear()
                 self.current_shape = None
                 self.drawing = False # Point is a single click action
             elif self.current_tool == 'laser_pointer':
+                # 激光笔不保存状态，因为它是临时的
                 self.current_shape = LaserPointer(event.pos(), color=self.current_color, thickness=self.current_thickness, opacity=self.current_opacity)
                 self.update() # 立即更新显示激光笔
-                return # 激光笔是临时的，不添加到shapes列表中
+                return # 激光笔是临时的，不添加到shapes列表中，也不保存状态
             else:
+                # 其他工具（line, rectangle, circle, arrow）在释放鼠标时保存状态
                 self.current_shape = None # Reset current shape
 
     def mouseMoveEvent(self, event):
@@ -136,35 +158,97 @@ class DrawingCanvas(QWidget):
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.LeftButton and self.drawing:
             self.drawing = False
-            if self.current_shape and self.current_tool != 'point': # Point is handled in mousePressEvent
+            if self.current_shape and self.current_tool != 'point' and self.current_tool != 'laser_pointer':
+                # 对于需要拖拽的工具（line, rectangle, circle, arrow），在释放时保存状态
+                if self.current_tool in ['line', 'rectangle', 'circle', 'arrow']:
+                    self.save_state_to_undo_stack()
+                
                 if self.single_draw_mode:
                     self.shapes.clear()
+                    # 单次绘制模式下，清空撤销栈并重新开始
                     self.undo_stack.clear()
                     self.redo_stack.clear()
+                    # 保存空白状态
+                    self.undo_stack.append([])  # 空的序列化状态列表
+                
                 self.shapes.append(self.current_shape)
-                self.undo_stack.append(self.current_shape)
-                self.redo_stack.clear() # Clear redo stack on new action
             self.current_shape = None
             self.update()
 
     def undo(self):
+        """撤销操作 - 恢复到上一个状态"""
         if self.undo_stack:
-            shape = self.undo_stack.pop()
-            self.shapes.remove(shape)
-            self.redo_stack.append(shape)
+            # 将当前状态序列化并保存到重做栈
+            current_serialized_state = []
+            for shape in self.shapes:
+                current_serialized_state.append(shape.to_dict())
+            self.redo_stack.append(current_serialized_state)
+            
+            # 限制重做栈的大小
+            if len(self.redo_stack) > 50:
+                self.redo_stack.pop(0)
+            
+            # 恢复到上一个状态
+            previous_serialized_state = self.undo_stack.pop()
+            self.shapes = self._deserialize_shapes(previous_serialized_state)
             self.update()
 
     def redo(self):
+        """重做操作 - 恢复到下一个状态"""
         if self.redo_stack:
-            shape = self.redo_stack.pop()
-            self.shapes.append(shape)
-            self.undo_stack.append(shape)
+            # 将当前状态序列化并保存到撤销栈
+            current_serialized_state = []
+            for shape in self.shapes:
+                current_serialized_state.append(shape.to_dict())
+            self.undo_stack.append(current_serialized_state)
+            
+            # 限制撤销栈的大小
+            if len(self.undo_stack) > 50:
+                self.undo_stack.pop(0)
+            
+            # 恢复到下一个状态
+            next_serialized_state = self.redo_stack.pop()
+            self.shapes = self._deserialize_shapes(next_serialized_state)
             self.update()
 
+    def _deserialize_shapes(self, serialized_shapes):
+        """从序列化的形状数据重建形状对象列表"""
+        shapes = []
+        for shape_data in serialized_shapes:
+            # 创建shape_data的副本，避免修改原始数据
+            shape_dict = shape_data.copy()
+            shape_type = shape_dict.pop("type")
+            
+            if shape_type == "Line":
+                shape = Line.from_dict(shape_dict)
+            elif shape_type == "Rectangle":
+                shape = Rectangle.from_dict(shape_dict)
+            elif shape_type == "Circle":
+                shape = Circle.from_dict(shape_dict)
+            elif shape_type == "Arrow":
+                shape = Arrow.from_dict(shape_dict)
+            elif shape_type == "Freehand":
+                shape = Freehand.from_dict(shape_dict)
+            elif shape_type == "FilledFreehand":
+                shape = FilledFreehand.from_dict(shape_dict)
+            elif shape_type == "Point":
+                shape = Point.from_dict(shape_dict)
+            elif shape_type == "LaserPointer":
+                # 跳过激光笔，因为它不应该被保存/恢复
+                continue
+            else:
+                continue # Skip unknown shape types
+            
+            shapes.append(shape)
+        return shapes
+
     def clear_canvas(self):
+        """清空画布 - 支持撤销/重做"""
+        # 先保存当前状态到撤销栈
+        self.save_state_to_undo_stack()
+        
+        # 清空画布
         self.shapes.clear()
-        self.undo_stack.clear()
-        self.redo_stack.clear()
         self.update()
 
     def to_json_data(self):
@@ -176,35 +260,15 @@ class DrawingCanvas(QWidget):
 
     def from_json_data(self, json_data):
         """从JSON数据导入画布内容"""
-        self.clear_canvas() # Clear current canvas before loading
+        # 保存当前状态到撤销栈
+        self.save_state_to_undo_stack()
+        
+        # 清空当前画布
+        self.shapes.clear()
+        
         try:
             data = json.loads(json_data)
-            for shape_data in data:
-                # 创建shape_data的副本，避免修改原始数据
-                shape_dict = shape_data.copy()
-                shape_type = shape_dict.pop("type")
-                
-                if shape_type == "Line":
-                    shape = Line.from_dict(shape_dict)
-                elif shape_type == "Rectangle":
-                    shape = Rectangle.from_dict(shape_dict)
-                elif shape_type == "Circle":
-                    shape = Circle.from_dict(shape_dict)
-                elif shape_type == "Arrow":
-                    shape = Arrow.from_dict(shape_dict)
-                elif shape_type == "Freehand":
-                    shape = Freehand.from_dict(shape_dict)
-                elif shape_type == "FilledFreehand":
-                    shape = FilledFreehand.from_dict(shape_dict)
-                elif shape_type == "Point":
-                    shape = Point.from_dict(shape_dict)
-                elif shape_type == "LaserPointer":
-                    shape = LaserPointer.from_dict(shape_dict)
-                else:
-                    continue # Skip unknown shape types
-                
-                self.shapes.append(shape)
-                self.undo_stack.append(shape)
+            self.shapes = self._deserialize_shapes(data)
             self.update()
         except (json.JSONDecodeError, KeyError, ValueError) as e:
             print(f"导入数据时出错: {e}")
