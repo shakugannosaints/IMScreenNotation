@@ -32,6 +32,7 @@ def load_config():
             "text_color": QColor(255, 0, 0, 255),
             "text_background_color": None,
             "text_border_color": None,
+            "text_border_enabled": False,
             "text_border_width": 1,
             "text_padding": 5
         }
@@ -79,6 +80,7 @@ def load_config():
             "text_color": [255, 0, 0, 255],  # 红色
             "text_background_color": None,  # 透明背景
             "text_border_color": None,  # 无边框
+            "text_border_enabled": False,  # 边框默认关闭
             "text_border_width": 1,
             "text_padding": 5
         }
@@ -121,6 +123,7 @@ def load_config():
             "text_color": [255, 0, 0, 255],  # 红色
             "text_background_color": None,  # 透明背景
             "text_border_color": None,  # 无边框
+            "text_border_enabled": False,  # 边框默认关闭
             "text_border_width": 1,
             "text_padding": 5
         }

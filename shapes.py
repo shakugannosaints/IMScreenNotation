@@ -397,11 +397,30 @@ class Text(Shape):
         self.font_italic = font_italic
         
         # 文本颜色，如果未指定则使用基础颜色
-        self.text_color = text_color if text_color else self.base_color
+        if text_color:
+            if isinstance(text_color, list):
+                self.text_color = QColor(*text_color)
+            else:
+                self.text_color = QColor(text_color)
+        else:
+            self.text_color = self.base_color
         
         # 背景和边框样式
-        self.background_color = background_color  # None表示透明背景
-        self.border_color = border_color  # None表示无边框
+        if background_color:
+            if isinstance(background_color, list):
+                self.background_color = QColor(*background_color)
+            else:
+                self.background_color = QColor(background_color)
+        else:
+            self.background_color = None
+            
+        if border_color:
+            if isinstance(border_color, list):
+                self.border_color = QColor(*border_color)
+            else:
+                self.border_color = QColor(border_color)
+        else:
+            self.border_color = None
         self.border_width = border_width
         self.padding = padding
         
@@ -447,20 +466,29 @@ class Text(Shape):
         
         # 绘制背景
         if self.background_color:
-            bg_color = QColor(self.background_color)
+            if isinstance(self.background_color, list):
+                bg_color = QColor(*self.background_color)
+            else:
+                bg_color = QColor(self.background_color)
             bg_color.setAlphaF(self.opacity)
             painter.fillRect(self.text_rect, bg_color)
         
         # 绘制边框
         if self.border_color and self.border_width > 0:
-            border_color = QColor(self.border_color)
+            if isinstance(self.border_color, list):
+                border_color = QColor(*self.border_color)
+            else:
+                border_color = QColor(self.border_color)
             border_color.setAlphaF(self.opacity)
             border_pen = QPen(border_color, self.border_width)
             painter.setPen(border_pen)
             painter.drawRect(self.text_rect)
         
         # 绘制文本
-        text_color = QColor(self.text_color)
+        if isinstance(self.text_color, list):
+            text_color = QColor(*self.text_color)
+        else:
+            text_color = QColor(self.text_color)
         text_color.setAlphaF(self.opacity)
         painter.setPen(QPen(text_color))
         
@@ -503,15 +531,30 @@ class Text(Shape):
 
     def set_text_color(self, color):
         """设置文本颜色"""
-        self.text_color = QColor(color)
+        if isinstance(color, list):
+            self.text_color = QColor(*color)
+        else:
+            self.text_color = QColor(color)
 
     def set_background_color(self, color):
         """设置背景颜色"""
-        self.background_color = QColor(color) if color else None
+        if color:
+            if isinstance(color, list):
+                self.background_color = QColor(*color)
+            else:
+                self.background_color = QColor(color)
+        else:
+            self.background_color = None
         
     def set_border_color(self, color):
         """设置边框颜色"""
-        self.border_color = QColor(color) if color else None
+        if color:
+            if isinstance(color, list):
+                self.border_color = QColor(*color)
+            else:
+                self.border_color = QColor(color)
+        else:
+            self.border_color = None
 
     def set_border_width(self, width):
         """设置边框宽度"""
