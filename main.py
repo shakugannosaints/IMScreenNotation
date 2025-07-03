@@ -634,8 +634,6 @@ class AnnotationTool(QMainWindow):
             self.hotkey_manager.register_hotkey(hotkeys["toggle_canvas_visibility"], self.toggle_canvas_visibility)
         if hotkeys.get("toggle_toolbar_collapse"):
             self.hotkey_manager.register_hotkey(hotkeys["toggle_toolbar_collapse"], self.toggle_toolbar_collapse)
-        # 添加工具栏完全隐藏热键（固定为 F12，不保存到配置文件）
-        self.hotkey_manager.register_hotkey("f12", self.toggle_toolbar_complete_hide)
         # 添加可自定义的完全隐藏热键
         if hotkeys.get("toggle_complete_hide"):
             self.hotkey_manager.register_hotkey(hotkeys["toggle_complete_hide"], self.toggle_toolbar_complete_hide)

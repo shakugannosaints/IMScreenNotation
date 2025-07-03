@@ -52,7 +52,7 @@ class HotkeySettingsDialog(QDialog):
         special_group = QGroupBox("特殊功能")
         special_layout = QVBoxLayout(special_group)
         
-        toolbar_hide_label = QLabel("🔸 工具栏完全隐藏: F12 (固定快捷键) + 上面的可自定义快捷键")
+        toolbar_hide_label = QLabel("🔸 工具栏完全隐藏: 请自定义快捷键")
         toolbar_hide_label.setStyleSheet("""
             QLabel {
                 color: #0078d4;
@@ -65,7 +65,7 @@ class HotkeySettingsDialog(QDialog):
         """)
         special_layout.addWidget(toolbar_hide_label)
         
-        note_label = QLabel("注意: 工具栏完全隐藏后可以通过以下方式重新显示：\n1. F12 快捷键（固定，不可修改）\n2. 上面设置的可自定义快捷键\n3. 点击系统托盘图标")
+        note_label = QLabel("注意: 工具栏完全隐藏后可以通过以下方式重新显示：1.上面设置的可自定义快捷键\n2. 点击系统托盘图标")
         note_label.setStyleSheet("""
             QLabel {
                 color: #666;
