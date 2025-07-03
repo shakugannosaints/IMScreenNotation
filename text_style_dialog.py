@@ -18,7 +18,7 @@ class TextStyleDialog(QDialog):
         self.canvas = canvas
         self.setWindowTitle("文本样式设置")
         self.setModal(True)
-        self.setFixedSize(450, 620)  # 增加对话框尺寸
+        self.setFixedSize(450, 720)  # 增加对话框高度
         
         # 设置窗口标志以确保在最前面，同时避免与QComboBox的下拉菜单冲突
         self.setWindowFlags(Qt.Dialog | Qt.WindowStaysOnTopHint | Qt.WindowCloseButtonHint)
@@ -40,9 +40,10 @@ class TextStyleDialog(QDialog):
         
         # 字体设置组
         font_group = QGroupBox("🔤 字体设置")
+        font_group.setMinimumHeight(160)  # 设置最小高度
         font_layout = QFormLayout(font_group)
         font_layout.setSpacing(12)  # 增加间距
-        font_layout.setContentsMargins(15, 20, 15, 15)  # 增加边距
+        font_layout.setContentsMargins(15, 25, 15, 15)  # 增加顶部边距
         
         # 字体族
         self.font_family_combo = QComboBox()
@@ -80,9 +81,10 @@ class TextStyleDialog(QDialog):
         
         # 颜色设置组
         color_group = QGroupBox("🎨 颜色设置")
+        color_group.setMinimumHeight(120)  # 设置最小高度
         color_layout = QFormLayout(color_group)
         color_layout.setSpacing(12)  # 增加间距
-        color_layout.setContentsMargins(15, 20, 15, 15)  # 增加边距
+        color_layout.setContentsMargins(15, 25, 15, 15)  # 增加顶部边距
         
         # 文本颜色
         self.text_color_btn = QPushButton("选择文本颜色")
@@ -107,9 +109,10 @@ class TextStyleDialog(QDialog):
         
         # 边框设置组
         border_group = QGroupBox("🔲 边框设置")
+        border_group.setMinimumHeight(150)  # 设置最小高度
         border_layout = QFormLayout(border_group)
         border_layout.setSpacing(12)  # 增加间距
-        border_layout.setContentsMargins(15, 20, 15, 15)  # 增加边距
+        border_layout.setContentsMargins(15, 25, 15, 15)  # 增加顶部边距
         
         # 边框开关
         self.border_enable_check = QCheckBox("启用边框")
@@ -134,9 +137,10 @@ class TextStyleDialog(QDialog):
         
         # 其他设置组
         other_group = QGroupBox("⚙️ 其他设置")
+        other_group.setMinimumHeight(80)  # 设置最小高度
         other_layout = QFormLayout(other_group)
         other_layout.setSpacing(12)  # 增加间距
-        other_layout.setContentsMargins(15, 20, 15, 15)  # 增加边距
+        other_layout.setContentsMargins(15, 25, 15, 15)  # 增加顶部边距
         
         # 内边距
         self.padding_spin = QSpinBox()
