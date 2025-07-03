@@ -1,4 +1,4 @@
-from PyQt5.QtGui import QColor, QPen, QPainterPath
+from PyQt5.QtGui import QColor, QPen, QPainterPath, QPolygonF
 from PyQt5.QtCore import QPointF, QRectF, QDateTime
 import math
 
@@ -137,10 +137,6 @@ class Arrow(Shape):
         self.end_point = end_point
 
     def draw(self, painter):
-        painter.setPen(self.pen)
-        painter.drawLine(self.start_point, self.end_point)
-        
-        # Draw arrowhead
         # Calculate angle of the line from start to end
         dx = self.end_point.x() - self.start_point.x()
         dy = self.end_point.y() - self.start_point.y()
@@ -149,31 +145,70 @@ class Arrow(Shape):
         if abs(dx) < 0.1 and abs(dy) < 0.1:
             return
         
-        # Calculate angle in radians first, then convert to degrees
+        # Calculate angle in radians
         angle_rad = math.atan2(dy, dx)
-        angle_deg = math.degrees(angle_rad)
-
-        arrow_size = 15
+        
+        # Arrow parameters
+        arrow_size = max(15, self.thickness * 2)  # 根据线条粗细调整箭头大小
         arrow_angle = 30
-
-        # Calculate the two arrow wing endpoints
-        # First wing - rotate backwards by (180 - arrow_angle) degrees
+        
+        # Calculate the shortened end point for the main line
+        # This prevents the main line from overlapping with the arrowhead
+        shortened_end = QPointF(
+            self.end_point.x() - arrow_size * 0.7 * math.cos(angle_rad),
+            self.end_point.y() - arrow_size * 0.7 * math.sin(angle_rad)
+        )
+        
+        # Calculate the arrowhead triangle points
         wing1_angle = angle_rad + math.radians(180 - arrow_angle)
         wing1_end = QPointF(
             self.end_point.x() + arrow_size * math.cos(wing1_angle),
             self.end_point.y() + arrow_size * math.sin(wing1_angle)
         )
-
-        # Second wing - rotate backwards by (180 + arrow_angle) degrees  
+        
         wing2_angle = angle_rad + math.radians(180 + arrow_angle)
         wing2_end = QPointF(
             self.end_point.x() + arrow_size * math.cos(wing2_angle),
             self.end_point.y() + arrow_size * math.sin(wing2_angle)
         )
-
-        # Draw the arrow wings
-        painter.drawLine(self.end_point, wing1_end)
-        painter.drawLine(self.end_point, wing2_end)
+        
+        # Save current brush and pen state
+        old_brush = painter.brush()
+        old_pen = painter.pen()
+        
+        # Calculate the exact point where the line should end
+        # We need to find where the arrow base intersects with the line
+        # The arrow base is the line connecting wing1_end and wing2_end
+        
+        # Calculate the midpoint of the arrow base
+        arrow_base_mid = QPointF(
+            (wing1_end.x() + wing2_end.x()) / 2,
+            (wing1_end.y() + wing2_end.y()) / 2
+        )
+        
+        # The line should end at this base midpoint, accounting for line thickness
+        # Move back slightly more to ensure no overlap even with thick lines
+        line_end = QPointF(
+            arrow_base_mid.x() - (self.thickness / 2 + 2) * math.cos(angle_rad),
+            arrow_base_mid.y() - (self.thickness / 2 + 2) * math.sin(angle_rad)
+        )
+        
+        # Draw the main line
+        painter.setPen(self.pen)
+        painter.drawLine(self.start_point, line_end)
+        
+        # Draw the arrowhead with thin outline for sharpness
+        arrowhead = QPolygonF([self.end_point, wing1_end, wing2_end])
+        
+        # Use a thin pen for sharp edges
+        arrow_pen = QPen(self.color, max(1, int(self.thickness * 0.2)))  # Even thinner for very sharp edges
+        painter.setPen(arrow_pen)
+        painter.setBrush(self.color)
+        painter.drawPolygon(arrowhead)
+        
+        # Restore original brush and pen state
+        painter.setBrush(old_brush)
+        painter.setPen(old_pen)
 
     def to_dict(self):
         data = super().to_dict()

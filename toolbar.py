@@ -264,7 +264,7 @@ class AnnotationToolbar(QWidget):
         draw_opacity_layout.setContentsMargins(0, 0, 0, 0)
         draw_opacity_layout.setSpacing(2)
         
-        self.drawing_opacity_label = QLabel(f"绘制透明度: {int(self.canvas.current_opacity * 100)}%")
+        self.drawing_opacity_label = QLabel(f"绘制不透明度: {int(self.canvas.current_opacity * 100)}%")
         self.drawing_opacity_label.setMinimumHeight(16)
         self.drawing_opacity_slider = QSlider(Qt.Horizontal)
         self.drawing_opacity_slider.setMinimum(0)
@@ -282,7 +282,7 @@ class AnnotationToolbar(QWidget):
         canvas_opacity_layout.setContentsMargins(0, 0, 0, 0)
         canvas_opacity_layout.setSpacing(2)
         
-        self.canvas_opacity_label = QLabel(f"画布透明度: {int(self.canvas.canvas_opacity * 100)}%")
+        self.canvas_opacity_label = QLabel(f"画布不透明度: {int(self.canvas.canvas_opacity * 100)}%")
         self.canvas_opacity_label.setMinimumHeight(16)
         self.canvas_opacity_slider = QSlider(Qt.Horizontal)
         self.canvas_opacity_slider.setMinimum(0)
@@ -963,7 +963,7 @@ class AnnotationToolbar(QWidget):
         """改变绘制不透明度"""
         opacity: float = value / 100.0
         self.canvas.set_current_opacity(opacity)
-        self.drawing_opacity_label.setText(f"绘制透明度: {value}%")
+        self.drawing_opacity_label.setText(f"绘制不透明度: {value}%")
 
     def change_canvas_opacity(self, value: int) -> None:
         """改变画布不透明度"""
@@ -976,7 +976,7 @@ class AnnotationToolbar(QWidget):
         else:
             self.main_window.user_non_passthrough_opacity = opacity
         
-        self.canvas_opacity_label.setText(f"画布透明度: {value}%")
+        self.canvas_opacity_label.setText(f"画布不透明度: {value}%")
 
     def update_canvas_opacity_ui(self) -> None:
         """更新GUI上的画布透明度显示，确保与实际画布透明度一致"""
@@ -989,7 +989,7 @@ class AnnotationToolbar(QWidget):
         self.canvas_opacity_slider.blockSignals(False)
         
         # 更新标签显示
-        self.canvas_opacity_label.setText(f"画布透明度: {percentage}%")
+        self.canvas_opacity_label.setText(f"画布不透明度: {percentage}%")
 
     def toggle_toolbar_collapse(self) -> None:
         """切换工具栏折叠/展开状态"""
