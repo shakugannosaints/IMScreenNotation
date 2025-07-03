@@ -1153,6 +1153,11 @@ class AnnotationToolbar(QWidget):
                 # 对话框已经在accept时应用了设置
                 print("Text style dialog accepted")
                 
+                # 确保配置被保存到文件
+                if hasattr(self.main_window, 'save_current_config'):
+                    self.main_window.save_current_config()
+                    print("Configuration saved after dialog accepted")
+                
         except Exception as e:
             print(f"Error opening text style dialog: {e}")
             import traceback

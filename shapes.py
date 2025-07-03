@@ -386,8 +386,8 @@ class LaserPointer(Shape):
 class Text(Shape):
     def __init__(self, position, text="", font_family="Arial", font_size=16, 
                  font_bold=False, font_italic=False, text_color=None,
-                 background_color=None, border_color=None, border_width=1,
-                 padding=5, **kwargs):
+                 background_color=None, border_color=None, border_enabled=True,
+                 border_width=1, padding=5, **kwargs):
         super().__init__(**kwargs)
         self.position = position
         self.text = text
@@ -421,6 +421,7 @@ class Text(Shape):
                 self.border_color = QColor(border_color)
         else:
             self.border_color = None
+        self.border_enabled = border_enabled
         self.border_width = border_width
         self.padding = padding
         
@@ -474,7 +475,7 @@ class Text(Shape):
             painter.fillRect(self.text_rect, bg_color)
         
         # 绘制边框
-        if self.border_color and self.border_width > 0:
+        if self.border_enabled and self.border_color and self.border_width > 0:
             if isinstance(self.border_color, list):
                 border_color = QColor(*self.border_color)
             else:
@@ -587,6 +588,7 @@ class Text(Shape):
             'text_color': self.text_color.getRgb() if self.text_color else None,
             'background_color': self.background_color.getRgb() if self.background_color else None,
             'border_color': self.border_color.getRgb() if self.border_color else None,
+            'border_enabled': self.border_enabled,
             'border_width': self.border_width,
             'padding': self.padding
         })
@@ -609,6 +611,7 @@ class Text(Shape):
             text_color=text_color,
             background_color=background_color,
             border_color=border_color,
+            border_enabled=data.get("border_enabled", True),  # 默认为True以保持向后兼容
             border_width=data["border_width"],
             padding=data["padding"],
             color=QColor(*data["color"]),

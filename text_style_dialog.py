@@ -198,15 +198,13 @@ class TextStyleDialog(QDialog):
         self.cancel_btn.setMinimumHeight(40)  # 增加按钮高度
         self.cancel_btn.setMinimumWidth(100)  # 增加按钮宽度
         self.cancel_btn.clicked.connect(self.close)
-        
         button_layout.addStretch()
         button_layout.addWidget(self.ok_btn)
         button_layout.addWidget(self.cancel_btn)
-        
+
         main_layout.addLayout(button_layout)
-        
-        # 初始化边框控件状态
-        self.toggle_border_enable()
+
+        # 注意：不在这里调用 toggle_border_enable，等到加载设置后再调用
         
     def load_current_settings(self):
         """加载当前画布的文本设置"""
@@ -238,20 +236,34 @@ class TextStyleDialog(QDialog):
             else:
                 self.bg_transparent_check.setChecked(True)
             
-            # 边框设置
+            # 边框设置 - 暂时断开信号连接以避免在加载设置时触发toggle方法
+            border_enabled = getattr(self.canvas, 'text_border_enabled', True)
+            
+            # 断开信号连接
+            self.border_enable_check.toggled.disconnect(self.toggle_border_enable)
+            self.border_enable_check.setChecked(border_enabled)
+            # 重新连接信号
+            self.border_enable_check.toggled.connect(self.toggle_border_enable)
+            
             border_color = getattr(self.canvas, 'text_border_color', None)
             if border_color:
-                self.border_enable_check.setChecked(True)
                 self.update_color_button(self.border_color_btn, border_color)
             else:
-                self.border_enable_check.setChecked(False)
-                
+                # 如果没有边框颜色但启用了边框，使用默认黑色
+                if border_enabled:
+                    default_border_color = QColor(0, 0, 0)
+                    setattr(self.canvas, 'text_border_color', default_border_color)
+                    self.update_color_button(self.border_color_btn, default_border_color)
+                    
             border_width = getattr(self.canvas, 'text_border_width', 1)
             self.border_width_spin.setValue(border_width)
             
             # 其他设置
             padding = getattr(self.canvas, 'text_padding', 5)
             self.padding_spin.setValue(padding)
+            
+            # 在最后调用 toggle_border_enable 来正确设置UI状态（但不修改画布状态）
+            self.toggle_border_enable()
             
         except Exception as e:
             print(f"Error loading current settings: {e}")
@@ -264,6 +276,9 @@ class TextStyleDialog(QDialog):
             self.border_enable_check.setChecked(False)
             self.border_width_spin.setValue(1)
             self.padding_spin.setValue(5)
+            
+            # 在异常情况下也调用 toggle_border_enable
+            self.toggle_border_enable()
         
     def update_color_button(self, button, color):
         """更新颜色按钮的样式"""
@@ -384,6 +399,9 @@ class TextStyleDialog(QDialog):
         self.border_color_btn.setEnabled(enabled)
         self.border_width_spin.setEnabled(enabled)
         
+        # 立即更新canvas的边框启用状态
+        setattr(self.canvas, 'text_border_enabled', enabled)
+        
         if enabled:
             current_border_color = getattr(self.canvas, 'text_border_color', None)
             if not current_border_color:
@@ -405,6 +423,7 @@ class TextStyleDialog(QDialog):
             setattr(self.canvas, 'text_font_italic', self.font_italic_check.isChecked())
             
             # 边框设置
+            setattr(self.canvas, 'text_border_enabled', self.border_enable_check.isChecked())
             if self.border_enable_check.isChecked():
                 setattr(self.canvas, 'text_border_width', self.border_width_spin.value())
             else:
@@ -428,18 +447,42 @@ class TextStyleDialog(QDialog):
             
             self.apply_settings()
             
+            # 触发配置保存
+            self.trigger_config_save()
+            
             # 强制处理所有待处理的事件
             QCoreApplication.processEvents()
             
-            # 在打包环境中使用 close() 而不是 accept()
-            # 因为 accept() 可能导致事件循环问题
-            self.close()
+            # 使用 accept() 而不是 close()，这样对话框会返回 Accepted 状态
+            self.accept()
             
         except Exception as e:
             print(f"Error accepting settings: {e}")
             import traceback
             traceback.print_exc()
             self.close()
+    
+    def trigger_config_save(self):
+        """触发配置保存"""
+        try:
+            # 查找主窗口并触发配置保存
+            if self.parent_widget:
+                # 如果父窗口有save_current_config方法，直接调用
+                if hasattr(self.parent_widget, 'save_current_config'):
+                    self.parent_widget.save_current_config()
+                    print("Configuration saved via parent widget")
+                # 如果父窗口是toolbar，通过main_window保存
+                elif hasattr(self.parent_widget, 'main_window') and hasattr(self.parent_widget.main_window, 'save_current_config'):
+                    self.parent_widget.main_window.save_current_config()
+                    print("Configuration saved via main window")
+                else:
+                    print("Warning: Unable to find save_current_config method")
+            else:
+                print("Warning: No parent widget found for config save")
+        except Exception as e:
+            print(f"Error triggering config save: {e}")
+            import traceback
+            traceback.print_exc()
         
     def get_parent_theme(self):
         """获取父窗口的主题状态"""
@@ -818,6 +861,11 @@ class TextStyleDialog(QDialog):
         """重写关闭事件"""
         try:
             from PyQt5.QtCore import QCoreApplication
+            
+            # 在关闭前应用设置并保存配置
+            self.apply_settings()
+            self.trigger_config_save()
+            
             # 确保所有事件都被处理
             QCoreApplication.processEvents()
             super().closeEvent(event)

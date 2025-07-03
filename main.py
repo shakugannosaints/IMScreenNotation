@@ -110,6 +110,7 @@ class AnnotationTool(QMainWindow):
         self.canvas.set_text_color(self.config["text_color"])
         self.canvas.set_text_background_color(self.config["text_background_color"])
         self.canvas.set_text_border_color(self.config["text_border_color"])
+        self.canvas.text_border_enabled = self.config["text_border_enabled"]
         self.canvas.set_text_border_width(self.config["text_border_width"])
         self.canvas.set_text_padding(self.config["text_padding"])
         
@@ -421,6 +422,7 @@ class AnnotationTool(QMainWindow):
         self.config["text_color"] = self.canvas.text_color
         self.config["text_background_color"] = self.canvas.text_background_color
         self.config["text_border_color"] = self.canvas.text_border_color
+        self.config["text_border_enabled"] = self.canvas.text_border_enabled
         self.config["text_border_width"] = self.canvas.text_border_width
         self.config["text_padding"] = self.canvas.text_padding
         

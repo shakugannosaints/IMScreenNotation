@@ -35,6 +35,7 @@ class DrawingCanvas(QWidget):
         self.text_color = QColor(255, 0, 0, 255)  # 默认红色
         self.text_background_color = None  # 默认透明背景
         self.text_border_color = None  # 默认无边框
+        self.text_border_enabled = True  # 默认启用边框
         self.text_border_width = 1
         self.text_padding = 5
 
@@ -320,6 +321,7 @@ class DrawingCanvas(QWidget):
                     text_color=self.text_color,
                     background_color=self.text_background_color,
                     border_color=self.text_border_color,
+                    border_enabled=self.text_border_enabled,
                     border_width=self.text_border_width,
                     padding=self.text_padding,
                     color=self.current_color,
