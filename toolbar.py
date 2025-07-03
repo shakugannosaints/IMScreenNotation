@@ -6,8 +6,9 @@
 from typing import Dict, Any, Optional, Callable
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
                              QColorDialog, QSlider, QLabel, QFrame, QGraphicsDropShadowEffect)
-from PyQt5.QtGui import QColor, QFont
+from PyQt5.QtGui import QColor, QFont, QMouseEvent
 from PyQt5.QtCore import Qt, QPoint, QEvent
+from PyQt5 import QtCore
 
 
 class AnnotationToolbar(QWidget):
@@ -19,7 +20,7 @@ class AnnotationToolbar(QWidget):
         self.canvas = canvas
         
         # 拖动相关属性
-        self.drag_position: Optional[QPoint] = None
+        self.drag_position: QPoint = QPoint(0, 0)
         self.dragging: bool = False
         
         # 工具按钮组
@@ -1017,20 +1018,23 @@ class AnnotationToolbar(QWidget):
         """事件过滤器，用于处理工具栏的拖动"""
         # 处理工具栏拖动
         if obj == self.title_container:
-            if event.type() == event.MouseButtonPress:
-                if event.button() == Qt.LeftButton:
+            if event.type() == QEvent.MouseButtonPress:
+                mouse_event = event
+                if isinstance(mouse_event, QMouseEvent) and mouse_event.button() == Qt.LeftButton:
                     # 记录鼠标按下位置和拖动状态
-                    self.drag_position = event.globalPos() - self.pos()
+                    self.drag_position = mouse_event.globalPos() - self.pos()
                     self.dragging = True
                     return True
-            elif event.type() == event.MouseMove:
-                if self.dragging and event.buttons() & Qt.LeftButton:
+            elif event.type() == QEvent.MouseMove:
+                mouse_event = event
+                if isinstance(mouse_event, QMouseEvent) and self.dragging and (mouse_event.buttons() & Qt.LeftButton) != 0:
                     # 计算新位置并移动工具栏
-                    new_pos: QPoint = event.globalPos() - self.drag_position
+                    new_pos: QPoint = mouse_event.globalPos() - self.drag_position
                     self.move(new_pos)
                     return True
-            elif event.type() == event.MouseButtonRelease:
-                if event.button() == Qt.LeftButton:
+            elif event.type() == QEvent.MouseButtonRelease:
+                mouse_event = event
+                if isinstance(mouse_event, QMouseEvent) and mouse_event.button() == Qt.LeftButton:
                     # 释放拖动状态
                     self.dragging = False
                     return True

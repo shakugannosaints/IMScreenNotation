@@ -2,7 +2,10 @@ import sys
 import json
 import os
 from typing import Dict, Any, Optional, Callable
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QColorDialog, QSlider, QLabel, QFileDialog, QStatusBar, QMenuBar, QAction, QSystemTrayIcon, QMenu
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
+                             QHBoxLayout, QPushButton, QColorDialog, QSlider, 
+                             QLabel, QFileDialog, QStatusBar, QMenuBar, QAction, 
+                             QSystemTrayIcon, QMenu, QStyle)
 from PyQt5.QtGui import QColor, QIcon, QCloseEvent, QPixmap, QPainter
 from PyQt5.QtCore import Qt, QTimer, QPoint, QEvent
 from gui import DrawingCanvas
@@ -29,7 +32,7 @@ def create_default_icon() -> QIcon:
     """创建一个默认的托盘图标"""
     # 创建一个16x16的像素图
     pixmap = QPixmap(16, 16)
-    pixmap.fill(Qt.transparent)
+    pixmap.fill(QColor(0, 0, 0, 0))  # 使用完全透明的QColor替代Qt.transparent
     
     # 在像素图上绘制一个简单的图标
     painter = QPainter(pixmap)
@@ -55,6 +58,10 @@ class AnnotationTool(QMainWindow):
         self.setWindowTitle("屏幕标注工具")
         self.setGeometry(100, 100, 1000, 800)
 
+        #类型注解
+        self._status_bar: QStatusBar = self.statusBar()
+        
+        # 设置状态栏
         self.central_widget: QWidget = QWidget()
         self.setCentralWidget(self.central_widget)
         self.main_layout: QVBoxLayout = QVBoxLayout(self.central_widget)
@@ -165,7 +172,7 @@ class AnnotationTool(QMainWindow):
                 "laser_pointer": "激光笔"
             }
             tool_name = tool_names.get(tool, tool)
-            self.statusBar().showMessage(f"已切换到{tool_name}工具", 2000)
+            self._status_bar.showMessage(f"已切换到{tool_name}工具", 2000)
             print(f"工具已切换到: {tool}")
             
             # 强制更新画布
@@ -187,7 +194,7 @@ class AnnotationTool(QMainWindow):
         current_flags = self.windowFlags()
         if self.passthrough_state:
             # Currently in pass-through mode, switch to non-pass-through
-            new_flags = current_flags & ~Qt.WindowTransparentForInput
+            new_flags = current_flags & ~Qt.WindowTransparentForInput  # type: ignore
             self.setWindowFlags(new_flags)
             self.passthrough_state = False
             # 使用用户在非穿透模式下设置的透明度
@@ -197,10 +204,10 @@ class AnnotationTool(QMainWindow):
             self.toolbar.toggle_passthrough_btn.setChecked(False)
             self.toolbar.toggle_passthrough_btn.setText("🖱️ 穿透")
             self.toolbar.toggle_passthrough_btn.setProperty("class", "action")
-            self.statusBar().showMessage("鼠标非穿透模式", 2000)
+            self._status_bar.showMessage("鼠标非穿透模式", 2000)
         else:
             # Currently in non-pass-through mode, switch to pass-through
-            new_flags = current_flags | Qt.WindowTransparentForInput
+            new_flags = current_flags | Qt.WindowTransparentForInput  # type: ignore
             self.setWindowFlags(new_flags)
             self.passthrough_state = True
             # 使用用户在穿透模式下设置的透明度
@@ -210,13 +217,14 @@ class AnnotationTool(QMainWindow):
             self.toolbar.toggle_passthrough_btn.setChecked(True)
             self.toolbar.toggle_passthrough_btn.setText("🖱️ 非穿透")
             self.toolbar.toggle_passthrough_btn.setProperty("class", "action active")
-            self.statusBar().showMessage("鼠标穿透模式", 2000)
+            self._status_bar.showMessage("鼠标穿透模式", 2000)
         
         # 更新GUI滑动条以同步画布透明度
         self.update_canvas_opacity_ui()
         
         # 刷新按钮样式
-        self.toolbar.toggle_passthrough_btn.style().polish(self.toolbar.toggle_passthrough_btn)
+        if self.toolbar.toggle_passthrough_btn.style():  # type: ignore
+            self.toolbar.toggle_passthrough_btn.style().polish(self.toolbar.toggle_passthrough_btn)  # type: ignore
         
         # 必须重新显示窗口以应用新的标志
         self.show()
@@ -232,28 +240,30 @@ class AnnotationTool(QMainWindow):
             self.toolbar.toggle_visibility_btn.setText("👁️ 显示")
             self.toolbar.toggle_visibility_btn.setChecked(True)
             self.toolbar.toggle_visibility_btn.setProperty("class", "action active")
-            self.statusBar().showMessage("画布已隐藏", 2000)
+            self._status_bar.showMessage("画布已隐藏", 2000)
         else:
             self.canvas.show()
             self.toolbar.toggle_visibility_btn.setText("👁️ 隐藏")
             self.toolbar.toggle_visibility_btn.setChecked(False)
             self.toolbar.toggle_visibility_btn.setProperty("class", "action")
-            self.statusBar().showMessage("画布已显示", 2000)
+            self._status_bar.showMessage("画布已显示", 2000)
         
         # 刷新按钮样式
-        self.toolbar.toggle_visibility_btn.style().polish(self.toolbar.toggle_visibility_btn)
+        if self.toolbar.toggle_visibility_btn.style():  # type: ignore
+            self.toolbar.toggle_visibility_btn.style().polish(self.toolbar.toggle_visibility_btn)  # type: ignore
 
     def toggle_single_draw_mode(self, checked: bool) -> None:
         self.canvas.single_draw_mode = checked
         if checked:
             self.toolbar.single_draw_mode_btn.setProperty("class", "action active")
-            self.statusBar().showMessage("已开启单次绘制模式", 2000)
+            self._status_bar.showMessage("已开启单次绘制模式", 2000)
         else:
             self.toolbar.single_draw_mode_btn.setProperty("class", "action")
-            self.statusBar().showMessage("已关闭单次绘制模式", 2000)
+            self._status_bar.showMessage("已关闭单次绘制模式", 2000)
         
         # 刷新按钮样式
-        self.toolbar.single_draw_mode_btn.style().polish(self.toolbar.single_draw_mode_btn)
+        if self.toolbar.single_draw_mode_btn.style():  # type: ignore
+            self.toolbar.single_draw_mode_btn.style().polish(self.toolbar.single_draw_mode_btn)  # type: ignore
 
     def import_canvas_content(self) -> None:
         file_name, _ = QFileDialog.getOpenFileName(self, "导入标注", "", "JSON Files (*.json)")
@@ -262,9 +272,9 @@ class AnnotationTool(QMainWindow):
                 with open(file_name, "r") as f:
                     json_data: str = f.read()
                 self.canvas.from_json_data(json_data)
-                self.statusBar().showMessage("标注导入成功", 2000)
+                self._status_bar.showMessage("标注导入成功", 2000)
             except Exception as e:
-                self.statusBar().showMessage(f"导入失败: {e}", 2000)
+                self._status_bar.showMessage(f"导入失败: {e}", 2000)
 
     def export_canvas_content(self) -> None:
         file_name, _ = QFileDialog.getSaveFileName(self, "导出标注", "", "JSON Files (*.json)")
@@ -273,17 +283,23 @@ class AnnotationTool(QMainWindow):
                 json_data: str = self.canvas.to_json_data()
                 with open(file_name, "w") as f:
                     f.write(json_data)
-                self.statusBar().showMessage("标注导出成功", 2000)
+                self._status_bar.showMessage("标注导出成功", 2000)
             except Exception as e:
-                self.statusBar().showMessage(f"导出失败: {e}", 2000)
+                self._status_bar.showMessage(f"导出失败: {e}", 2000)
 
     def setup_window_properties(self) -> None:
         # 获取屏幕尺寸
-        screen = QApplication.primaryScreen().geometry()
+        screen = QApplication.primaryScreen()
+        if screen:  # type: ignore
+            screen_geometry = screen.geometry()  # type: ignore
+        else:
+            # 如果无法获取主屏幕，使用默认值
+            from PyQt5.QtCore import QRect
+            screen_geometry = QRect(0, 0, 1920, 1080)
         
         # 设置窗口覆盖整个屏幕，去除所有边距
-        self.setGeometry(screen)
-        self.setFixedSize(screen.size())  # 固定窗口大小为屏幕大小
+        self.setGeometry(screen_geometry)
+        self.setFixedSize(screen_geometry.size())  # 固定窗口大小为屏幕大小
         
         # 确保画布也覆盖整个窗口
         self.main_layout.setContentsMargins(0, 0, 0, 0)  # 去除布局边距
@@ -291,8 +307,8 @@ class AnnotationTool(QMainWindow):
         
         # 设置窗口属性使其成为透明覆盖层
         # 移除 Qt.Tool 标志，以确保工具栏可以显示在主窗口之上
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
-        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)  # type: ignore
+        self.setAttribute(Qt.WA_TranslucentBackground)  # type: ignore
 
         # 默认透明度设置
         self.passthrough_opacity = self.config["passthrough_opacity"]
@@ -306,7 +322,7 @@ class AnnotationTool(QMainWindow):
 
         # 设置初始透明度 - 使用配置文件中的透明度，而不是重新设置
         if self.passthrough_state:
-            self.setWindowFlags(self.windowFlags() | Qt.WindowTransparentForInput)
+            self.setWindowFlags(self.windowFlags() | Qt.WindowTransparentForInput)  # type: ignore
             # 如果是穿透模式，使用穿透透明度
             if self.canvas.canvas_opacity != self.user_passthrough_opacity:
                 self.canvas.set_canvas_opacity(self.user_passthrough_opacity)
@@ -328,13 +344,15 @@ class AnnotationTool(QMainWindow):
         self.update_canvas_opacity_ui()
             
         # 添加状态栏
-        self.statusBar()
+        self._status_bar
 
     def setup_menubar(self) -> None:
         """设置菜单栏 - 在无边框模式下隐藏菜单栏"""
         # 隐藏菜单栏以确保真正的无边框体验
-        self.menuBar().setVisible(False)
-        self.menuBar().setMaximumHeight(0)
+        menu_bar = self.menuBar()
+        if menu_bar:  # type: ignore
+            menu_bar.setVisible(False)  # type: ignore
+            menu_bar.setMaximumHeight(0)  # type: ignore
 
     def open_hotkey_settings(self) -> None:
         """打开热键设置对话框"""
@@ -352,7 +370,7 @@ class AnnotationTool(QMainWindow):
         self.config["passthrough_opacity"] = self.user_passthrough_opacity
         self.config["non_passthrough_opacity"] = self.user_non_passthrough_opacity
         save_config(self.config)
-        self.statusBar().showMessage("配置已保存", 2000)
+        self._status_bar.showMessage("配置已保存", 2000)
         
     def toggle_toolbar_collapse(self) -> None:
         """切换工具栏折叠/展开状态"""
@@ -413,12 +431,20 @@ class AnnotationTool(QMainWindow):
                 print("使用自定义默认图标")
             except Exception as e2:
                 print(f"创建默认图标失败: {e2}，使用系统图标")
-                icon = self.style().standardIcon(self.style().SP_ComputerIcon)
+                style = self.style()
+                if style:  # type: ignore
+                    icon = style.standardIcon(QStyle.SP_ComputerIcon)  # type: ignore
+                else:
+                    icon = create_default_icon()
         
         # 最后检查，确保有可用的图标
         if icon is None or icon.isNull():
             print("使用系统默认图标作为最后备选")
-            icon = self.style().standardIcon(self.style().SP_ComputerIcon)
+            style = self.style()
+            if style:  # type: ignore
+                icon = style.standardIcon(QStyle.SP_ComputerIcon)  # type: ignore
+            else:
+                icon = create_default_icon()
             
         self.tray_icon.setIcon(icon)
         print(f"托盘图标设置完成，图标有效性: {not icon.isNull()}")
@@ -469,14 +495,14 @@ class AnnotationTool(QMainWindow):
             self.tray_icon.hide()
             self.tray_icon_visible = False
         
-        self.statusBar().showMessage("窗口已从托盘恢复", 2000)
+        self._status_bar.showMessage("窗口已从托盘恢复", 2000)
         print("窗口已从托盘恢复")
 
     def tray_icon_activated(self, reason: QSystemTrayIcon.ActivationReason) -> None:
         """托盘图标被点击"""
-        if reason == QSystemTrayIcon.Trigger:  # 左键单击
+        if reason == QSystemTrayIcon.Trigger:  # type: ignore  # 左键单击
             self.show_from_tray()
-        elif reason == QSystemTrayIcon.DoubleClick:  # 双击
+        elif reason == QSystemTrayIcon.DoubleClick:  # type: ignore  # 双击
             self.show_from_tray()
 
     def toggle_toolbar_complete_hide(self) -> None:
@@ -503,7 +529,7 @@ class AnnotationTool(QMainWindow):
                 self.tray_icon.showMessage(
                     "屏幕标注工具",
                     "程序已最小化到系统托盘\n点击托盘图标恢复窗口",
-                    QSystemTrayIcon.Information,
+                    QSystemTrayIcon.Information,  # type: ignore
                     3000
                 )
             
@@ -593,7 +619,7 @@ class AnnotationTool(QMainWindow):
     def test_hotkey_function(self) -> None:
         """测试热键功能"""
         print("测试热键被触发!")
-        self.statusBar().showMessage("热键测试成功！", 3000)
+        self._status_bar.showMessage("热键测试成功！", 3000)
         
     def add_tool_hotkey(self, hotkey_str: str, tool_name: str) -> None:
         """添加工具切换热键"""
