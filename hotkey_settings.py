@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
                              QLineEdit, QPushButton, QScrollArea, QWidget,
-                             QMessageBox, QGroupBox, QGridLayout)
+                             QMessageBox, QGroupBox, QGridLayout, QSpinBox)
 from PyQt5.QtCore import Qt
 from config import save_config
 
@@ -10,13 +10,15 @@ class HotkeySettingsDialog(QDialog):
         self.main_window = main_window
         self.config = config
         self.hotkey_inputs = {}
+        self.font_size_spinbox = None
         
-        self.setWindowTitle("热键设置")
+        self.setWindowTitle("设置")
         self.setModal(True)
-        self.setMinimumSize(500, 600)
+        self.setMinimumSize(500, 700)
         
         self.setup_ui()
         self.load_current_hotkeys()
+        self.load_current_settings()
     
     def setup_ui(self):
         layout = QVBoxLayout(self)
@@ -121,6 +123,22 @@ class HotkeySettingsDialog(QDialog):
         
         scroll_layout.addWidget(tool_group)
         
+        # 界面设置组
+        ui_group = QGroupBox("界面设置")
+        ui_layout = QGridLayout(ui_group)
+        
+        # 字体大小设置
+        ui_layout.addWidget(QLabel("工具栏字体大小:"), 0, 0)
+        self.font_size_spinbox = QSpinBox()
+        self.font_size_spinbox.setMinimum(8)
+        self.font_size_spinbox.setMaximum(24)
+        self.font_size_spinbox.setValue(11)
+        self.font_size_spinbox.setSuffix(" px")
+        self.font_size_spinbox.setToolTip("设置工具栏按钮和文字的字体大小")
+        ui_layout.addWidget(self.font_size_spinbox, 0, 1)
+        
+        scroll_layout.addWidget(ui_group)
+        
         # 说明
         info_label = QLabel("热键格式说明:\n"
                            "- 修饰键: <ctrl>, <alt>, <shift>\n"
@@ -157,6 +175,11 @@ class HotkeySettingsDialog(QDialog):
         hotkeys = self.config.get("hotkeys", {})
         for key, input_field in self.hotkey_inputs.items():
             input_field.setText(hotkeys.get(key, ""))
+    
+    def load_current_settings(self):
+        """加载当前的界面设置"""
+        if self.font_size_spinbox:
+            self.font_size_spinbox.setValue(self.config.get("toolbar_font_size", 11))
     def reset_to_defaults(self):
         """重置为默认热键""" 
         default_hotkeys = {
@@ -227,7 +250,16 @@ class HotkeySettingsDialog(QDialog):
         
         # 保存配置
         self.config["hotkeys"] = new_hotkeys
+        
+        # 保存界面设置
+        if self.font_size_spinbox:
+            self.config["toolbar_font_size"] = self.font_size_spinbox.value()
+        
         save_config(self.config)
+        
+        # 应用字体大小设置到工具栏
+        if hasattr(self.main_window, 'toolbar') and self.main_window.toolbar:
+            self.main_window.toolbar.update_font_size(self.config["toolbar_font_size"])
         
         # 重新注册热键
         if hasattr(self.main_window, 'hotkey_manager') and self.main_window.hotkey_manager:
@@ -239,5 +271,5 @@ class HotkeySettingsDialog(QDialog):
         if hasattr(self.main_window, 'hotkey_manager') and self.main_window.hotkey_manager:
             self.main_window.hotkey_manager.start_listening()
         
-        QMessageBox.information(self, "设置已保存", "热键设置已成功保存并应用。")
+        QMessageBox.information(self, "设置已保存", "热键设置和界面设置已成功保存并应用。")
         self.accept()

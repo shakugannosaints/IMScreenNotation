@@ -369,6 +369,9 @@ class AnnotationTool(QMainWindow):
         # 同时保存穿透模式的透明度设置 - 保存用户实际设置的值
         self.config["passthrough_opacity"] = self.user_passthrough_opacity
         self.config["non_passthrough_opacity"] = self.user_non_passthrough_opacity
+        # 保存字体大小设置
+        if hasattr(self, 'toolbar') and self.toolbar:
+            self.config["toolbar_font_size"] = self.toolbar.font_size
         save_config(self.config)
         self._status_bar.showMessage("配置已保存", 2000)
         

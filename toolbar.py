@@ -58,10 +58,17 @@ class AnnotationToolbar(QWidget):
         # 主题状态
         self.is_dark_theme = True
         
+        # 字体大小
+        self.font_size = 11
+        
         self.setup_toolbar()
         
     def setup_toolbar(self) -> None:
         """设置工具栏界面"""
+        # 从主窗口配置中获取字体大小
+        if hasattr(self.main_window, 'config') and 'toolbar_font_size' in self.main_window.config:
+            self.font_size = self.main_window.config['toolbar_font_size']
+        
         self.setWindowTitle("标注工具")
         # 确保工具栏始终在最顶层
         self.setWindowFlags(Qt.Tool | Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
@@ -416,467 +423,467 @@ class AnnotationToolbar(QWidget):
     
     def get_dark_theme_stylesheet(self) -> str:
         """获取黑夜模式样式表"""
-        return """
+        return f"""
             /* 主容器样式 */
-            QWidget {
+            QWidget {{
                 background-color: #1a1a1a;
                 color: #ffffff;
                 font-family: "Microsoft YaHei UI", "Segoe UI", Arial, sans-serif;
-                font-size: 11px;
+                font-size: {self.font_size}px;
                 border: none;
-            }
+            }}
             
             /* 卡片容器样式 */
-            QFrame.card {
+            QFrame.card {{
                 background-color: #2a2a2a;
                 border: 1px solid #3a3a3a;
                 border-radius: 8px;
                 padding: 6px;
                 margin: 2px;
-            }
+            }}
             
             /* 标题区域样式 */
-            QWidget#titleContainer {
+            QWidget#titleContainer {{
                 background-color: #0078d4;
                 border-radius: 8px 8px 0px 0px;
                 padding: 8px;
-            }
+            }}
             
             /* 标题标签样式 */
-            QLabel#titleLabel {
+            QLabel#titleLabel {{
                 color: #ffffff;
-                font-size: 12px;
+                font-size: {self.font_size + 1}px;
                 font-weight: bold;
                 background: transparent;
                 border: none;
                 padding: 0px;
-            }
+            }}
             
             /* 工具按钮样式 */
-            QPushButton.tool {
+            QPushButton.tool {{
                 background-color: #3a3a3a;
                 border: 1px solid #4a4a4a;
                 border-radius: 6px;
                 color: #ffffff;
                 padding: 6px 8px;
-                font-size: 9px;
+                font-size: {max(self.font_size - 2, 8)}px;
                 font-weight: 500;
                 min-height: 26px;
                 min-width: 65px;
                 max-width: 80px;
-            }
-            QPushButton.tool:hover {
+            }}
+            QPushButton.tool:hover {{
                 background-color: #4a4a4a;
                 border: 1px solid #0078d4;
                 color: #ffffff;
-            }
-            QPushButton.tool:pressed {
+            }}
+            QPushButton.tool:pressed {{
                 background-color: #2a2a2a;
                 border: 1px solid #0078d4;
-            }
-            QPushButton.tool:checked {
+            }}
+            QPushButton.tool:checked {{
                 background-color: #0078d4;
                 border: 1px solid #106ebe;
                 color: #ffffff;
                 font-weight: 600;
-            }
+            }}
             
             /* 操作按钮样式 */
-            QPushButton.action {
+            QPushButton.action {{
                 background-color: #2a2a2a;
                 border: 1px solid #3a3a3a;
                 border-radius: 6px;
                 color: #ffffff;
                 padding: 5px 8px;
-                font-size: 9px;
+                font-size: {max(self.font_size - 2, 8)}px;
                 min-height: 24px;
                 min-width: 60px;
                 max-width: 85px;
-            }
-            QPushButton.action:hover {
+            }}
+            QPushButton.action:hover {{
                 background-color: #3a3a3a;
                 border: 1px solid #0078d4;
-            }
-            QPushButton.action:pressed {
+            }}
+            QPushButton.action:pressed {{
                 background-color: #1a1a1a;
                 border: 1px solid #3a3a3a;
                 border-radius: 6px;
-            }
-            QPushButton.action:checked {
+            }}
+            QPushButton.action:checked {{
                 background-color: #0078d4;
                 border: 1px solid #106ebe;
                 border-radius: 6px;
                 color: #ffffff;
-            }
+            }}
             
             /* 激活状态按钮样式 */
-            QPushButton.action.active {
+            QPushButton.action.active {{
                 background-color: #0078d4;
                 border: 1px solid #106ebe;
                 color: #ffffff;
                 font-weight: 600;
-            }
-            QPushButton.action.active:hover {
+            }}
+            QPushButton.action.active:hover {{
                 background-color: #106ebe;
                 border: 1px solid #005a9e;
-            }
+            }}
             
             /* 特殊按钮样式 */
-            QPushButton.primary {
+            QPushButton.primary {{
                 background-color: #0078d4;
                 border: 1px solid #106ebe;
-            }
-            QPushButton.primary:hover {
+            }}
+            QPushButton.primary:hover {{
                 background-color: #106ebe;
-            }
+            }}
             
-            QPushButton.success {
+            QPushButton.success {{
                 background-color: #28a745;
                 border: 1px solid #1e7e34;
-            }
-            QPushButton.success:hover {
+            }}
+            QPushButton.success:hover {{
                 background-color: #1e7e34;
-            }
+            }}
             
-            QPushButton.warning {
+            QPushButton.warning {{
                 background-color: #fd7e14;
                 border: 1px solid #e8590c;
-            }
-            QPushButton.warning:hover {
+            }}
+            QPushButton.warning:hover {{
                 background-color: #e8590c;
-            }
+            }}
             
-            QPushButton.danger {
+            QPushButton.danger {{
                 background-color: #dc3545;
                 border: 1px solid #bd2130;
-            }
-            QPushButton.danger:hover {
+            }}
+            QPushButton.danger:hover {{
                 background-color: #bd2130;
-            }
+            }}
             
             /* 颜色按钮特殊样式 */
-            QPushButton#colorButton {
+            QPushButton#colorButton {{
                 border: 2px solid #4a4a4a;
                 border-radius: 6px;
                 min-height: 26px;
                 min-width: 100px;
                 max-width: 120px;
                 font-weight: bold;
-                font-size: 9px;
-            }
-            QPushButton#colorButton:hover {
+                font-size: {max(self.font_size - 2, 8)}px;
+            }}
+            QPushButton#colorButton:hover {{
                 border: 1px solid #0078d4;
-            }
+            }}
             
             /* 标签样式 */
-            QLabel {
+            QLabel {{
                 color: #ffffff;
-                font-size: 9px;
+                font-size: {max(self.font_size - 2, 8)}px;
                 font-weight: 500;
                 background: transparent;
                 border: none;
                 padding: 2px;
-            }
+            }}
             
-            QLabel.section-title {
+            QLabel.section-title {{
                 color: #0078d4;
-                font-size: 10px;
+                font-size: {max(self.font_size - 1, 9)}px;
                 font-weight: bold;
                 padding: 3px 2px;
                 border-bottom: 1px solid #3a3a3a;
                 margin-bottom: 4px;
-            }
+            }}
             
             /* 滑块样式 */
-            QSlider::groove:horizontal {
+            QSlider::groove:horizontal {{
                 border: 1px solid #3a3a3a;
                 height: 4px;
                 background: #2a2a2a;
                 border-radius: 2px;
-            }
-            QSlider::handle:horizontal {
+            }}
+            QSlider::handle:horizontal {{
                 background: #0078d4;
                 border: 1px solid #106ebe;
                 width: 14px;
                 height: 14px;
                 border-radius: 7px;
                 margin: -5px 0;
-            }
-            QSlider::handle:horizontal:hover {
+            }}
+            QSlider::handle:horizontal:hover {{
                 background: #106ebe;
-            }
-            QSlider::handle:horizontal:pressed {
+            }}
+            QSlider::handle:horizontal:pressed {{
                 background: #005a9e;
-            }
+            }}
             
             /* 折叠按钮样式 */
-            QPushButton#collapseButton {
+            QPushButton#collapseButton {{
                 background-color: #3a3a3a;
                 border: 1px solid #4a4a4a;
                 border-radius: 12px;
                 color: #ffffff;
-                font-size: 10px;
+                font-size: {max(self.font_size - 1, 9)}px;
                 min-width: 24px;
                 max-width: 24px;
                 min-height: 24px;
                 max-height: 24px;
-            }
-            QPushButton#collapseButton:hover {
+            }}
+            QPushButton#collapseButton:hover {{
                 background-color: #4a4a4a;
                 border: 1px solid #0078d4;
-            }
+            }}
             
             /* 主题切换按钮样式 */
-            QPushButton#themeToggleButton {
+            QPushButton#themeToggleButton {{
                 background-color: #3a3a3a;
                 border: 1px solid #4a4a4a;
                 border-radius: 12px;
                 color: #ffffff;
-                font-size: 10px;
+                font-size: {max(self.font_size - 1, 9)}px;
                 min-width: 24px;
                 max-width: 24px;
                 min-height: 24px;
                 max-height: 24px;
-            }
-            QPushButton#themeToggleButton:hover {
+            }}
+            QPushButton#themeToggleButton:hover {{
                 background-color: #4a4a4a;
                 border: 1px solid #0078d4;
-            }
+            }}
         """
     
     def get_light_theme_stylesheet(self) -> str:
         """获取白天模式样式表"""
-        return """
+        return f"""
             /* 主容器样式 */
-            QWidget {
+            QWidget {{
                 background-color: #ffffff;
                 color: #333333;
                 font-family: "Microsoft YaHei UI", "Segoe UI", Arial, sans-serif;
-                font-size: 11px;
+                font-size: {self.font_size}px;
                 border: none;
-            }
+            }}
             
             /* 卡片容器样式 */
-            QFrame.card {
+            QFrame.card {{
                 background-color: #f5f5f5;
                 border: 1px solid #d0d0d0;
                 border-radius: 8px;
                 padding: 6px;
                 margin: 2px;
-            }
+            }}
             
             /* 标题区域样式 */
-            QWidget#titleContainer {
+            QWidget#titleContainer {{
                 background-color: #0078d4;
                 border-radius: 8px 8px 0px 0px;
                 padding: 8px;
-            }
+            }}
             
             /* 标题标签样式 */
-            QLabel#titleLabel {
+            QLabel#titleLabel {{
                 color: #ffffff;
-                font-size: 12px;
+                font-size: {self.font_size + 1}px;
                 font-weight: bold;
                 background: transparent;
                 border: none;
                 padding: 0px;
-            }
+            }}
             
             /* 工具按钮样式 */
-            QPushButton.tool {
+            QPushButton.tool {{
                 background-color: #e8e8e8;
                 border: 1px solid #c0c0c0;
                 border-radius: 6px;
                 color: #333333;
                 padding: 6px 8px;
-                font-size: 9px;
+                font-size: {max(self.font_size - 2, 8)}px;
                 font-weight: 500;
                 min-height: 26px;
                 min-width: 65px;
                 max-width: 80px;
-            }
-            QPushButton.tool:hover {
+            }}
+            QPushButton.tool:hover {{
                 background-color: #d8d8d8;
                 border: 1px solid #0078d4;
                 color: #333333;
-            }
-            QPushButton.tool:pressed {
+            }}
+            QPushButton.tool:pressed {{
                 background-color: #c8c8c8;
                 border: 1px solid #0078d4;
                 color: #333333;
-            }
-            QPushButton.tool:checked {
+            }}
+            QPushButton.tool:checked {{
                 background-color: #0078d4;
                 border: 1px solid #106ebe;
                 color: #333333;
                 font-weight: 600;
-            }
+            }}
             
             /* 操作按钮样式 */
-            QPushButton.action {
+            QPushButton.action {{
                 background-color: #f0f0f0;
                 border: 1px solid #d0d0d0;
                 border-radius: 6px;
                 color: #333333;
                 padding: 5px 8px;
-                font-size: 9px;
+                font-size: {max(self.font_size - 2, 8)}px;
                 min-height: 24px;
                 min-width: 60px;
                 max-width: 85px;
-            }
-            QPushButton.action:hover {
+            }}
+            QPushButton.action:hover {{
                 background-color: #e0e0e0;
                 border: 1px solid #0078d4;
-            }
-            QPushButton.action:pressed {
+            }}
+            QPushButton.action:pressed {{
                 background-color: #d0d0d0;
                 border: 1px solid #d0d0d0;
                 border-radius: 6px;
-            }
-            QPushButton.action:checked {
+            }}
+            QPushButton.action:checked {{
                 background-color: #0078d4;
                 border: 1px solid #106ebe;
                 border-radius: 6px;
                 color: #333333;
-            }
+            }}
             
             /* 激活状态按钮样式 */
-            QPushButton.action.active {
+            QPushButton.action.active {{
                 background-color: #0078d4;
                 border: 1px solid #106ebe;
                 color: #333333;
                 font-weight: 600;
-            }
-            QPushButton.action.active:hover {
+            }}
+            QPushButton.action.active:hover {{
                 background-color: #106ebe;
                 border: 1px solid #005a9e;
-            }
+            }}
             
             /* 特殊按钮样式 */
-            QPushButton.primary {
+            QPushButton.primary {{
                 background-color: #0078d4;
                 border: 1px solid #106ebe;
                 color: #333333;
-            }
-            QPushButton.primary:hover {
+            }}
+            QPushButton.primary:hover {{
                 background-color: #106ebe;
-            }
+            }}
             
-            QPushButton.success {
+            QPushButton.success {{
                 background-color: #28a745;
                 border: 1px solid #1e7e34;
                 color: #333333;
-            }
-            QPushButton.success:hover {
+            }}
+            QPushButton.success:hover {{
                 background-color: #1e7e34;
-            }
+            }}
             
-            QPushButton.warning {
+            QPushButton.warning {{
                 background-color: #fd7e14;
                 border: 1px solid #e8590c;
                 color: #333333;
-            }
-            QPushButton.warning:hover {
+            }}
+            QPushButton.warning:hover {{
                 background-color: #e8590c;
-            }
+            }}
             
-            QPushButton.danger {
+            QPushButton.danger {{
                 background-color: #dc3545;
                 border: 1px solid #bd2130;
                 color: #333333;
-            }
-            QPushButton.danger:hover {
+            }}
+            QPushButton.danger:hover {{
                 background-color: #bd2130;
-            }
+            }}
             
             /* 颜色按钮特殊样式 */
-            QPushButton#colorButton {
+            QPushButton#colorButton {{
                 border: 2px solid #c0c0c0;
                 border-radius: 6px;
                 min-height: 26px;
                 min-width: 100px;
                 max-width: 120px;
                 font-weight: bold;
-                font-size: 9px;
-            }
-            QPushButton#colorButton:hover {
+                font-size: {max(self.font_size - 2, 8)}px;
+            }}
+            QPushButton#colorButton:hover {{
                 border: 1px solid #0078d4;
-            }
+            }}
             
             /* 标签样式 */
-            QLabel {
+            QLabel {{
                 color: #333333;
-                font-size: 9px;
+                font-size: {max(self.font_size - 2, 8)}px;
                 font-weight: 500;
                 background: transparent;
                 border: none;
                 padding: 2px;
-            }
+            }}
             
-            QLabel.section-title {
+            QLabel.section-title {{
                 color: #0078d4;
-                font-size: 10px;
+                font-size: {max(self.font_size - 1, 9)}px;
                 font-weight: bold;
                 padding: 3px 2px;
                 border-bottom: 1px solid #d0d0d0;
                 margin-bottom: 4px;
-            }
+            }}
             
             /* 滑块样式 */
-            QSlider::groove:horizontal {
+            QSlider::groove:horizontal {{
                 border: 1px solid #d0d0d0;
                 height: 4px;
                 background: #f0f0f0;
                 border-radius: 2px;
-            }
-            QSlider::handle:horizontal {
+            }}
+            QSlider::handle:horizontal {{
                 background: #0078d4;
                 border: 1px solid #106ebe;
                 width: 14px;
                 height: 14px;
                 border-radius: 7px;
                 margin: -5px 0;
-            }
-            QSlider::handle:horizontal:hover {
+            }}
+            QSlider::handle:horizontal:hover {{
                 background: #106ebe;
-            }
-            QSlider::handle:horizontal:pressed {
+            }}
+            QSlider::handle:horizontal:pressed {{
                 background: #005a9e;
-            }
+            }}
             
             /* 折叠按钮样式 */
-            QPushButton#collapseButton {
+            QPushButton#collapseButton {{
                 background-color: #e8e8e8;
                 border: 1px solid #c0c0c0;
                 border-radius: 12px;
                 color: #333333;
-                font-size: 10px;
+                font-size: {max(self.font_size - 1, 9)}px;
                 min-width: 24px;
                 max-width: 24px;
                 min-height: 24px;
                 max-height: 24px;
-            }
-            QPushButton#collapseButton:hover {
+            }}
+            QPushButton#collapseButton:hover {{
                 background-color: #d8d8d8;
                 border: 1px solid #0078d4;
-            }
+            }}
             
             /* 主题切换按钮样式 */
-            QPushButton#themeToggleButton {
+            QPushButton#themeToggleButton {{
                 background-color: #e8e8e8;
                 border: 1px solid #c0c0c0;
                 border-radius: 12px;
                 color: #333333;
-                font-size: 10px;
+                font-size: {max(self.font_size - 1, 9)}px;
                 min-width: 24px;
                 max-width: 24px;
                 min-height: 24px;
                 max-height: 24px;
-            }
-            QPushButton#themeToggleButton:hover {
+            }}
+            QPushButton#themeToggleButton:hover {{
                 background-color: #d8d8d8;
                 border: 1px solid #0078d4;
-            }
+            }}
         """
     
     def toggle_theme(self) -> None:
@@ -1046,3 +1053,11 @@ class AnnotationToolbar(QWidget):
         """更新内容区域的样式"""
         bg_color = "#1a1a1a" if self.is_dark_theme else "#ffffff"
         self.content_widget.setStyleSheet(f"background-color: {bg_color}; border-radius: 0px 0px 8px 8px;")
+
+    def update_font_size(self, size: int) -> None:
+        """更新字体大小"""
+        self.font_size = size
+        self.setStyleSheet(self.get_theme_stylesheet())
+        
+        # 强制重绘界面
+        self.repaint()

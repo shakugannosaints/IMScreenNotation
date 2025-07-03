@@ -12,6 +12,11 @@ def load_config():
             config["current_color"] = QColor(*config["current_color"])
         if "canvas_color" in config:
             config["canvas_color"] = QColor(*config["canvas_color"])
+        
+        # 确保字体大小配置存在
+        if "toolbar_font_size" not in config:
+            config["toolbar_font_size"] = 11
+            
         return config
     except FileNotFoundError:
         return {
@@ -40,7 +45,8 @@ def load_config():
             "canvas_color": [0, 0, 0, 0], # RGBA for transparent
             "canvas_opacity": 0.0,
             "passthrough_opacity": 0.1,
-            "non_passthrough_opacity": 0.8
+            "non_passthrough_opacity": 0.8,
+            "toolbar_font_size": 11  # 默认字体大小
         }
     except json.JSONDecodeError:
         print("Error decoding config.json. Using default configuration.")
@@ -51,8 +57,6 @@ def load_config():
                 "toggle_canvas_visibility": "<ctrl>+<alt>+v",
                 "toggle_toolbar_collapse": "<ctrl>+<alt>+t",
                 "toggle_complete_hide": "<ctrl>+<alt>+f12",
-                "clear_canvas": "<ctrl>+<alt>+c",
-                "toggle_toolbar_collapse": "<ctrl>+<alt>+t",
                 "clear_canvas": "<ctrl>+<alt>+c",
                 "undo": "<ctrl>+z",
                 "redo": "<ctrl>+y",
@@ -72,7 +76,8 @@ def load_config():
             "canvas_color": [0, 0, 0, 0], # RGBA for transparent
             "canvas_opacity": 0.0,
             "passthrough_opacity": 0.1,
-            "non_passthrough_opacity": 0.8
+            "non_passthrough_opacity": 0.8,
+            "toolbar_font_size": 11  # 默认字体大小
         }
 
 def save_config(config):
