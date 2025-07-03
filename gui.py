@@ -1,17 +1,21 @@
-from PyQt5.QtWidgets import QWidget, QApplication
-from PyQt5.QtGui import QPainter, QColor, QPen
-from PyQt5.QtCore import Qt, QPoint, QRect
+from PyQt5.QtWidgets import QWidget, QApplication, QInputDialog, QFontDialog, QColorDialog
+from PyQt5.QtGui import QPainter, QColor, QPen, QFont
+from PyQt5.QtCore import Qt, QPoint, QRect, QPointF
 import json
-from shapes import Line, Rectangle, Circle, Arrow, Freehand, Point, LaserPointer, FilledFreehand
+from typing import List, Union, Optional
+from shapes import Line, Rectangle, Circle, Arrow, Freehand, Point, LaserPointer, FilledFreehand, Text
+
+# 定义Shape类型联合
+ShapeType = Union[Line, Rectangle, Circle, Arrow, Freehand, Point, LaserPointer, FilledFreehand, Text]
 
 class DrawingCanvas(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setMouseTracking(True) # Enable mouse tracking even when no button is pressed
-        self.shapes = [] # List to store all drawn shapes
+        self.shapes: List[ShapeType] = [] # List to store all drawn shapes
         self.undo_stack = [] # For undo functionality - stores canvas states
         self.redo_stack = [] # For redo functionality - stores canvas states
-        self.current_shape = None
+        self.current_shape: Optional[ShapeType] = None
         self.drawing = False
         self.start_point = QPoint()
         self.end_point = QPoint()
@@ -22,6 +26,17 @@ class DrawingCanvas(QWidget):
         self.canvas_color = QColor(0, 0, 0, 0) # Default transparent background
         self.canvas_opacity = 0.0 # Default fully transparent
         self.single_draw_mode = False # New attribute for single draw mode
+        
+        # 文本相关属性
+        self.text_font_family = "Arial"
+        self.text_font_size = 16
+        self.text_font_bold = False
+        self.text_font_italic = False
+        self.text_color = QColor(255, 0, 0, 255)  # 默认红色
+        self.text_background_color = None  # 默认透明背景
+        self.text_border_color = None  # 默认无边框
+        self.text_border_width = 1
+        self.text_padding = 5
 
     def save_state_to_undo_stack(self):
         """保存当前画布状态到撤销栈"""
@@ -105,7 +120,12 @@ class DrawingCanvas(QWidget):
             self.drawing = True
             self.start_point = event.pos()
             self.end_point = event.pos()
-            if self.current_tool == 'freehand':
+            
+            if self.current_tool == 'text':
+                # 文本工具：弹出输入对话框
+                self.create_text_annotation(event.pos())
+                return
+            elif self.current_tool == 'freehand':
                 # 保存状态到撤销栈（在创建新shape前）
                 self.save_state_to_undo_stack()
                 self.current_shape = Freehand([self.start_point], color=self.current_color, thickness=self.current_thickness, opacity=self.current_opacity)
@@ -233,6 +253,8 @@ class DrawingCanvas(QWidget):
                 shape = FilledFreehand.from_dict(shape_dict)
             elif shape_type == "Point":
                 shape = Point.from_dict(shape_dict)
+            elif shape_type == "Text":
+                shape = Text.from_dict(shape_dict)
             elif shape_type == "LaserPointer":
                 # 跳过激光笔，因为它不应该被保存/恢复
                 continue
@@ -273,6 +295,89 @@ class DrawingCanvas(QWidget):
         except (json.JSONDecodeError, KeyError, ValueError) as e:
             print(f"导入数据时出错: {e}")
             raise
+
+    def create_text_annotation(self, position):
+        """创建文本标注"""
+        # 弹出文本输入对话框
+        text, ok = QInputDialog.getText(self, '输入文本', '请输入要标注的文本:')
+        if ok and text:
+            # 保存状态到撤销栈
+            self.save_state_to_undo_stack()
+            
+            # 创建文本对象
+            text_shape = Text(
+                position=QPointF(position),
+                text=text,
+                font_family=self.text_font_family,
+                font_size=self.text_font_size,
+                font_bold=self.text_font_bold,
+                font_italic=self.text_font_italic,
+                text_color=self.text_color,
+                background_color=self.text_background_color,
+                border_color=self.text_border_color,
+                border_width=self.text_border_width,
+                padding=self.text_padding,
+                color=self.current_color,
+                thickness=self.current_thickness,
+                opacity=self.current_opacity
+            )
+            
+            # 添加到形状列表
+            self.shapes.append(text_shape)
+            
+            # 如果是单次绘制模式，清空其他形状
+            if self.single_draw_mode:
+                self.shapes = [text_shape]
+                self.undo_stack.clear()
+            
+            # 更新显示
+            self.update()
+            
+            # 重置绘制状态
+            self.drawing = False
+            self.current_shape = None
+
+    def set_text_font_family(self, font_family):
+        """设置文本字体族"""
+        self.text_font_family = font_family
+
+    def set_text_font_size(self, font_size):
+        """设置文本字体大小"""
+        self.text_font_size = font_size
+
+    def set_text_font_bold(self, bold):
+        """设置文本粗体"""
+        self.text_font_bold = bold
+
+    def set_text_font_italic(self, italic):
+        """设置文本斜体"""
+        self.text_font_italic = italic
+
+    def set_text_color(self, color):
+        """设置文本颜色"""
+        self.text_color = color
+
+    def set_text_background_color(self, color):
+        """设置文本背景颜色"""
+        self.text_background_color = color
+
+    def set_text_border_color(self, color):
+        """设置文本边框颜色"""
+        self.text_border_color = color
+
+    def set_text_border_width(self, width):
+        """设置文本边框宽度"""
+        self.text_border_width = width
+
+    def set_text_padding(self, padding):
+        """设置文本内边距"""
+        self.text_padding = padding
+
+    def open_text_style_dialog(self):
+        """打开文本样式配置对话框"""
+        from text_style_dialog import TextStyleDialog
+        dialog = TextStyleDialog(self)
+        dialog.exec_()
 
 # Example usage (for testing purposes, will be integrated into main app later)
 if __name__ == '__main__':

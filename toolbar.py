@@ -61,6 +61,11 @@ class AnnotationToolbar(QWidget):
         # 字体大小
         self.font_size = 11
         
+        # 工具栏尺寸
+        self.toolbar_width = 380
+        self.toolbar_height = 680  # 增加默认高度
+        self.collapsed_height = 50
+        
         self.setup_toolbar()
         
     def setup_toolbar(self) -> None:
@@ -100,8 +105,8 @@ class AnnotationToolbar(QWidget):
         self.content_widget = QWidget()
         self.update_content_widget_style()
         content_layout = QVBoxLayout(self.content_widget)
-        content_layout.setSpacing(6)
-        content_layout.setContentsMargins(10, 10, 10, 10)
+        content_layout.setSpacing(8)  # 增加间距
+        content_layout.setContentsMargins(12, 12, 12, 12)  # 增加边距
         
         # 工具选择区域
         self.setup_tools_section(content_layout)
@@ -114,8 +119,8 @@ class AnnotationToolbar(QWidget):
         
         toolbar_main_layout.addWidget(self.content_widget)
         
-        # 设置工具栏窗口大小和位置
-        self.setFixedSize(380, 620)
+        # 计算并设置自适应尺寸
+        self.calculate_and_set_size()
         self.move(50, 50)
         self.show()
 
@@ -176,7 +181,8 @@ class AnnotationToolbar(QWidget):
             ("自由绘制", "freehand"),
             ("填充绘制", "filled_freehand"),
             ("点", "point"),
-            ("激光笔", "laser_pointer")
+            ("激光笔", "laser_pointer"),
+            ("文本", "text")
         ]
         
         self.tool_button_group = {}
@@ -199,7 +205,7 @@ class AnnotationToolbar(QWidget):
         # 第二行工具按钮
         tools_row2 = QHBoxLayout()
         tools_row2.setSpacing(4)
-        for name, tool in tool_buttons[4:]:
+        for name, tool in tool_buttons[4:8]:
             btn = QPushButton(name)
             btn.setProperty("class", "tool")
             btn.setCheckable(True)
@@ -210,6 +216,23 @@ class AnnotationToolbar(QWidget):
             tools_row2.addWidget(btn)
             self.tool_button_group[tool] = btn
         tools_layout.addLayout(tools_row2)
+        
+        # 第三行工具按钮（文本工具）
+        tools_row3 = QHBoxLayout()
+        tools_row3.setSpacing(4)
+        for name, tool in tool_buttons[8:]:
+            btn = QPushButton(name)
+            btn.setProperty("class", "tool")
+            btn.setCheckable(True)
+            btn.setMinimumSize(70, 28)
+            btn.setMaximumSize(85, 32)
+            tool_name = str(tool)
+            btn.clicked.connect(lambda checked, tool_name=tool_name: self.main_window.select_tool(tool_name))
+            tools_row3.addWidget(btn)
+            self.tool_button_group[tool] = btn
+        # 添加空白占位符使文本按钮居中
+        tools_row3.addStretch()
+        tools_layout.addLayout(tools_row3)
         
         # 默认选择直线工具
         self.tool_button_group["line"].setChecked(True)
@@ -222,8 +245,8 @@ class AnnotationToolbar(QWidget):
         attrs_card.setFrameStyle(QFrame.NoFrame)
         attrs_card.setProperty("class", "card")
         attrs_layout = QVBoxLayout(attrs_card)
-        attrs_layout.setContentsMargins(6, 6, 6, 6)
-        attrs_layout.setSpacing(6)
+        attrs_layout.setContentsMargins(8, 8, 8, 8)  # 增加边距
+        attrs_layout.setSpacing(10)  # 增加间距
         
         # 区域标题
         attrs_title = QLabel("⚙️ 绘制属性")
@@ -234,13 +257,14 @@ class AnnotationToolbar(QWidget):
         color_container = QWidget()
         color_layout = QHBoxLayout(color_container)
         color_layout.setContentsMargins(0, 0, 0, 0)
-        color_layout.setSpacing(6)
+        color_layout.setSpacing(8)
         
         color_label = QLabel("颜色")
-        color_label.setMinimumWidth(40)
-        color_label.setMaximumWidth(50)
+        color_label.setMinimumWidth(50)
+        color_label.setMaximumWidth(60)
         self.color_btn = QPushButton("选择颜色")
         self.color_btn.setObjectName("colorButton")
+        self.color_btn.setMinimumHeight(32)  # 增加按钮高度
         self.color_btn.clicked.connect(self.pick_color)
         
         color_layout.addWidget(color_label)
@@ -251,14 +275,15 @@ class AnnotationToolbar(QWidget):
         thickness_container = QWidget()
         thickness_layout = QVBoxLayout(thickness_container)
         thickness_layout.setContentsMargins(0, 0, 0, 0)
-        thickness_layout.setSpacing(2)
+        thickness_layout.setSpacing(6)  # 增加间距
         
         self.thickness_label = QLabel(f"粗细: {self.canvas.current_thickness}")
-        self.thickness_label.setMinimumHeight(16)
+        self.thickness_label.setMinimumHeight(20)  # 增加标签高度
         self.thickness_slider = QSlider(Qt.Horizontal)
         self.thickness_slider.setMinimum(1)
         self.thickness_slider.setMaximum(20)
         self.thickness_slider.setValue(self.canvas.current_thickness)
+        self.thickness_slider.setMinimumHeight(24)  # 增加滑块高度
         self.thickness_slider.valueChanged.connect(self.change_thickness)
         
         thickness_layout.addWidget(self.thickness_label)
@@ -269,14 +294,15 @@ class AnnotationToolbar(QWidget):
         draw_opacity_container = QWidget()
         draw_opacity_layout = QVBoxLayout(draw_opacity_container)
         draw_opacity_layout.setContentsMargins(0, 0, 0, 0)
-        draw_opacity_layout.setSpacing(2)
+        draw_opacity_layout.setSpacing(6)  # 增加间距
         
         self.drawing_opacity_label = QLabel(f"绘制不透明度: {int(self.canvas.current_opacity * 100)}%")
-        self.drawing_opacity_label.setMinimumHeight(16)
+        self.drawing_opacity_label.setMinimumHeight(20)  # 增加标签高度
         self.drawing_opacity_slider = QSlider(Qt.Horizontal)
         self.drawing_opacity_slider.setMinimum(0)
         self.drawing_opacity_slider.setMaximum(100)
         self.drawing_opacity_slider.setValue(int(self.canvas.current_opacity * 100))
+        self.drawing_opacity_slider.setMinimumHeight(24)  # 增加滑块高度
         self.drawing_opacity_slider.valueChanged.connect(self.change_drawing_opacity)
         
         draw_opacity_layout.addWidget(self.drawing_opacity_label)
@@ -287,20 +313,41 @@ class AnnotationToolbar(QWidget):
         canvas_opacity_container = QWidget()
         canvas_opacity_layout = QVBoxLayout(canvas_opacity_container)
         canvas_opacity_layout.setContentsMargins(0, 0, 0, 0)
-        canvas_opacity_layout.setSpacing(2)
+        canvas_opacity_layout.setSpacing(6)  # 增加间距
         
         self.canvas_opacity_label = QLabel(f"画布不透明度: {int(self.canvas.canvas_opacity * 100)}%")
-        self.canvas_opacity_label.setMinimumHeight(16)
+        self.canvas_opacity_label.setMinimumHeight(20)  # 增加标签高度
         self.canvas_opacity_slider = QSlider(Qt.Horizontal)
         self.canvas_opacity_slider.setMinimum(0)
         self.canvas_opacity_slider.setMaximum(100)
         self.canvas_opacity_slider.setValue(int(self.canvas.canvas_opacity * 100))
+        self.canvas_opacity_slider.setMinimumHeight(24)  # 增加滑块高度
         self.canvas_opacity_slider.valueChanged.connect(self.change_canvas_opacity)
         
         canvas_opacity_layout.addWidget(self.canvas_opacity_label)
         canvas_opacity_layout.addWidget(self.canvas_opacity_slider)
         attrs_layout.addWidget(canvas_opacity_container)
-        attrs_layout.addStretch()
+        
+        # 文本样式按钮
+        text_style_container = QWidget()
+        text_style_layout = QHBoxLayout(text_style_container)
+        text_style_layout.setContentsMargins(0, 0, 0, 0)
+        text_style_layout.setSpacing(8)
+        
+        text_style_label = QLabel("文本样式")
+        text_style_label.setMinimumWidth(50)
+        text_style_label.setMaximumWidth(60)
+        
+        self.text_style_btn = QPushButton("🎨 文本样式")
+        self.text_style_btn.setProperty("class", "action")
+        self.text_style_btn.setMinimumHeight(32)  # 增加按钮高度
+        self.text_style_btn.clicked.connect(self.open_text_style_dialog)
+        
+        text_style_layout.addWidget(text_style_label)
+        text_style_layout.addWidget(self.text_style_btn)
+        attrs_layout.addWidget(text_style_container)
+        
+        # 移除自动拉伸，让内容保持紧凑
         
         main_layout.addWidget(attrs_card)
 
@@ -310,8 +357,8 @@ class AnnotationToolbar(QWidget):
         actions_card.setFrameStyle(QFrame.NoFrame)
         actions_card.setProperty("class", "card")
         actions_layout = QVBoxLayout(actions_card)
-        actions_layout.setContentsMargins(6, 6, 6, 6)
-        actions_layout.setSpacing(6)
+        actions_layout.setContentsMargins(8, 8, 8, 8)  # 增加边距
+        actions_layout.setSpacing(10)  # 增加间距
         
         # 区域标题
         actions_title = QLabel("🎯 操作控制")
@@ -320,46 +367,52 @@ class AnnotationToolbar(QWidget):
         
         # 编辑操作行
         edit_row = QHBoxLayout()
-        edit_row.setSpacing(4)
+        edit_row.setSpacing(6)  # 增加间距
         
         self.undo_btn = QPushButton("↶ 撤销")
         self.undo_btn.setProperty("class", "action")
+        self.undo_btn.setMinimumHeight(32)  # 增加按钮高度
         self.undo_btn.clicked.connect(self.canvas.undo)
         edit_row.addWidget(self.undo_btn)
         
         self.redo_btn = QPushButton("↷ 重做")
         self.redo_btn.setProperty("class", "action")
+        self.redo_btn.setMinimumHeight(32)  # 增加按钮高度
         self.redo_btn.clicked.connect(self.canvas.redo)
         edit_row.addWidget(self.redo_btn)
         
         self.clear_btn = QPushButton("🗑 清空")
         self.clear_btn.setProperty("class", "action warning")
+        self.clear_btn.setMinimumHeight(32)  # 增加按钮高度
         self.clear_btn.clicked.connect(self.canvas.clear_canvas)
         edit_row.addWidget(self.clear_btn)
         
         actions_layout.addLayout(edit_row)
         
         # 添加间距
-        actions_layout.addSpacing(4)
+        actions_layout.addSpacing(8)  # 增加间距
         
         # 模式控制行
         mode_row = QHBoxLayout()
-        mode_row.setSpacing(4)
+        mode_row.setSpacing(6)  # 增加间距
         
         self.toggle_passthrough_btn = QPushButton("🖱 穿透")
         self.toggle_passthrough_btn.setProperty("class", "action")
+        self.toggle_passthrough_btn.setMinimumHeight(32)  # 增加按钮高度
         self.toggle_passthrough_btn.setCheckable(True)
         self.toggle_passthrough_btn.clicked.connect(self.main_window.toggle_mouse_passthrough)
         mode_row.addWidget(self.toggle_passthrough_btn)
         
         self.toggle_visibility_btn = QPushButton("👁 隐藏")
         self.toggle_visibility_btn.setProperty("class", "action")
+        self.toggle_visibility_btn.setMinimumHeight(32)  # 增加按钮高度
         self.toggle_visibility_btn.setCheckable(True)
         self.toggle_visibility_btn.clicked.connect(self.main_window.toggle_canvas_visibility)
         mode_row.addWidget(self.toggle_visibility_btn)
         
         self.single_draw_mode_btn = QPushButton("1️⃣ 单次")
         self.single_draw_mode_btn.setProperty("class", "action")
+        self.single_draw_mode_btn.setMinimumHeight(32)  # 增加按钮高度
         self.single_draw_mode_btn.setCheckable(True)
         self.single_draw_mode_btn.clicked.connect(self.main_window.toggle_single_draw_mode)
         mode_row.addWidget(self.single_draw_mode_btn)
@@ -367,43 +420,48 @@ class AnnotationToolbar(QWidget):
         actions_layout.addLayout(mode_row)
         
         # 添加间距
-        actions_layout.addSpacing(4)
+        actions_layout.addSpacing(8)  # 增加间距
         
         # 文件操作行
         file_row = QHBoxLayout()
-        file_row.setSpacing(4)
+        file_row.setSpacing(6)  # 增加间距
         
         self.import_btn = QPushButton("📥 导入")
         self.import_btn.setProperty("class", "action primary")
+        self.import_btn.setMinimumHeight(32)  # 增加按钮高度
         self.import_btn.clicked.connect(self.main_window.import_canvas_content)
         file_row.addWidget(self.import_btn)
         
         self.export_btn = QPushButton("📤 导出")
         self.export_btn.setProperty("class", "action success")
+        self.export_btn.setMinimumHeight(32)  # 增加按钮高度
         self.export_btn.clicked.connect(self.main_window.export_canvas_content)
         file_row.addWidget(self.export_btn)
         
         self.save_config_btn = QPushButton("💾 保存")
         self.save_config_btn.setProperty("class", "action")
+        self.save_config_btn.setMinimumHeight(32)  # 增加按钮高度
         self.save_config_btn.clicked.connect(self.main_window.save_current_config)
         file_row.addWidget(self.save_config_btn)
         
         actions_layout.addLayout(file_row)
         
         # 添加间距
-        actions_layout.addSpacing(4)
+        actions_layout.addSpacing(8)  # 增加间距
         
         # 系统操作行
         system_row = QHBoxLayout()
-        system_row.setSpacing(4)
+        system_row.setSpacing(6)  # 增加间距
         
         self.settings_btn = QPushButton("⚙️ 设置")
         self.settings_btn.setProperty("class", "action")
+        self.settings_btn.setMinimumHeight(32)  # 增加按钮高度
         self.settings_btn.clicked.connect(self.main_window.open_hotkey_settings)
         system_row.addWidget(self.settings_btn)
         
         self.exit_btn = QPushButton("❌ 退出")
         self.exit_btn.setProperty("class", "action danger")
+        self.exit_btn.setMinimumHeight(32)  # 增加按钮高度
         self.exit_btn.clicked.connect(self.main_window.close_application)
         system_row.addWidget(self.exit_btn)
         
@@ -494,9 +552,9 @@ class AnnotationToolbar(QWidget):
                 border: 1px solid #3a3a3a;
                 border-radius: 6px;
                 color: #ffffff;
-                padding: 5px 8px;
+                padding: 6px 8px;
                 font-size: {max(self.font_size - 2, 8)}px;
-                min-height: 24px;
+                min-height: 28px;  /* 增加最小高度 */
                 min-width: 60px;
                 max-width: 85px;
             }}
@@ -725,9 +783,9 @@ class AnnotationToolbar(QWidget):
                 border: 1px solid #d0d0d0;
                 border-radius: 6px;
                 color: #333333;
-                padding: 5px 8px;
+                padding: 6px 8px;
                 font-size: {max(self.font_size - 2, 8)}px;
-                min-height: 24px;
+                min-height: 28px;  /* 增加最小高度 */
                 min-width: 60px;
                 max-width: 85px;
             }}
@@ -1000,20 +1058,17 @@ class AnnotationToolbar(QWidget):
 
     def toggle_toolbar_collapse(self) -> None:
         """切换工具栏折叠/展开状态"""
-        collapsed_height: int = 50  # 标题栏的高度
-        expanded_height: int = 620  # 完全展开的高度
-        
         if not self.is_collapsed:
             # 折叠
             self.content_widget.hide()
-            self.setFixedSize(380, collapsed_height)
+            self.setFixedSize(self.toolbar_width, self.collapsed_height)
             self.toggle_collapse_btn.setText("🔽")
             self.is_collapsed = True
             self.main_window.statusBar().showMessage("工具栏已折叠", 1000)
         else:
             # 展开
             self.content_widget.show()
-            self.setFixedSize(380, expanded_height)
+            self.setFixedSize(self.toolbar_width, self.toolbar_height)
             self.toggle_collapse_btn.setText("🔼")
             self.is_collapsed = False
             self.main_window.statusBar().showMessage("工具栏已展开", 1000)
@@ -1059,5 +1114,63 @@ class AnnotationToolbar(QWidget):
         self.font_size = size
         self.setStyleSheet(self.get_theme_stylesheet())
         
+        # 重新计算和设置尺寸
+        self.calculate_and_set_size()
+        
         # 强制重绘界面
         self.repaint()
+
+    def open_text_style_dialog(self) -> None:
+        """打开文本样式设置对话框"""
+        # 暂时停止工具栏的定时器，避免焦点冲突
+        if hasattr(self.main_window, 'toolbar_timer'):
+            self.main_window.toolbar_timer.stop()
+        
+        from text_style_dialog import TextStyleDialog
+        dialog = TextStyleDialog(self.canvas, self)
+        
+        try:
+            if dialog.exec_() == TextStyleDialog.Accepted:
+                # 对话框已经在accept时应用了设置
+                pass
+        finally:
+            # 恢复工具栏定时器
+            if hasattr(self.main_window, 'toolbar_timer'):
+                self.main_window.toolbar_timer.start(1000)
+
+    def calculate_and_set_size(self) -> None:
+        """计算并设置工具栏的最佳尺寸"""
+        # 确保内容已完全布局
+        self.content_widget.adjustSize()
+        
+        # 获取标题区域高度
+        title_height = self.title_container.sizeHint().height()
+        
+        # 获取内容区域高度
+        content_height = self.content_widget.sizeHint().height()
+        
+        # 计算总高度（标题 + 内容 + 额外边距）
+        total_height = title_height + content_height + 20  # 20px额外边距
+        
+        # 确保最小高度
+        min_height = 650
+        self.toolbar_height = max(total_height, min_height)
+        
+        # 设置工具栏尺寸
+        self.setFixedSize(self.toolbar_width, self.toolbar_height)
+        
+        # 更新折叠高度
+        self.collapsed_height = title_height + 10  # 10px边距
+
+    def get_recommended_size(self) -> tuple:
+        """获取推荐的工具栏尺寸"""
+        # 基于字体大小计算推荐尺寸
+        base_width = 380
+        base_height = 680
+        
+        # 根据字体大小调整
+        font_scale = self.font_size / 11.0
+        adjusted_width = int(base_width * font_scale)
+        adjusted_height = int(base_height * font_scale)
+        
+        return adjusted_width, adjusted_height

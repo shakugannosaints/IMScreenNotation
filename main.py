@@ -74,6 +74,18 @@ class AnnotationTool(QMainWindow):
         self.canvas.set_current_opacity(self.config["current_opacity"])
         self.canvas.set_canvas_color(self.config["canvas_color"])
         self.canvas.set_canvas_opacity(self.config["canvas_opacity"])
+        
+        # 初始化文本相关属性
+        self.canvas.set_text_font_family(self.config["text_font_family"])
+        self.canvas.set_text_font_size(self.config["text_font_size"])
+        self.canvas.set_text_font_bold(self.config["text_font_bold"])
+        self.canvas.set_text_font_italic(self.config["text_font_italic"])
+        self.canvas.set_text_color(self.config["text_color"])
+        self.canvas.set_text_background_color(self.config["text_background_color"])
+        self.canvas.set_text_border_color(self.config["text_border_color"])
+        self.canvas.set_text_border_width(self.config["text_border_width"])
+        self.canvas.set_text_padding(self.config["text_padding"])
+        
         self.main_layout.addWidget(self.canvas)
           # 初始化热键管理器
         self.hotkey_manager: HotkeyManager = HotkeyManager(self)
@@ -169,7 +181,8 @@ class AnnotationTool(QMainWindow):
                 "freehand": "自由绘制",
                 "filled_freehand": "填充绘制",
                 "point": "点",
-                "laser_pointer": "激光笔"
+                "laser_pointer": "激光笔",
+                "text": "文本"
             }
             tool_name = tool_names.get(tool, tool)
             self._status_bar.showMessage(f"已切换到{tool_name}工具", 2000)
@@ -372,6 +385,18 @@ class AnnotationTool(QMainWindow):
         # 保存字体大小设置
         if hasattr(self, 'toolbar') and self.toolbar:
             self.config["toolbar_font_size"] = self.toolbar.font_size
+        
+        # 保存文本相关配置
+        self.config["text_font_family"] = self.canvas.text_font_family
+        self.config["text_font_size"] = self.canvas.text_font_size
+        self.config["text_font_bold"] = self.canvas.text_font_bold
+        self.config["text_font_italic"] = self.canvas.text_font_italic
+        self.config["text_color"] = self.canvas.text_color
+        self.config["text_background_color"] = self.canvas.text_background_color
+        self.config["text_border_color"] = self.canvas.text_border_color
+        self.config["text_border_width"] = self.canvas.text_border_width
+        self.config["text_padding"] = self.canvas.text_padding
+        
         save_config(self.config)
         self._status_bar.showMessage("配置已保存", 2000)
         
@@ -613,6 +638,8 @@ class AnnotationTool(QMainWindow):
             self.add_tool_hotkey(hotkeys["tool_point"], "point")
         if hotkeys.get("tool_laser_pointer"):
             self.add_tool_hotkey(hotkeys["tool_laser_pointer"], "laser_pointer")
+        if hotkeys.get("tool_text"):
+            self.add_tool_hotkey(hotkeys["tool_text"], "text")
             
         # 添加测试热键 F9
         self.hotkey_manager.register_hotkey("f9", self.test_hotkey_function)

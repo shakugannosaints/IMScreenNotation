@@ -1,4 +1,4 @@
-from PyQt5.QtGui import QColor, QPen, QPainterPath, QPolygonF
+from PyQt5.QtGui import QColor, QPen, QPainterPath, QPolygonF, QFont, QFontMetrics
 from PyQt5.QtCore import QPointF, QRectF, QDateTime
 import math
 
@@ -382,5 +382,195 @@ class LaserPointer(Shape):
         instance = cls(center_point, radius, duration=duration, color=color, thickness=data["thickness"], opacity=data["opacity"])
         instance.start_time = start_time # Restore original start time
         return instance
+
+class Text(Shape):
+    def __init__(self, position, text="", font_family="Arial", font_size=16, 
+                 font_bold=False, font_italic=False, text_color=None,
+                 background_color=None, border_color=None, border_width=1,
+                 padding=5, **kwargs):
+        super().__init__(**kwargs)
+        self.position = position
+        self.text = text
+        self.font_family = font_family
+        self.font_size = font_size
+        self.font_bold = font_bold
+        self.font_italic = font_italic
+        
+        # 文本颜色，如果未指定则使用基础颜色
+        self.text_color = text_color if text_color else self.base_color
+        
+        # 背景和边框样式
+        self.background_color = background_color  # None表示透明背景
+        self.border_color = border_color  # None表示无边框
+        self.border_width = border_width
+        self.padding = padding
+        
+        # 计算文本边界
+        self._calculate_bounds()
+    
+    def _calculate_bounds(self):
+        """计算文本的边界矩形"""
+        font = QFont(self.font_family, self.font_size)
+        font.setBold(self.font_bold)
+        font.setItalic(self.font_italic)
+        
+        # 使用QFontMetrics计算文本尺寸
+        metrics = QFontMetrics(font)
+        
+        # 支持多行文本
+        lines = self.text.split('\n')
+        max_width = 0
+        total_height = 0
+        
+        for line in lines:
+            line_rect = metrics.boundingRect(line)
+            max_width = max(max_width, line_rect.width())
+            total_height += metrics.height()
+        
+        # 添加内边距
+        self.text_rect = QRectF(
+            self.position.x() - self.padding,
+            self.position.y() - self.padding,
+            max_width + 2 * self.padding,
+            total_height + 2 * self.padding
+        )
+
+    def draw(self, painter):
+        # 创建字体
+        font = QFont(self.font_family, self.font_size)
+        font.setBold(self.font_bold)
+        font.setItalic(self.font_italic)
+        painter.setFont(font)
+        
+        # 重新计算边界（以防文本发生变化）
+        self._calculate_bounds()
+        
+        # 绘制背景
+        if self.background_color:
+            bg_color = QColor(self.background_color)
+            bg_color.setAlphaF(self.opacity)
+            painter.fillRect(self.text_rect, bg_color)
+        
+        # 绘制边框
+        if self.border_color and self.border_width > 0:
+            border_color = QColor(self.border_color)
+            border_color.setAlphaF(self.opacity)
+            border_pen = QPen(border_color, self.border_width)
+            painter.setPen(border_pen)
+            painter.drawRect(self.text_rect)
+        
+        # 绘制文本
+        text_color = QColor(self.text_color)
+        text_color.setAlphaF(self.opacity)
+        painter.setPen(QPen(text_color))
+        
+        # 计算文本绘制位置
+        text_x = int(self.position.x())
+        text_y = int(self.position.y())
+        
+        # 支持多行文本
+        lines = self.text.split('\n')
+        font_metrics = QFontMetrics(font)
+        
+        for i, line in enumerate(lines):
+            line_y = text_y + i * font_metrics.height() + font_metrics.ascent()
+            painter.drawText(text_x, int(line_y), line)
+
+    def set_text(self, text):
+        """设置文本内容"""
+        self.text = text
+        self._calculate_bounds()
+
+    def set_font_family(self, font_family):
+        """设置字体族"""
+        self.font_family = font_family
+        self._calculate_bounds()
+
+    def set_font_size(self, font_size):
+        """设置字体大小"""
+        self.font_size = font_size
+        self._calculate_bounds()
+
+    def set_font_bold(self, bold):
+        """设置字体粗体"""
+        self.font_bold = bold
+        self._calculate_bounds()
+
+    def set_font_italic(self, italic):
+        """设置字体斜体"""
+        self.font_italic = italic
+        self._calculate_bounds()
+
+    def set_text_color(self, color):
+        """设置文本颜色"""
+        self.text_color = QColor(color)
+
+    def set_background_color(self, color):
+        """设置背景颜色"""
+        self.background_color = QColor(color) if color else None
+        
+    def set_border_color(self, color):
+        """设置边框颜色"""
+        self.border_color = QColor(color) if color else None
+
+    def set_border_width(self, width):
+        """设置边框宽度"""
+        self.border_width = width
+
+    def set_padding(self, padding):
+        """设置内边距"""
+        self.padding = padding
+        self._calculate_bounds()
+
+    def contains_point(self, point):
+        """检查点是否在文本区域内"""
+        return self.text_rect.contains(point)
+
+    def move_to(self, new_position):
+        """移动文本到新位置"""
+        self.position = new_position
+        self._calculate_bounds()
+
+    def to_dict(self):
+        data = super().to_dict()
+        data.update({
+            'position_x': self.position.x(),
+            'position_y': self.position.y(),
+            'text': self.text,
+            'font_family': self.font_family,
+            'font_size': self.font_size,
+            'font_bold': self.font_bold,
+            'font_italic': self.font_italic,
+            'text_color': self.text_color.getRgb() if self.text_color else None,
+            'background_color': self.background_color.getRgb() if self.background_color else None,
+            'border_color': self.border_color.getRgb() if self.border_color else None,
+            'border_width': self.border_width,
+            'padding': self.padding
+        })
+        return data
+
+    @classmethod
+    def from_dict(cls, data):
+        position = QPointF(data["position_x"], data["position_y"])
+        text_color = QColor(*data["text_color"]) if data["text_color"] else None
+        background_color = QColor(*data["background_color"]) if data["background_color"] else None
+        border_color = QColor(*data["border_color"]) if data["border_color"] else None
+        
+        return cls(
+            position=position,
+            text=data["text"],
+            font_family=data["font_family"],
+            font_size=data["font_size"],
+            font_bold=data["font_bold"],
+            font_italic=data["font_italic"],
+            text_color=text_color,
+            background_color=background_color,
+            border_color=border_color,
+            border_width=data["border_width"],
+            padding=data["padding"],
+            color=QColor(*data["color"]),
+            thickness=data["thickness"],
+            opacity=data["opacity"]
+        )
 
 
