@@ -16,6 +16,7 @@ class TextStyleDialog(QDialog):
     def __init__(self, canvas, parent=None):
         super().__init__(parent)
         self.canvas = canvas
+        self.parent_widget = parent  # 保存父窗口引用
         self.setWindowTitle("文本样式设置")
         self.setModal(True)
         self.setFixedSize(450, 720)  # 增加对话框高度
@@ -231,11 +232,15 @@ class TextStyleDialog(QDialog):
             brightness = (color.red() * 299 + color.green() * 587 + color.blue() * 114) / 1000
             text_color = "white" if brightness < 128 else "black"
             
+            # 根据主题选择边框颜色
+            is_dark = self.get_parent_theme()
+            border_color = "#4a4a4a" if is_dark else "#d0d0d0"
+            
             button.setStyleSheet(f"""
                 QPushButton {{
                     background-color: {color.name()};
-                    color: {text_color};
-                    border: 2px solid #4a4a4a;
+                    color: {text_color} !important;
+                    border: 2px solid {border_color};
                     border-radius: 6px;
                     font-weight: bold;
                     padding: 8px 12px;
@@ -244,15 +249,23 @@ class TextStyleDialog(QDialog):
                 }}
                 QPushButton:hover {{
                     border: 2px solid #0078d4;
+                    color: {text_color} !important;
                 }}
                 QPushButton:pressed {{
                     border: 2px solid #0078d4;
                     background-color: {color.darker().name()};
+                    color: {text_color} !important;
                 }}
             """)
         else:
-            # 恢复默认样式
-            button.setStyleSheet("")
+            # 恢复默认样式，确保文本颜色正确
+            is_dark = self.get_parent_theme()
+            text_color = "#ffffff" if is_dark else "#333333"
+            button.setStyleSheet(f"""
+                QPushButton {{
+                    color: {text_color} !important;
+                }}
+            """)
             
     def choose_text_color(self):
         """选择文本颜色"""
@@ -378,10 +391,51 @@ class TextStyleDialog(QDialog):
             traceback.print_exc()
             self.reject()
         
+    def get_parent_theme(self):
+        """获取父窗口的主题状态"""
+        try:
+            # 尝试从父窗口获取主题信息
+            if self.parent_widget:
+                # 如果父窗口有is_dark_theme属性，直接使用
+                if hasattr(self.parent_widget, 'is_dark_theme'):
+                    return self.parent_widget.is_dark_theme
+                # 如果父窗口是主窗口，尝试获取toolbar的主题
+                elif hasattr(self.parent_widget, 'toolbar') and hasattr(self.parent_widget.toolbar, 'is_dark_theme'):
+                    return self.parent_widget.toolbar.is_dark_theme
+            
+            # 如果无法获取主题信息，默认使用浅色主题
+            return False
+        except Exception as e:
+            print(f"Error getting parent theme: {e}")
+            return False
+    
+    def refresh_theme(self):
+        """刷新对话框主题"""
+        try:
+            # 重新应用样式表
+            self.apply_stylesheet()
+            
+            # 更新所有颜色按钮
+            if hasattr(self, 'text_color_btn'):
+                self.update_color_button(self.text_color_btn, self.canvas.text_color)
+            
+            if hasattr(self, 'bg_color_btn') and self.canvas.text_background_color:
+                self.update_color_button(self.bg_color_btn, self.canvas.text_background_color)
+                
+            if hasattr(self, 'border_color_btn') and self.canvas.text_border_color:
+                self.update_color_button(self.border_color_btn, self.canvas.text_border_color)
+                
+        except Exception as e:
+            print(f"Error refreshing theme: {e}")
+    
     def apply_stylesheet(self):
         """应用现代化样式表"""
-        # 默认使用深色主题，可以在需要时扩展
-        self.setStyleSheet(self.get_dark_theme_stylesheet())
+        # 根据父窗口的主题状态选择样式
+        is_dark = self.get_parent_theme()
+        if is_dark:
+            self.setStyleSheet(self.get_dark_theme_stylesheet())
+        else:
+            self.setStyleSheet(self.get_light_theme_stylesheet())
     
     def get_dark_theme_stylesheet(self):
         """获取深色主题样式表"""
@@ -661,6 +715,7 @@ class TextStyleDialog(QDialog):
                 padding: 6px;
                 border: none;
                 min-height: 20px;
+                color: #333333;
             }
             
             QComboBox QAbstractItemView::item:selected {
