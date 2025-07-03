@@ -20,17 +20,27 @@ class TextStyleDialog(QDialog):
         self.setModal(True)
         self.setFixedSize(450, 720)  # 增加对话框高度
         
-        # 设置窗口标志以确保在最前面，同时避免与QComboBox的下拉菜单冲突
-        self.setWindowFlags(Qt.Dialog | Qt.WindowStaysOnTopHint | Qt.WindowCloseButtonHint)
+        # 设置窗口标志以确保对话框正常显示
+        self.setWindowFlags(Qt.Dialog | Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint)
         
-        # 初始化界面
-        self.setup_ui()
+        # 设置窗口属性
+        self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setWindowModality(Qt.ApplicationModal)
         
-        # 应用样式表
-        self.apply_stylesheet()
-        
-        # 加载当前设置
-        self.load_current_settings()
+        try:
+            # 初始化界面
+            self.setup_ui()
+            
+            # 应用样式表
+            self.apply_stylesheet()
+            
+            # 加载当前设置
+            self.load_current_settings()
+            
+        except Exception as e:
+            print(f"Error initializing TextStyleDialog: {e}")
+            import traceback
+            traceback.print_exc()
         
     def setup_ui(self):
         """设置界面布局"""
@@ -246,27 +256,63 @@ class TextStyleDialog(QDialog):
             
     def choose_text_color(self):
         """选择文本颜色"""
-        color = QColorDialog.getColor(self.canvas.text_color, self, "选择文本颜色")
-        if color.isValid():
-            self.canvas.text_color = color
-            self.update_color_button(self.text_color_btn, color)
+        try:
+            from PyQt5.QtCore import QCoreApplication
+            
+            # 强制处理所有待处理的事件
+            QCoreApplication.processEvents()
+            
+            color = QColorDialog.getColor(self.canvas.text_color, self, "选择文本颜色")
+            if color.isValid():
+                self.canvas.text_color = color
+                self.update_color_button(self.text_color_btn, color)
+                
+            # 强制处理所有待处理的事件
+            QCoreApplication.processEvents()
+            
+        except Exception as e:
+            print(f"Error choosing text color: {e}")
             
     def choose_background_color(self):
         """选择背景颜色"""
-        current_color = self.canvas.text_background_color or QColor(255, 255, 255)
-        color = QColorDialog.getColor(current_color, self, "选择背景颜色")
-        if color.isValid():
-            self.canvas.text_background_color = color
-            self.update_color_button(self.bg_color_btn, color)
-            self.bg_transparent_check.setChecked(False)
+        try:
+            from PyQt5.QtCore import QCoreApplication
+            
+            # 强制处理所有待处理的事件
+            QCoreApplication.processEvents()
+            
+            current_color = self.canvas.text_background_color or QColor(255, 255, 255)
+            color = QColorDialog.getColor(current_color, self, "选择背景颜色")
+            if color.isValid():
+                self.canvas.text_background_color = color
+                self.update_color_button(self.bg_color_btn, color)
+                self.bg_transparent_check.setChecked(False)
+                
+            # 强制处理所有待处理的事件
+            QCoreApplication.processEvents()
+            
+        except Exception as e:
+            print(f"Error choosing background color: {e}")
             
     def choose_border_color(self):
         """选择边框颜色"""
-        current_color = self.canvas.text_border_color or QColor(0, 0, 0)
-        color = QColorDialog.getColor(current_color, self, "选择边框颜色")
-        if color.isValid():
-            self.canvas.text_border_color = color
-            self.update_color_button(self.border_color_btn, color)
+        try:
+            from PyQt5.QtCore import QCoreApplication
+            
+            # 强制处理所有待处理的事件
+            QCoreApplication.processEvents()
+            
+            current_color = self.canvas.text_border_color or QColor(0, 0, 0)
+            color = QColorDialog.getColor(current_color, self, "选择边框颜色")
+            if color.isValid():
+                self.canvas.text_border_color = color
+                self.update_color_button(self.border_color_btn, color)
+                
+            # 强制处理所有待处理的事件
+            QCoreApplication.processEvents()
+            
+        except Exception as e:
+            print(f"Error choosing border color: {e}")
             
     def toggle_background_transparency(self):
         """切换背景透明度"""
@@ -313,8 +359,24 @@ class TextStyleDialog(QDialog):
         
     def accept_settings(self):
         """接受设置并关闭对话框"""
-        self.apply_settings()
-        self.accept()
+        try:
+            from PyQt5.QtCore import QCoreApplication
+            
+            # 强制处理所有待处理的事件
+            QCoreApplication.processEvents()
+            
+            self.apply_settings()
+            
+            # 强制处理所有待处理的事件
+            QCoreApplication.processEvents()
+            
+            self.accept()
+            
+        except Exception as e:
+            print(f"Error accepting settings: {e}")
+            import traceback
+            traceback.print_exc()
+            self.reject()
         
     def apply_stylesheet(self):
         """应用现代化样式表"""
@@ -644,8 +706,7 @@ class TextStyleDialog(QDialog):
     def showEvent(self, event):
         """重写显示事件以确保对话框稳定显示"""
         super().showEvent(event)
-        # 确保对话框在最前面并获得焦点
-        self.raise_()
+        # 确保对话框正常显示
         self.activateWindow()
         
     def closeEvent(self, event):

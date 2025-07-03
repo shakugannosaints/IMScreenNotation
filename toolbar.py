@@ -1126,13 +1126,37 @@ class AnnotationToolbar(QWidget):
         if hasattr(self.main_window, 'toolbar_timer'):
             self.main_window.toolbar_timer.stop()
         
-        from text_style_dialog import TextStyleDialog
-        dialog = TextStyleDialog(self.canvas, self)
-        
         try:
-            if dialog.exec_() == TextStyleDialog.Accepted:
+            # 确保在主线程中执行
+            from PyQt5.QtCore import QTimer, QCoreApplication
+            from text_style_dialog import TextStyleDialog
+            
+            # 强制处理所有待处理的事件
+            QCoreApplication.processEvents()
+            
+            # 创建对话框
+            dialog = TextStyleDialog(self.canvas, self)
+            
+            # 设置对话框属性以确保正常显示
+            dialog.setWindowModality(Qt.ApplicationModal)
+            dialog.setAttribute(Qt.WA_DeleteOnClose)
+            dialog.raise_()
+            dialog.activateWindow()
+            
+            # 确保对话框在主线程中执行
+            result = dialog.exec_()
+            
+            # 强制处理所有待处理的事件
+            QCoreApplication.processEvents()
+            
+            if result == TextStyleDialog.Accepted:
                 # 对话框已经在accept时应用了设置
-                pass
+                print("Text style dialog accepted")
+                
+        except Exception as e:
+            print(f"Error opening text style dialog: {e}")
+            import traceback
+            traceback.print_exc()
         finally:
             # 恢复工具栏定时器
             if hasattr(self.main_window, 'toolbar_timer'):

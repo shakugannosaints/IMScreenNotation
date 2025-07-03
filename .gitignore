@@ -13,3 +13,16 @@ build/main/xref-main.html
 dist/main.exe
 main.spec
 build.py
+build_improved.py
+build/IMScreenNotation/Analysis-00.toc
+build/IMScreenNotation/base_library.zip
+build/IMScreenNotation/EXE-00.toc
+build/IMScreenNotation/IMScreenNotation.pkg
+build/IMScreenNotation/PKG-00.toc
+build/IMScreenNotation/PYZ-00.pyz
+build/IMScreenNotation/PYZ-00.toc
+build/IMScreenNotation/qt.conf
+build/IMScreenNotation/warn-IMScreenNotation.txt
+build/IMScreenNotation/xref-IMScreenNotation.html
+dist/IMScreenNotation.exe
+IMScreenNotation.spec

@@ -14,6 +14,25 @@ from config import load_config, save_config
 from hotkey_settings import HotkeySettingsDialog
 from toolbar import AnnotationToolbar
 
+# 显式导入所有必需的模块确保PyInstaller能正确打包
+try:
+    import text_style_dialog
+    print("Successfully imported text_style_dialog")
+except ImportError as e:
+    print(f"Warning: text_style_dialog module not found: {e}")
+
+try:
+    from PyQt5.QtWidgets import QColorDialog, QInputDialog, QFontDialog
+    print("Successfully imported PyQt5 dialog modules")
+except ImportError as e:
+    print(f"Warning: PyQt5 dialog modules not found: {e}")
+    
+try:
+    from PyQt5.QtCore import QCoreApplication
+    print("Successfully imported QCoreApplication")
+except ImportError as e:
+    print(f"Warning: QCoreApplication not found: {e}")
+
 def get_resource_path(relative_path: str) -> str:
     """获取资源文件的绝对路径，支持打包后的exe运行"""
     try:

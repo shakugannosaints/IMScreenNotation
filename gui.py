@@ -298,41 +298,52 @@ class DrawingCanvas(QWidget):
 
     def create_text_annotation(self, position):
         """创建文本标注"""
-        # 弹出文本输入对话框
-        text, ok = QInputDialog.getText(self, '输入文本', '请输入要标注的文本:')
-        if ok and text:
-            # 保存状态到撤销栈
-            self.save_state_to_undo_stack()
+        try:
+            # 确保在主线程中执行
+            from PyQt5.QtCore import QTimer
+            from PyQt5.QtWidgets import QInputDialog
             
-            # 创建文本对象
-            text_shape = Text(
-                position=QPointF(position),
-                text=text,
-                font_family=self.text_font_family,
-                font_size=self.text_font_size,
-                font_bold=self.text_font_bold,
-                font_italic=self.text_font_italic,
-                text_color=self.text_color,
-                background_color=self.text_background_color,
-                border_color=self.text_border_color,
-                border_width=self.text_border_width,
-                padding=self.text_padding,
-                color=self.current_color,
-                thickness=self.current_thickness,
-                opacity=self.current_opacity
-            )
+            # 弹出文本输入对话框
+            text, ok = QInputDialog.getText(self, '输入文本', '请输入要标注的文本:')
+            if ok and text:
+                # 保存状态到撤销栈
+                self.save_state_to_undo_stack()
+                
+                # 创建文本对象
+                text_shape = Text(
+                    position=QPointF(position),
+                    text=text,
+                    font_family=self.text_font_family,
+                    font_size=self.text_font_size,
+                    font_bold=self.text_font_bold,
+                    font_italic=self.text_font_italic,
+                    text_color=self.text_color,
+                    background_color=self.text_background_color,
+                    border_color=self.text_border_color,
+                    border_width=self.text_border_width,
+                    padding=self.text_padding,
+                    color=self.current_color,
+                    thickness=self.current_thickness,
+                    opacity=self.current_opacity
+                )
+                
+                # 添加到形状列表
+                self.shapes.append(text_shape)
+                
+                # 如果是单次绘制模式，清空其他形状
+                if self.single_draw_mode:
+                    self.shapes = [text_shape]
+                    self.undo_stack.clear()
+                
+                # 更新显示
+                self.update()
+                
+            # 重置绘制状态
+            self.drawing = False
+            self.current_shape = None
             
-            # 添加到形状列表
-            self.shapes.append(text_shape)
-            
-            # 如果是单次绘制模式，清空其他形状
-            if self.single_draw_mode:
-                self.shapes = [text_shape]
-                self.undo_stack.clear()
-            
-            # 更新显示
-            self.update()
-            
+        except Exception as e:
+            print(f"Error creating text annotation: {e}")
             # 重置绘制状态
             self.drawing = False
             self.current_shape = None
@@ -375,9 +386,36 @@ class DrawingCanvas(QWidget):
 
     def open_text_style_dialog(self):
         """打开文本样式配置对话框"""
-        from text_style_dialog import TextStyleDialog
-        dialog = TextStyleDialog(self)
-        dialog.exec_()
+        try:
+            # 确保在主线程中执行
+            from PyQt5.QtCore import QTimer, QCoreApplication
+            from text_style_dialog import TextStyleDialog
+            
+            # 强制处理所有待处理的事件
+            QCoreApplication.processEvents()
+            
+            # 创建对话框
+            dialog = TextStyleDialog(self)
+            
+            # 设置对话框属性以确保正常显示
+            dialog.setWindowModality(Qt.ApplicationModal)
+            dialog.setAttribute(Qt.WA_DeleteOnClose)
+            dialog.raise_()
+            dialog.activateWindow()
+            
+            # 确保对话框在主线程中执行
+            result = dialog.exec_()
+            
+            # 强制处理所有待处理的事件
+            QCoreApplication.processEvents()
+            
+            return result
+            
+        except Exception as e:
+            print(f"Error opening text style dialog: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
 
 # Example usage (for testing purposes, will be integrated into main app later)
 if __name__ == '__main__':
