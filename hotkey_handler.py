@@ -90,7 +90,11 @@ class HotkeyHandler:
         # 单次绘制模式热键需要特殊处理
         if hotkeys.get("single_draw_mode"):
             def toggle_single_draw():
-                self.main_window.toolbar.single_draw_mode_btn.click()
+                # 检查按钮是否存在
+                if hasattr(self.main_window.toolbar, 'single_draw_mode_btn') and self.main_window.toolbar.single_draw_mode_btn:
+                    self.main_window.toolbar.single_draw_mode_btn.click()
+                else:
+                    print("警告: single_draw_mode_btn 未初始化")
             self.main_window.hotkey_manager.register_hotkey(hotkeys["single_draw_mode"], toggle_single_draw)
     
     def _register_tool_hotkeys(self, hotkeys: dict) -> None:

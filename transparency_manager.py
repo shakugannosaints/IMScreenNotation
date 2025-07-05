@@ -33,15 +33,17 @@ class TransparencyManager:
             self.main_window.setWindowFlags(self.main_window.windowFlags() | Qt.WindowTransparentForInput)
             if self.main_window.canvas.canvas_opacity != self.main_window.user_passthrough_opacity:
                 self.main_window.canvas.set_canvas_opacity(self.main_window.user_passthrough_opacity)
-            self.main_window.toolbar.toggle_passthrough_btn.setChecked(True)
-            self.main_window.toolbar.toggle_passthrough_btn.setText("🖱️ 非穿透")
+            if self.main_window.toolbar.toggle_passthrough_btn:
+                self.main_window.toolbar.toggle_passthrough_btn.setChecked(True)
+                self.main_window.toolbar.toggle_passthrough_btn.setText("🖱️ 非穿透")
         else:
             if self.main_window.canvas.canvas_opacity == 0.0:
                 self.main_window.canvas.set_canvas_opacity(self.main_window.user_non_passthrough_opacity)
             else:
                 self.main_window.user_non_passthrough_opacity = self.main_window.canvas.canvas_opacity
-            self.main_window.toolbar.toggle_passthrough_btn.setChecked(False)
-            self.main_window.toolbar.toggle_passthrough_btn.setText("🖱️ 穿透")
+            if self.main_window.toolbar.toggle_passthrough_btn:
+                self.main_window.toolbar.toggle_passthrough_btn.setChecked(False)
+                self.main_window.toolbar.toggle_passthrough_btn.setText("🖱️ 穿透")
         
         # 更新GUI滑动条以同步画布透明度
         self.main_window.toolbar.update_canvas_opacity_ui()
@@ -56,9 +58,10 @@ class TransparencyManager:
             self.main_window.passthrough_state = False
             # 使用用户在非穿透模式下设置的透明度
             self.main_window.canvas.set_canvas_opacity(self.main_window.user_non_passthrough_opacity)
-            self.main_window.toolbar.toggle_passthrough_btn.setChecked(False)
-            self.main_window.toolbar.toggle_passthrough_btn.setText("🖱️ 穿透")
-            self.main_window.toolbar.toggle_passthrough_btn.setProperty("class", "action")
+            if self.main_window.toolbar.toggle_passthrough_btn:
+                self.main_window.toolbar.toggle_passthrough_btn.setChecked(False)
+                self.main_window.toolbar.toggle_passthrough_btn.setText("🖱️ 穿透")
+                self.main_window.toolbar.toggle_passthrough_btn.setProperty("class", "action")
             self.main_window._status_bar.showMessage("鼠标非穿透模式", STATUS_MESSAGE_TIMEOUT)
         else:
             # Currently in non-pass-through mode, switch to pass-through
@@ -67,16 +70,21 @@ class TransparencyManager:
             self.main_window.passthrough_state = True
             # 使用用户在穿透模式下设置的透明度
             self.main_window.canvas.set_canvas_opacity(self.main_window.user_passthrough_opacity)
-            self.main_window.toolbar.toggle_passthrough_btn.setChecked(True)
-            self.main_window.toolbar.toggle_passthrough_btn.setText("🖱️ 非穿透")
-            self.main_window.toolbar.toggle_passthrough_btn.setProperty("class", "action active")
+            if self.main_window.toolbar.toggle_passthrough_btn:
+                self.main_window.toolbar.toggle_passthrough_btn.setChecked(True)
+                self.main_window.toolbar.toggle_passthrough_btn.setText("🖱️ 非穿透")
+                self.main_window.toolbar.toggle_passthrough_btn.setProperty("class", "action active")
             self.main_window._status_bar.showMessage("鼠标穿透模式", STATUS_MESSAGE_TIMEOUT)
         
         # 更新GUI滑动条以同步画布透明度
         self.main_window.toolbar.update_canvas_opacity_ui()
         
         # 刷新按钮样式
-        if self.main_window.toolbar.toggle_passthrough_btn.style():
+        if (self.main_window.toolbar.toggle_passthrough_btn and 
+            self.main_window.toolbar.toggle_passthrough_btn.style()):
+            self.main_window.toolbar.toggle_passthrough_btn.style().unpolish(
+                self.main_window.toolbar.toggle_passthrough_btn
+            )
             self.main_window.toolbar.toggle_passthrough_btn.style().polish(
                 self.main_window.toolbar.toggle_passthrough_btn
             )

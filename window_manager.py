@@ -60,19 +60,25 @@ class WindowManager:
         """切换画布显示/隐藏"""
         if self.main_window.canvas.isVisible():
             self.main_window.canvas.hide()
-            self.main_window.toolbar.toggle_visibility_btn.setText("👁️ 显示")
-            self.main_window.toolbar.toggle_visibility_btn.setChecked(True)
-            self.main_window.toolbar.toggle_visibility_btn.setProperty("class", "action active")
+            if self.main_window.toolbar.toggle_visibility_btn:
+                self.main_window.toolbar.toggle_visibility_btn.setText("👁️ 显示")
+                self.main_window.toolbar.toggle_visibility_btn.setChecked(True)
+                self.main_window.toolbar.toggle_visibility_btn.setProperty("class", "action active")
             self.main_window._status_bar.showMessage("画布已隐藏", STATUS_MESSAGE_TIMEOUT)
         else:
             self.main_window.canvas.show()
-            self.main_window.toolbar.toggle_visibility_btn.setText("👁️ 隐藏")
-            self.main_window.toolbar.toggle_visibility_btn.setChecked(False)
-            self.main_window.toolbar.toggle_visibility_btn.setProperty("class", "action")
+            if self.main_window.toolbar.toggle_visibility_btn:
+                self.main_window.toolbar.toggle_visibility_btn.setText("👁️ 隐藏")
+                self.main_window.toolbar.toggle_visibility_btn.setChecked(False)
+                self.main_window.toolbar.toggle_visibility_btn.setProperty("class", "action")
             self.main_window._status_bar.showMessage("画布已显示", STATUS_MESSAGE_TIMEOUT)
         
         # 刷新按钮样式
-        if self.main_window.toolbar.toggle_visibility_btn.style():
+        if (self.main_window.toolbar.toggle_visibility_btn and 
+            self.main_window.toolbar.toggle_visibility_btn.style()):
+            self.main_window.toolbar.toggle_visibility_btn.style().unpolish(
+                self.main_window.toolbar.toggle_visibility_btn
+            )
             self.main_window.toolbar.toggle_visibility_btn.style().polish(
                 self.main_window.toolbar.toggle_visibility_btn
             )
