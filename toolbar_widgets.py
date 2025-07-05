@@ -278,116 +278,119 @@ class ToolbarWidgetBuilder:
         actions_title.setProperty("class", "section-title")
         actions_layout.addWidget(actions_title)
         
-        # 创建各种操作按钮行
-        self._create_edit_actions_row(actions_layout)
-        actions_layout.addSpacing(8)
-        
-        self._create_mode_control_row(actions_layout)
-        actions_layout.addSpacing(8)
-        
-        self._create_file_operations_row(actions_layout)
-        actions_layout.addSpacing(8)
-        
-        self._create_system_operations_row(actions_layout)
+        # 创建所有操作按钮
+        self._create_all_action_buttons(actions_layout)
         
         main_layout.addWidget(actions_card)
     
-    def _create_edit_actions_row(self, layout: QVBoxLayout) -> None:
-        """创建编辑操作行"""
-        edit_row = QHBoxLayout()
-        edit_row.setSpacing(6)
+    def _create_all_action_buttons(self, layout: QVBoxLayout) -> None:
+        """创建所有操作按钮（自动排列）"""
+        # 创建所有按钮
+        buttons = []
         
+        # 编辑操作按钮
         self.toolbar.undo_btn = QPushButton("↶ 撤销")
         self.toolbar.undo_btn.setProperty("class", "action")
         self.toolbar.undo_btn.setMinimumHeight(32)
         self.toolbar.undo_btn.clicked.connect(self.canvas.undo)
-        edit_row.addWidget(self.toolbar.undo_btn)
+        buttons.append(self.toolbar.undo_btn)
         
         self.toolbar.redo_btn = QPushButton("↷ 重做")
         self.toolbar.redo_btn.setProperty("class", "action")
         self.toolbar.redo_btn.setMinimumHeight(32)
         self.toolbar.redo_btn.clicked.connect(self.canvas.redo)
-        edit_row.addWidget(self.toolbar.redo_btn)
+        buttons.append(self.toolbar.redo_btn)
         
         self.toolbar.clear_btn = QPushButton("🗑 清空")
         self.toolbar.clear_btn.setProperty("class", "action warning")
         self.toolbar.clear_btn.setMinimumHeight(32)
         self.toolbar.clear_btn.clicked.connect(self.canvas.clear_canvas)
-        edit_row.addWidget(self.toolbar.clear_btn)
+        buttons.append(self.toolbar.clear_btn)
         
-        layout.addLayout(edit_row)
-    
-    def _create_mode_control_row(self, layout: QVBoxLayout) -> None:
-        """创建模式控制行"""
-        mode_row = QHBoxLayout()
-        mode_row.setSpacing(6)
-        
+        # 模式控制按钮
         self.toolbar.toggle_passthrough_btn = QPushButton("🖱 穿透")
         self.toolbar.toggle_passthrough_btn.setProperty("class", "action")
         self.toolbar.toggle_passthrough_btn.setMinimumHeight(32)
         self.toolbar.toggle_passthrough_btn.setCheckable(True)
         self.toolbar.toggle_passthrough_btn.clicked.connect(self.main_window.toggle_mouse_passthrough)
-        mode_row.addWidget(self.toolbar.toggle_passthrough_btn)
+        buttons.append(self.toolbar.toggle_passthrough_btn)
         
         self.toolbar.toggle_visibility_btn = QPushButton("👁 隐藏")
         self.toolbar.toggle_visibility_btn.setProperty("class", "action")
         self.toolbar.toggle_visibility_btn.setMinimumHeight(32)
         self.toolbar.toggle_visibility_btn.setCheckable(True)
         self.toolbar.toggle_visibility_btn.clicked.connect(self.main_window.toggle_canvas_visibility)
-        mode_row.addWidget(self.toolbar.toggle_visibility_btn)
+        buttons.append(self.toolbar.toggle_visibility_btn)
         
         self.toolbar.single_draw_mode_btn = QPushButton("1️⃣ 单次")
         self.toolbar.single_draw_mode_btn.setProperty("class", "action")
         self.toolbar.single_draw_mode_btn.setMinimumHeight(32)
         self.toolbar.single_draw_mode_btn.setCheckable(True)
         self.toolbar.single_draw_mode_btn.clicked.connect(self.main_window.toggle_single_draw_mode)
-        mode_row.addWidget(self.toolbar.single_draw_mode_btn)
+        buttons.append(self.toolbar.single_draw_mode_btn)
         
-        layout.addLayout(mode_row)
-    
-    def _create_file_operations_row(self, layout: QVBoxLayout) -> None:
-        """创建文件操作行"""
-        file_row = QHBoxLayout()
-        file_row.setSpacing(6)
-        
+        # 文件操作按钮
         self.toolbar.import_btn = QPushButton("📥 导入")
         self.toolbar.import_btn.setProperty("class", "action primary")
         self.toolbar.import_btn.setMinimumHeight(32)
         self.toolbar.import_btn.clicked.connect(self.main_window.import_canvas_content)
-        file_row.addWidget(self.toolbar.import_btn)
+        buttons.append(self.toolbar.import_btn)
         
         self.toolbar.export_btn = QPushButton("📤 导出")
         self.toolbar.export_btn.setProperty("class", "action success")
         self.toolbar.export_btn.setMinimumHeight(32)
         self.toolbar.export_btn.clicked.connect(self.main_window.export_canvas_content)
-        file_row.addWidget(self.toolbar.export_btn)
+        buttons.append(self.toolbar.export_btn)
         
         self.toolbar.save_config_btn = QPushButton("💾 保存")
         self.toolbar.save_config_btn.setProperty("class", "action")
         self.toolbar.save_config_btn.setMinimumHeight(32)
         self.toolbar.save_config_btn.clicked.connect(self.main_window.save_current_config)
-        file_row.addWidget(self.toolbar.save_config_btn)
+        buttons.append(self.toolbar.save_config_btn)
         
-        layout.addLayout(file_row)
-    
-    def _create_system_operations_row(self, layout: QVBoxLayout) -> None:
-        """创建系统操作行"""
-        system_row = QHBoxLayout()
-        system_row.setSpacing(6)
-        
+        # 系统操作按钮
         self.toolbar.settings_btn = QPushButton("⚙️ 设置")
         self.toolbar.settings_btn.setProperty("class", "action")
         self.toolbar.settings_btn.setMinimumHeight(32)
         self.toolbar.settings_btn.clicked.connect(self.main_window.open_hotkey_settings)
-        system_row.addWidget(self.toolbar.settings_btn)
+        buttons.append(self.toolbar.settings_btn)
         
         self.toolbar.exit_btn = QPushButton("❌ 退出")
         self.toolbar.exit_btn.setProperty("class", "action danger")
         self.toolbar.exit_btn.setMinimumHeight(32)
         self.toolbar.exit_btn.clicked.connect(self.main_window.close_application)
-        system_row.addWidget(self.toolbar.exit_btn)
+        buttons.append(self.toolbar.exit_btn)
         
-        # 添加空白填充
-        system_row.addStretch()
+        # 使用通用方法创建按钮行（每行3个按钮）
+        self._create_button_rows(layout, buttons, buttons_per_row=3)
+
+    def _create_button_rows(self, layout: QVBoxLayout, buttons: List[QPushButton], buttons_per_row: int = 3) -> None:
+        """通用的按钮行创建方法（自动排列）
         
-        layout.addLayout(system_row)
+        Args:
+            layout: 目标布局
+            buttons: 按钮列表
+            buttons_per_row: 每行按钮数量，默认为3
+        """
+        total_buttons = len(buttons)
+        rows_needed = (total_buttons + buttons_per_row - 1) // buttons_per_row
+        
+        # 逐行创建按钮
+        for row_index in range(rows_needed):
+            row_layout = QHBoxLayout()
+            row_layout.setSpacing(6)
+            
+            # 计算当前行的按钮范围
+            start_index = row_index * buttons_per_row
+            end_index = min(start_index + buttons_per_row, total_buttons)
+            
+            # 添加当前行的按钮
+            for button in buttons[start_index:end_index]:
+                row_layout.addWidget(button)
+            
+            # 如果最后一行按钮数量不足，添加占位符保持布局美观
+            buttons_in_row = end_index - start_index
+            if buttons_in_row < buttons_per_row:
+                row_layout.addStretch()
+            
+            layout.addLayout(row_layout)
