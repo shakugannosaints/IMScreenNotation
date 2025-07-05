@@ -83,6 +83,12 @@ class AnnotationTool(QMainWindow):
         self.config_manager._apply_canvas_config(self.config)
         self.config_manager._apply_text_config(self.config)
         
+        # 如果是首次运行（没有配置文件），立即保存一次配置以创建文件
+        import os
+        if not os.path.exists("config.json"):
+            print("首次运行，创建默认配置文件...")
+            self.config_manager.save_current_config()
+        
         self.main_layout.addWidget(self.canvas)
         
         # 初始化热键管理器

@@ -215,7 +215,7 @@ class TextStyleDialog(QDialog):
             if font_family_index >= 0:
                 self.font_family_combo.setCurrentIndex(font_family_index)
             
-            font_size = getattr(self.canvas, 'text_font_size', 12)
+            font_size = getattr(self.canvas, 'text_font_size', 16)
             self.font_size_spin.setValue(font_size)
             
             font_bold = getattr(self.canvas, 'text_font_bold', False)
@@ -225,7 +225,7 @@ class TextStyleDialog(QDialog):
             self.font_italic_check.setChecked(font_italic)
             
             # 颜色设置
-            text_color = getattr(self.canvas, 'text_color', QColor(0, 0, 0))
+            text_color = getattr(self.canvas, 'text_color', QColor(255, 0, 0, 255))
             self.update_color_button(self.text_color_btn, text_color)
             
             # 背景色设置
@@ -267,18 +267,43 @@ class TextStyleDialog(QDialog):
             
         except Exception as e:
             print(f"Error loading current settings: {e}")
-            # 如果加载失败，使用默认值
+            # 如果加载失败，确保画布有基本的文本属性
+            self.ensure_canvas_text_attributes()
+            # 设置默认UI值
             self.font_family_combo.setCurrentIndex(0)
-            self.font_size_spin.setValue(12)
+            self.font_size_spin.setValue(16)
             self.font_bold_check.setChecked(False)
             self.font_italic_check.setChecked(False)
             self.bg_transparent_check.setChecked(True)
-            self.border_enable_check.setChecked(False)
+            self.border_enable_check.setChecked(True)
             self.border_width_spin.setValue(1)
             self.padding_spin.setValue(5)
             
             # 在异常情况下也调用 toggle_border_enable
             self.toggle_border_enable()
+    
+    def ensure_canvas_text_attributes(self):
+        """确保画布有必要的文本属性"""
+        if not hasattr(self.canvas, 'text_font_family'):
+            self.canvas.text_font_family = 'Arial'
+        if not hasattr(self.canvas, 'text_font_size'):
+            self.canvas.text_font_size = 16
+        if not hasattr(self.canvas, 'text_font_bold'):
+            self.canvas.text_font_bold = False
+        if not hasattr(self.canvas, 'text_font_italic'):
+            self.canvas.text_font_italic = False
+        if not hasattr(self.canvas, 'text_color'):
+            self.canvas.text_color = QColor(255, 0, 0, 255)
+        if not hasattr(self.canvas, 'text_background_color'):
+            self.canvas.text_background_color = None
+        if not hasattr(self.canvas, 'text_border_color'):
+            self.canvas.text_border_color = None
+        if not hasattr(self.canvas, 'text_border_enabled'):
+            self.canvas.text_border_enabled = True
+        if not hasattr(self.canvas, 'text_border_width'):
+            self.canvas.text_border_width = 1
+        if not hasattr(self.canvas, 'text_padding'):
+            self.canvas.text_padding = 5
         
     def update_color_button(self, button, color):
         """更新颜色按钮的样式"""

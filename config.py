@@ -43,7 +43,8 @@ def load_config():
             
         return config
     except FileNotFoundError:
-        return {
+        # 首次运行时创建默认配置，并确保颜色格式一致
+        default_config = {
             "hotkeys": {
                 "toggle_visibility": "<ctrl>+<alt>+h",
                 "toggle_passthrough": "<ctrl>+<alt>+p",
@@ -64,10 +65,10 @@ def load_config():
                 "tool_laser_pointer": "<ctrl>+7",
                 "tool_text": "<ctrl>+8"
             },
-            "current_color": [255, 0, 0, 255], # RGBA for red
+            "current_color": QColor(255, 0, 0, 255),  # RGBA for red
             "current_thickness": 3,
             "current_opacity": 1.0,
-            "canvas_color": [0, 0, 0, 0], # RGBA for transparent
+            "canvas_color": QColor(0, 0, 0, 0),  # RGBA for transparent
             "canvas_opacity": 0.0,
             "passthrough_opacity": 0.1,
             "non_passthrough_opacity": 0.8,
@@ -77,16 +78,18 @@ def load_config():
             "text_font_size": 16,
             "text_font_bold": False,
             "text_font_italic": False,
-            "text_color": [255, 0, 0, 255],  # 红色
+            "text_color": QColor(255, 0, 0, 255),  # 红色
             "text_background_color": None,  # 透明背景
             "text_border_color": None,  # 无边框
-            "text_border_enabled": True,  # 边框默认关闭
+            "text_border_enabled": True,  # 边框默认启用
             "text_border_width": 1,
             "text_padding": 5
         }
+        return default_config
     except json.JSONDecodeError:
         print("Error decoding config.json. Using default configuration.")
-        return {
+        # JSON解码错误时也使用默认配置，确保颜色格式一致
+        default_config = {
             "hotkeys": {
                 "toggle_visibility": "<ctrl>+<alt>+h",
                 "toggle_passthrough": "<ctrl>+<alt>+p",
@@ -107,10 +110,10 @@ def load_config():
                 "tool_laser_pointer": "<ctrl>+7",
                 "tool_text": "<ctrl>+8"
             },
-            "current_color": [255, 0, 0, 255], # RGBA for red
+            "current_color": QColor(255, 0, 0, 255),  # RGBA for red
             "current_thickness": 3,
             "current_opacity": 1.0,
-            "canvas_color": [0, 0, 0, 0], # RGBA for transparent
+            "canvas_color": QColor(0, 0, 0, 0),  # RGBA for transparent
             "canvas_opacity": 0.0,
             "passthrough_opacity": 0.1,
             "non_passthrough_opacity": 0.8,
@@ -120,13 +123,14 @@ def load_config():
             "text_font_size": 16,
             "text_font_bold": False,
             "text_font_italic": False,
-            "text_color": [255, 0, 0, 255],  # 红色
+            "text_color": QColor(255, 0, 0, 255),  # 红色
             "text_background_color": None,  # 透明背景
             "text_border_color": None,  # 无边框
-            "text_border_enabled": True,  # 边框默认关闭
+            "text_border_enabled": True,  # 边框默认启用
             "text_border_width": 1,
             "text_padding": 5
         }
+        return default_config
 
 def save_config(config):
     # Convert QColor objects to list for JSON serialization

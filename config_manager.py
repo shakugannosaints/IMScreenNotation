@@ -78,13 +78,43 @@ class ConfigManager:
         """应用文本配置"""
         canvas = self.main_window.canvas
         
-        canvas.set_text_font_family(config["text_font_family"])
-        canvas.set_text_font_size(config["text_font_size"])
-        canvas.set_text_font_bold(config["text_font_bold"])
-        canvas.set_text_font_italic(config["text_font_italic"])
-        canvas.set_text_color(config["text_color"])
-        canvas.set_text_background_color(config["text_background_color"])
-        canvas.set_text_border_color(config["text_border_color"])
-        canvas.text_border_enabled = config["text_border_enabled"]
-        canvas.set_text_border_width(config["text_border_width"])
-        canvas.set_text_padding(config["text_padding"])
+        try:
+            canvas.set_text_font_family(config["text_font_family"])
+            canvas.set_text_font_size(config["text_font_size"])
+            canvas.set_text_font_bold(config["text_font_bold"])
+            canvas.set_text_font_italic(config["text_font_italic"])
+            canvas.set_text_color(config["text_color"])
+            canvas.set_text_background_color(config["text_background_color"])
+            canvas.set_text_border_color(config["text_border_color"])
+            canvas.text_border_enabled = config["text_border_enabled"]
+            canvas.set_text_border_width(config["text_border_width"])
+            canvas.set_text_padding(config["text_padding"])
+        except Exception as e:
+            print(f"Error applying text config: {e}")
+            # 如果应用配置失败，确保画布有基本的默认值
+            self._ensure_canvas_text_defaults(canvas)
+    
+    def _ensure_canvas_text_defaults(self, canvas) -> None:
+        """确保画布有基本的文本默认值"""
+        from PyQt5.QtGui import QColor
+        
+        if not hasattr(canvas, 'text_font_family') or canvas.text_font_family is None:
+            canvas.text_font_family = 'Arial'
+        if not hasattr(canvas, 'text_font_size') or canvas.text_font_size is None:
+            canvas.text_font_size = 16
+        if not hasattr(canvas, 'text_font_bold') or canvas.text_font_bold is None:
+            canvas.text_font_bold = False
+        if not hasattr(canvas, 'text_font_italic') or canvas.text_font_italic is None:
+            canvas.text_font_italic = False
+        if not hasattr(canvas, 'text_color') or canvas.text_color is None:
+            canvas.text_color = QColor(255, 0, 0, 255)
+        if not hasattr(canvas, 'text_background_color'):
+            canvas.text_background_color = None
+        if not hasattr(canvas, 'text_border_color'):
+            canvas.text_border_color = None
+        if not hasattr(canvas, 'text_border_enabled') or canvas.text_border_enabled is None:
+            canvas.text_border_enabled = True
+        if not hasattr(canvas, 'text_border_width') or canvas.text_border_width is None:
+            canvas.text_border_width = 1
+        if not hasattr(canvas, 'text_padding') or canvas.text_padding is None:
+            canvas.text_padding = 5
