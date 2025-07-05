@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
                              QMessageBox, QGroupBox, QGridLayout, QSpinBox)
 from PyQt5.QtCore import Qt
 from config import save_config
+from hotkey_manager import HotkeyManager
 
 class HotkeySettingsDialog(QDialog):
     def __init__(self, main_window, config):
@@ -266,7 +267,12 @@ class HotkeySettingsDialog(QDialog):
         if hasattr(self.main_window, 'hotkey_manager') and self.main_window.hotkey_manager:
             self.main_window.hotkey_manager.stop_listening()
         self.main_window.hotkey_manager = None
-        self.main_window.setup_hotkeys()
+        
+        # 重新创建热键管理器
+        self.main_window.hotkey_manager = HotkeyManager(self.main_window)
+        
+        # 重新设置热键
+        self.main_window.hotkey_handler.setup_hotkeys()
         
         # 确保hotkey_manager已创建后再启动监听
         if hasattr(self.main_window, 'hotkey_manager') and self.main_window.hotkey_manager:

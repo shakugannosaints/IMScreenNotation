@@ -50,6 +50,12 @@ class ToolManager:
     def toggle_single_draw_mode(self, checked: bool) -> None:
         """切换单次绘制模式"""
         self.main_window.canvas.single_draw_mode = checked
+        
+        # 检查按钮是否存在
+        if not self.main_window.toolbar.single_draw_mode_btn:
+            print("警告: single_draw_mode_btn 未初始化")
+            return
+            
         if checked:
             self.main_window.toolbar.single_draw_mode_btn.setProperty("class", "action active")
             self.main_window._status_bar.showMessage("已开启单次绘制模式", STATUS_MESSAGE_TIMEOUT)
@@ -58,10 +64,10 @@ class ToolManager:
             self.main_window._status_bar.showMessage("已关闭单次绘制模式", STATUS_MESSAGE_TIMEOUT)
         
         # 刷新按钮样式
-        if self.main_window.toolbar.single_draw_mode_btn.style():
-            self.main_window.toolbar.single_draw_mode_btn.style().polish(
-                self.main_window.toolbar.single_draw_mode_btn
-            )
+        button_style = self.main_window.toolbar.single_draw_mode_btn.style()
+        if button_style:
+            button_style.unpolish(self.main_window.toolbar.single_draw_mode_btn)
+            button_style.polish(self.main_window.toolbar.single_draw_mode_btn)
     
     def add_tool_hotkey(self, hotkey_str: str, tool_name: str) -> None:
         """添加工具切换热键"""
