@@ -98,32 +98,33 @@ class ToolbarWidgetBuilder:
         ]
     
     def _create_tool_button_rows(self, layout: QVBoxLayout, tool_buttons: List[Tuple[str, str]]) -> None:
-        """创建工具按钮行"""
-        # 第一行工具按钮（4个）
-        tools_row1 = QHBoxLayout()
-        tools_row1.setSpacing(4)
-        for name, tool in tool_buttons[:4]:
-            btn = self._create_tool_button(name, tool)
-            tools_row1.addWidget(btn)
-        layout.addLayout(tools_row1)
+        """创建工具按钮行（自动排列，每行4个工具）"""
+        buttons_per_row = 4
         
-        # 第二行工具按钮（4个）
-        tools_row2 = QHBoxLayout()
-        tools_row2.setSpacing(4)
-        for name, tool in tool_buttons[4:8]:
-            btn = self._create_tool_button(name, tool)
-            tools_row2.addWidget(btn)
-        layout.addLayout(tools_row2)
+        # 计算需要的行数
+        total_buttons = len(tool_buttons)
+        rows_needed = (total_buttons + buttons_per_row - 1) // buttons_per_row
         
-        # 第三行工具按钮（文本工具）
-        tools_row3 = QHBoxLayout()
-        tools_row3.setSpacing(4)
-        for name, tool in tool_buttons[8:]:
-            btn = self._create_tool_button(name, tool)
-            tools_row3.addWidget(btn)
-        # 添加空白占位符使文本按钮居中
-        tools_row3.addStretch()
-        layout.addLayout(tools_row3)
+        # 逐行创建工具按钮
+        for row_index in range(rows_needed):
+            row_layout = QHBoxLayout()
+            row_layout.setSpacing(4)
+            
+            # 计算当前行的按钮范围
+            start_index = row_index * buttons_per_row
+            end_index = min(start_index + buttons_per_row, total_buttons)
+            
+            # 添加当前行的按钮
+            for name, tool in tool_buttons[start_index:end_index]:
+                btn = self._create_tool_button(name, tool)
+                row_layout.addWidget(btn)
+            
+            # 如果最后一行按钮数量不足4个，添加占位符保持布局美观
+            buttons_in_row = end_index - start_index
+            if buttons_in_row < buttons_per_row:
+                row_layout.addStretch()
+            
+            layout.addLayout(row_layout)
     
     def _create_tool_button(self, name: str, tool: str) -> QPushButton:
         """创建单个工具按钮"""
