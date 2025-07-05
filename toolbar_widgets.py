@@ -38,6 +38,13 @@ class ToolbarWidgetBuilder:
         
         title_layout.addStretch()
         
+        # GitHub仓库按钮
+        self.toolbar.github_btn = QPushButton("❗")
+        self.toolbar.github_btn.setObjectName("themeToggleButton")  # 使用相同样式
+        self.toolbar.github_btn.setToolTip("访问GitHub仓库")
+        self.toolbar.github_btn.clicked.connect(self._open_github_repo)
+        title_layout.addWidget(self.toolbar.github_btn)
+        
         # 主题切换按钮
         self.toolbar.theme_toggle_btn = QPushButton("☀️")
         self.toolbar.theme_toggle_btn.setObjectName("themeToggleButton")
@@ -513,4 +520,16 @@ class ToolbarWidgetBuilder:
         # 这里可以实现图层管理功能
         if hasattr(self.main_window, 'statusBar'):
             self.main_window.statusBar().showMessage("图层管理功能待实现", 2000)
-    
+
+    def _open_github_repo(self) -> None:
+        """打开GitHub仓库页面"""
+        import webbrowser
+        repo_url = "https://github.com/shakugannosaints/IMScreenNotation"
+        try:
+            webbrowser.open(repo_url)
+            if hasattr(self.main_window, '_status_bar'):
+                self.main_window._status_bar.showMessage("正在打开GitHub仓库...", 2000)
+        except Exception as e:
+            print(f"无法打开GitHub仓库: {e}")
+            if hasattr(self.main_window, '_status_bar'):
+                self.main_window._status_bar.showMessage("无法打开GitHub仓库", 3000)
