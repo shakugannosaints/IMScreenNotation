@@ -28,8 +28,10 @@ class ConfigManager:
         config["canvas_opacity"] = self.main_window.canvas.canvas_opacity
         
         # 保存透明度设置
-        config["passthrough_opacity"] = self.main_window.user_passthrough_opacity
-        config["non_passthrough_opacity"] = self.main_window.user_non_passthrough_opacity
+        if hasattr(self.main_window, 'user_passthrough_opacity'):
+            config["passthrough_opacity"] = self.main_window.user_passthrough_opacity
+        if hasattr(self.main_window, 'user_non_passthrough_opacity'):
+            config["non_passthrough_opacity"] = self.main_window.user_non_passthrough_opacity
         
         # 保存工具栏字体大小设置
         if hasattr(self.main_window, 'toolbar') and self.main_window.toolbar:
