@@ -27,3 +27,7 @@ build/IMScreenNotation/xref-IMScreenNotation.html
 dist/IMScreenNotation.exe
 IMScreenNotation.spec
 packaging_fix.py
+build/IMScreenNotation_safe/base_library.zip
+/build
+build_optimized.py
+IMScreenNotation_safe.spec
