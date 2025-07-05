@@ -196,8 +196,13 @@ class AnnotationToolbar(QWidget):
         
         # 使用尺寸管理器计算最优尺寸
         if self.scrollable_content:
-            content_height = self.scrollable_content.get_total_content_height()
-            self.toolbar_width, self.toolbar_height = self.size_manager.calculate_optimal_size(content_height)
+            # 使用可见内容高度而不是总内容高度
+            visible_content_height = self.scrollable_content.get_visible_content_height()
+            new_width, new_height = self.size_manager.calculate_optimal_size(visible_content_height)
+            
+            # 更新工具栏尺寸属性
+            self.toolbar_width = new_width
+            self.toolbar_height = new_height
         else:
             # 回退到默认尺寸
             self.toolbar_height = 650
@@ -207,6 +212,22 @@ class AnnotationToolbar(QWidget):
         
         # 更新折叠高度
         self.collapsed_height = title_height + 10  # 10px边距
+    
+    def on_content_size_changed(self) -> None:
+        """当工具栏内容大小发生变化时调用"""
+        # 重新计算并设置工具栏大小
+        self.calculate_and_set_size()
+        
+        # 如果内容需要滚动，确保滚动区域正确更新
+        if self.scrollable_content:
+            visible_height = self.scrollable_content.get_visible_content_height()
+            needs_scroll = self.size_manager.should_use_scrolling(visible_height)
+            
+            # 更新滚动策略
+            if needs_scroll:
+                self.scrollable_content.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+            else:
+                self.scrollable_content.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
     def get_recommended_size(self) -> tuple:
         """获取推荐的工具栏尺寸"""
@@ -239,16 +260,23 @@ class AnnotationToolbar(QWidget):
             section = self.scrollable_content.get_section(section_id)
             if section and hasattr(section, 'toggle_collapse'):
                 section.toggle_collapse()  # type: ignore
+                # 内容变化将通过CollapsibleSection的动画回调自动触发大小重新计算
     
     def collapse_all_sections(self) -> None:
         """折叠所有区域"""
         if self.scrollable_content:
             self.scrollable_content.collapse_all_sections()
+            # 延迟重新计算大小，等待所有折叠动画完成
+            from PyQt5.QtCore import QTimer
+            QTimer.singleShot(300, self.on_content_size_changed)
     
     def expand_all_sections(self) -> None:
         """展开所有区域"""
         if self.scrollable_content:
             self.scrollable_content.expand_all_sections()
+            # 延迟重新计算大小，等待所有展开动画完成
+            from PyQt5.QtCore import QTimer
+            QTimer.singleShot(300, self.on_content_size_changed)
     
     def scroll_to_section(self, section_id: str) -> None:
         """滚动到指定区域"""

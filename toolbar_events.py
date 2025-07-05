@@ -96,18 +96,19 @@ class ToolbarEventHandler:
             return
             
         if not self.toolbar.is_collapsed:
-            # 折叠
+            # 折叠：只显示标题栏
             self.toolbar.scrollable_content.hide()
             self.toolbar.setFixedSize(self.toolbar.toolbar_width, self.toolbar.collapsed_height)
             self.toolbar.toggle_collapse_btn.setText("🔽")
             self.toolbar.is_collapsed = True
             self.main_window.statusBar().showMessage("工具栏已折叠", 1000)
         else:
-            # 展开
+            # 展开：重新计算并应用最优大小
             self.toolbar.scrollable_content.show()
-            self.toolbar.setFixedSize(self.toolbar.toolbar_width, self.toolbar.toolbar_height)
-            self.toolbar.toggle_collapse_btn.setText("🔼")
             self.toolbar.is_collapsed = False
+            # 使用动态大小计算而不是固定尺寸
+            self.toolbar.calculate_and_set_size()
+            self.toolbar.toggle_collapse_btn.setText("🔼")
             self.main_window.statusBar().showMessage("工具栏已展开", 1000)
             
         # 确保工具栏始终在最前面

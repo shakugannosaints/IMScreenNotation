@@ -118,6 +118,8 @@ class CollapsibleSection(QWidget):
             """)
             self.setProperty("collapsed", True)
             self.updateGeometry()  # 通知父组件更新布局
+            # 通知工具栏内容已变化，需要重新计算窗口大小
+            self._notify_content_changed()
         
         # 断开之前的信号连接，避免重复连接
         try:
@@ -161,6 +163,8 @@ class CollapsibleSection(QWidget):
         
         def on_expand_finished():
             self.updateGeometry()  # 通知父组件更新布局
+            # 通知工具栏内容已变化，需要重新计算窗口大小
+            self._notify_content_changed()
         
         self.animation.finished.connect(on_expand_finished)
         self.animation.start()
@@ -178,6 +182,20 @@ class CollapsibleSection(QWidget):
             return self.header.minimumSizeHint()
         else:
             return super().minimumSizeHint()
+    
+    def _notify_content_changed(self):
+        """通知父级工具栏内容已变化，需要重新计算大小"""
+        # 向上查找ScrollableToolbarContent
+        parent = self.parent()
+        while parent:
+            if hasattr(parent, '_on_content_changed'):
+                try:
+                    parent._on_content_changed()  # type: ignore
+                    break
+                except Exception as e:
+                    print(f"调用_on_content_changed时出错: {e}")
+                    break
+            parent = parent.parent()
 
 
 class ScrollableToolbarContent(QScrollArea):
@@ -294,6 +312,36 @@ class ScrollableToolbarContent(QScrollArea):
         if section:
             # 确保区域可见
             self.ensureWidgetVisible(section, 0, 50)
+    
+    def get_visible_content_height(self) -> int:
+        """获取当前可见内容的实际高度（考虑折叠状态）"""
+        total_height = 0
+        for i in range(self.content_layout.count()):
+            item = self.content_layout.itemAt(i)
+            if item and item.widget():
+                widget = item.widget()
+                if isinstance(widget, CollapsibleSection):
+                    # 对于可折叠区域，根据折叠状态计算高度
+                    if widget.is_collapsed:
+                        total_height += widget.header.sizeHint().height() + 1  # 标题高度 + 分隔线
+                    else:
+                        total_height += widget.sizeHint().height()
+                else:
+                    # 对于普通区域，直接使用sizeHint
+                    total_height += widget.sizeHint().height()
+                
+                # 添加布局间距
+                if i < self.content_layout.count() - 1:
+                    total_height += self.content_layout.spacing()
+        
+        return total_height
+    
+    def _on_content_changed(self):
+        """内容变化时的回调，通知工具栏重新计算大小"""
+        if hasattr(self.toolbar, 'on_content_size_changed'):
+            # 延迟执行，确保所有动画和布局更新完成
+            from PyQt5.QtCore import QTimer
+            QTimer.singleShot(250, self.toolbar.on_content_size_changed)
 
 
 class ToolbarSizeManager:
@@ -301,40 +349,59 @@ class ToolbarSizeManager:
     
     def __init__(self, toolbar):
         self.toolbar = toolbar
-        self.min_height = 400
+        self.min_height = 200  # 降低最小高度，让工具栏可以更紧凑
         self.max_height = 800
         self.preferred_height = 650
+        self.screen_height_ratio = 0.8  # 最大使用屏幕高度的80%
     
-    def calculate_optimal_size(self, content_height: int) -> tuple:
-        """计算最优尺寸"""
-        # 获取屏幕尺寸
-        screen = self.toolbar.main_window.screen() if hasattr(self.toolbar.main_window, 'screen') else None
-        if screen:
-            screen_height = screen.availableGeometry().height()
-            max_allowed_height = int(screen_height * 0.9)  # 屏幕高度的90%
-        else:
-            max_allowed_height = 800
+    def get_screen_height(self) -> int:
+        """获取屏幕可用高度"""
+        try:
+            from PyQt5.QtWidgets import QApplication
+            screen = QApplication.primaryScreen()
+            if screen:
+                return screen.availableGeometry().height()
+        except:
+            pass
+        return 1080  # 默认值
+    
+    def calculate_optimal_size(self, visible_content_height: int) -> tuple:
+        """根据可见内容高度计算最优尺寸"""
+        screen_height = self.get_screen_height()
+        max_allowed_height = int(screen_height * self.screen_height_ratio)
         
         # 标题栏高度
-        title_height = 50
+        title_height = self.toolbar.title_container.sizeHint().height() if self.toolbar.title_container else 50
         
-        # 计算内容区域需要的高度
-        total_needed_height = title_height + content_height + 40  # 加上边距
+        # 计算内容区域需要的高度（加上内边距）
+        content_padding = 20  # 内容区域的上下边距
+        total_needed_height = title_height + visible_content_height + content_padding
         
         # 确定最终高度
-        if total_needed_height <= self.preferred_height:
-            # 内容较少，使用首选高度
-            final_height = max(total_needed_height, self.min_height)
+        if total_needed_height <= self.min_height:
+            # 内容很少时，使用最小高度
+            final_height = self.min_height
+        elif total_needed_height <= max_allowed_height:
+            # 内容适中，使用实际需要的高度
+            final_height = total_needed_height
         else:
-            # 内容较多，限制在最大允许高度内
-            final_height = min(total_needed_height, max_allowed_height, self.max_height)
+            # 内容过多，限制在最大允许高度内，此时需要滚动
+            final_height = max_allowed_height
         
-        return self.toolbar.toolbar_width, final_height
+        # 计算最优宽度（基于字体大小调整）
+        base_width = 380
+        font_scale = getattr(self.toolbar, 'font_size', 11) / 11.0
+        optimal_width = int(base_width * font_scale)
+        # 确保宽度在合理范围内
+        optimal_width = max(320, min(optimal_width, 500))
+        
+        return optimal_width, final_height
     
-    def should_use_scrolling(self, content_height: int) -> bool:
-        """判断是否应该使用滚动"""
-        _, calculated_height = self.calculate_optimal_size(content_height)
-        title_height = 50
-        available_content_height = calculated_height - title_height - 40
+    def should_use_scrolling(self, visible_content_height: int) -> bool:
+        """判断是否需要使用滚动"""
+        _, calculated_height = self.calculate_optimal_size(visible_content_height)
+        title_height = self.toolbar.title_container.sizeHint().height() if self.toolbar.title_container else 50
+        content_padding = 20
+        available_content_height = calculated_height - title_height - content_padding
         
-        return content_height > available_content_height
+        return visible_content_height > available_content_height
