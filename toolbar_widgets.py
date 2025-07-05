@@ -45,6 +45,18 @@ class ToolbarWidgetBuilder:
         self.toolbar.theme_toggle_btn.clicked.connect(self.toolbar.theme_manager.toggle_theme)
         title_layout.addWidget(self.toolbar.theme_toggle_btn)
         
+        # 区域管理按钮
+        self.toolbar.section_manage_btn = QPushButton("📋")
+        self.toolbar.section_manage_btn.setObjectName("themeToggleButton")  # 使用相同样式
+        self.toolbar.section_manage_btn.setToolTip("区域管理：点击展开所有，右键折叠所有")
+        self.toolbar.section_manage_btn.clicked.connect(self.toolbar.expand_all_sections)
+        # 添加右键菜单支持
+        self.toolbar.section_manage_btn.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.toolbar.section_manage_btn.customContextMenuRequested.connect(
+            lambda: self.toolbar.collapse_all_sections()
+        )
+        title_layout.addWidget(self.toolbar.section_manage_btn)
+        
         # 折叠按钮
         self.toolbar.toggle_collapse_btn = QPushButton("🔼")
         self.toolbar.toggle_collapse_btn.setObjectName("collapseButton")
@@ -394,3 +406,111 @@ class ToolbarWidgetBuilder:
                 row_layout.addStretch()
             
             layout.addLayout(row_layout)
+    
+    def setup_scrollable_sections(self, scrollable_content) -> None:
+        """设置可滚动的分组区域"""
+        # 创建工具选择区域
+        tools_widget = QWidget()
+        self.setup_tools_section_for_scrollable(tools_widget)
+        scrollable_content.add_section("tools", "🎨 绘制工具", tools_widget, collapsible=True, start_collapsed=False)
+        
+        # 创建属性控制区域
+        attrs_widget = QWidget()
+        self.setup_attributes_section_for_scrollable(attrs_widget)
+        scrollable_content.add_section("attributes", "⚙️ 绘制属性", attrs_widget, collapsible=True, start_collapsed=False)
+        
+        # 创建操作区域
+        actions_widget = QWidget()
+        self.setup_actions_section_for_scrollable(actions_widget)
+        scrollable_content.add_section("actions", "🔧 操作功能", actions_widget, collapsible=True, start_collapsed=False)
+        
+        # 如果有更多功能，可以继续添加新的区域
+        self._setup_advanced_features_section(scrollable_content)
+    
+    def setup_tools_section_for_scrollable(self, container_widget: QWidget) -> None:
+        """为可滚动区域设置工具选择区域"""
+        layout = QVBoxLayout(container_widget)
+        layout.setContentsMargins(6, 6, 6, 6)
+        layout.setSpacing(6)
+        
+        # 工具按钮定义
+        tool_buttons = self._get_tool_button_definitions()
+        
+        self.toolbar.tool_button_group = {}
+        
+        # 创建工具按钮行
+        self._create_tool_button_rows(layout, tool_buttons)
+        
+        # 默认选择直线工具
+        if "line" in self.toolbar.tool_button_group:
+            self.toolbar.tool_button_group["line"].setChecked(True)
+    
+    def setup_attributes_section_for_scrollable(self, container_widget: QWidget) -> None:
+        """为可滚动区域设置属性控制区域"""
+        layout = QVBoxLayout(container_widget)
+        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setSpacing(10)
+        
+        # 创建各种属性控件
+        self._create_color_selection(layout)
+        self._create_thickness_control(layout)
+        self._create_drawing_opacity_control(layout)
+        self._create_canvas_opacity_control(layout)
+        self._create_text_style_control(layout)
+    
+    def setup_actions_section_for_scrollable(self, container_widget: QWidget) -> None:
+        """为可滚动区域设置操作功能区域"""
+        layout = QVBoxLayout(container_widget)
+        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setSpacing(8)
+        
+        # 创建所有操作按钮
+        self._create_all_action_buttons(layout)
+    
+    def _setup_advanced_features_section(self, scrollable_content) -> None:
+        """设置高级功能区域（示例，展示如何添加更多功能区域）"""
+        advanced_widget = QWidget()
+        layout = QVBoxLayout(advanced_widget)
+        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setSpacing(8)
+        
+        # 创建高级功能按钮
+        buttons = []
+
+        
+        # 图层管理按钮
+        layer_btn = QPushButton("📚 图层管理")
+        layer_btn.setProperty("class", "action")
+        layer_btn.setMinimumHeight(32)
+        layer_btn.setToolTip("管理标注图层")
+        layer_btn.clicked.connect(lambda: self._show_layer_manager())
+        buttons.append(layer_btn)
+        
+        
+        # 折叠/展开所有区域的快捷按钮
+        collapse_all_btn = QPushButton("📁 折叠所有")
+        collapse_all_btn.setProperty("class", "action warning")
+        collapse_all_btn.setMinimumHeight(32)
+        collapse_all_btn.setToolTip("折叠所有功能区域")
+        collapse_all_btn.clicked.connect(self.toolbar.collapse_all_sections)
+        buttons.append(collapse_all_btn)
+        
+        expand_all_btn = QPushButton("📂 展开所有")
+        expand_all_btn.setProperty("class", "action warning")
+        expand_all_btn.setMinimumHeight(32)
+        expand_all_btn.setToolTip("展开所有功能区域")
+        expand_all_btn.clicked.connect(self.toolbar.expand_all_sections)
+        buttons.append(expand_all_btn)
+        
+        # 使用通用方法创建按钮行（每行3个按钮）
+        self._create_button_rows(layout, buttons, buttons_per_row=3)
+        
+        scrollable_content.add_section("advanced", "🚀 高级功能（未实现的未来规划）", advanced_widget, 
+                                     collapsible=True, start_collapsed=True)
+
+    def _show_layer_manager(self) -> None:
+        """显示图层管理器（占位符实现）"""
+        # 这里可以实现图层管理功能
+        if hasattr(self.main_window, 'statusBar'):
+            self.main_window.statusBar().showMessage("图层管理功能待实现", 2000)
+    

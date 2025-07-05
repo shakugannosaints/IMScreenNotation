@@ -1,6 +1,7 @@
 """
 工具栏界面模块（重构版）
 包含屏幕标注工具的浮动工具栏界面
+支持可滚动内容和分组折叠功能
 """
 
 from typing import Dict, Any, Optional, Callable
@@ -14,6 +15,7 @@ from PyQt5 import QtCore
 from toolbar_theme import ToolbarThemeManager
 from toolbar_widgets import ToolbarWidgetBuilder
 from toolbar_events import ToolbarEventHandler
+from toolbar_scrollable import ScrollableToolbarContent, ToolbarSizeManager
 
 
 class AnnotationToolbar(QWidget):
@@ -28,6 +30,7 @@ class AnnotationToolbar(QWidget):
         self.theme_manager = ToolbarThemeManager(self)
         self.widget_builder = ToolbarWidgetBuilder(self)
         self.event_handler = ToolbarEventHandler(self)
+        self.size_manager = ToolbarSizeManager(self)
         
         # 拖动相关属性
         self.drag_position: QPoint = QPoint(0, 0)
@@ -64,6 +67,7 @@ class AnnotationToolbar(QWidget):
         self.title_container: Optional[QWidget] = None
         self.title_label: Optional[QLabel] = None
         self.theme_toggle_btn: Optional[QPushButton] = None
+        self.section_manage_btn: Optional[QPushButton] = None
         self.toggle_collapse_btn: Optional[QPushButton] = None
         
         # 模式控制按钮
@@ -82,8 +86,8 @@ class AnnotationToolbar(QWidget):
         self.save_config_btn: Optional[QPushButton] = None
         self.text_style_btn: Optional[QPushButton] = None
         
-        # 内容区域
-        self.content_widget: Optional[QWidget] = None
+        # 可滚动内容区域
+        self.scrollable_content: Optional[ScrollableToolbarContent] = None
         
     def setup_toolbar(self) -> None:
         """设置工具栏界面"""
@@ -118,19 +122,13 @@ class AnnotationToolbar(QWidget):
         # 使用widget_builder创建界面组件
         self.widget_builder.setup_title_section(toolbar_main_layout)
         
-        # 内容区域容器
-        self.content_widget = QWidget()
-        self.theme_manager.update_content_widget_style()
-        content_layout = QVBoxLayout(self.content_widget)
-        content_layout.setSpacing(8)
-        content_layout.setContentsMargins(12, 12, 12, 12)
+        # 创建可滚动的内容区域
+        self.scrollable_content = ScrollableToolbarContent(self)
         
         # 使用widget_builder创建各个区域
-        self.widget_builder.setup_tools_section(content_layout)
-        self.widget_builder.setup_attributes_section(content_layout)
-        self.widget_builder.setup_actions_section(content_layout)
+        self.widget_builder.setup_scrollable_sections(self.scrollable_content)
         
-        toolbar_main_layout.addWidget(self.content_widget)
+        toolbar_main_layout.addWidget(self.scrollable_content)
         
         # 计算并设置自适应尺寸
         self.calculate_and_set_size()
@@ -193,22 +191,16 @@ class AnnotationToolbar(QWidget):
     # 尺寸计算方法
     def calculate_and_set_size(self) -> None:
         """计算并设置工具栏的最佳尺寸"""
-        # 确保内容已完全布局
-        if self.content_widget:
-            self.content_widget.adjustSize()
-        
         # 获取标题区域高度
         title_height = self.title_container.sizeHint().height() if self.title_container else 50
         
-        # 获取内容区域高度
-        content_height = self.content_widget.sizeHint().height() if self.content_widget else 600
-        
-        # 计算总高度（标题 + 内容 + 额外边距）
-        total_height = title_height + content_height + 20  # 20px额外边距
-        
-        # 确保最小高度
-        min_height = 650
-        self.toolbar_height = max(total_height, min_height)
+        # 使用尺寸管理器计算最优尺寸
+        if self.scrollable_content:
+            content_height = self.scrollable_content.get_total_content_height()
+            self.toolbar_width, self.toolbar_height = self.size_manager.calculate_optimal_size(content_height)
+        else:
+            # 回退到默认尺寸
+            self.toolbar_height = 650
         
         # 设置工具栏尺寸
         self.setFixedSize(self.toolbar_width, self.toolbar_height)
@@ -239,3 +231,32 @@ class AnnotationToolbar(QWidget):
     def is_dark_theme(self) -> bool:
         """获取是否为黑夜主题"""
         return self.theme_manager.is_dark_theme
+
+    # 可滚动区域管理方法
+    def toggle_section_collapse(self, section_id: str) -> None:
+        """切换指定区域的折叠状态"""
+        if self.scrollable_content:
+            section = self.scrollable_content.get_section(section_id)
+            if section and hasattr(section, 'toggle_collapse'):
+                section.toggle_collapse()  # type: ignore
+    
+    def collapse_all_sections(self) -> None:
+        """折叠所有区域"""
+        if self.scrollable_content:
+            self.scrollable_content.collapse_all_sections()
+    
+    def expand_all_sections(self) -> None:
+        """展开所有区域"""
+        if self.scrollable_content:
+            self.scrollable_content.expand_all_sections()
+    
+    def scroll_to_section(self, section_id: str) -> None:
+        """滚动到指定区域"""
+        if self.scrollable_content:
+            self.scrollable_content.scroll_to_section(section_id)
+    
+    def is_content_scrollable(self) -> bool:
+        """检查内容是否需要滚动"""
+        if self.scrollable_content:
+            return self.scrollable_content.is_scrollable()
+        return False

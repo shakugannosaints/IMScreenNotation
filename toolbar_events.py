@@ -90,16 +90,21 @@ class ToolbarEventHandler:
     
     def handle_toolbar_collapse_toggle(self) -> None:
         """处理工具栏折叠/展开切换事件"""
+        # 检查可滚动内容是否存在
+        if not hasattr(self.toolbar, 'scrollable_content') or not self.toolbar.scrollable_content:
+            self.main_window.statusBar().showMessage("工具栏内容未初始化", 2000)
+            return
+            
         if not self.toolbar.is_collapsed:
             # 折叠
-            self.toolbar.content_widget.hide()
+            self.toolbar.scrollable_content.hide()
             self.toolbar.setFixedSize(self.toolbar.toolbar_width, self.toolbar.collapsed_height)
             self.toolbar.toggle_collapse_btn.setText("🔽")
             self.toolbar.is_collapsed = True
             self.main_window.statusBar().showMessage("工具栏已折叠", 1000)
         else:
             # 展开
-            self.toolbar.content_widget.show()
+            self.toolbar.scrollable_content.show()
             self.toolbar.setFixedSize(self.toolbar.toolbar_width, self.toolbar.toolbar_height)
             self.toolbar.toggle_collapse_btn.setText("🔼")
             self.toolbar.is_collapsed = False

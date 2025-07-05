@@ -23,10 +23,9 @@ class ToolbarThemeManager:
     
     def get_theme_stylesheet(self) -> str:
         """获取当前主题的样式表"""
-        if self.is_dark_theme:
-            return self.get_dark_theme_stylesheet()
-        else:
-            return self.get_light_theme_stylesheet()
+        base_styles = self.get_dark_theme_stylesheet() if self.is_dark_theme else self.get_light_theme_stylesheet()
+        scrollable_styles = self.get_scrollable_components_stylesheet()
+        return base_styles + "\n" + scrollable_styles
     
     def get_dark_theme_stylesheet(self) -> str:
         """获取黑夜模式样式表"""
@@ -493,6 +492,161 @@ class ToolbarThemeManager:
             }}
         """
     
+    def get_scrollable_components_stylesheet(self) -> str:
+        """获取可滚动组件的样式表"""
+        if self.is_dark_theme:
+            return """
+            /* 可折叠区域样式 */
+            QWidget#collapsibleSection {
+                background-color: transparent;
+                border: none;
+                margin: 2px 0px;
+            }
+            
+            QWidget#sectionHeader {
+                background-color: #3a3a3a;
+                border: 1px solid #4a4a4a;
+                border-radius: 6px;
+                padding: 4px;
+            }
+            
+            QWidget#sectionHeader:hover {
+                background-color: #4a4a4a;
+                border-color: #0078d4;
+            }
+            
+            QLabel#collapseIndicator {
+                color: #ffffff;
+                font-weight: bold;
+                font-size: 12px;
+            }
+            
+            QLabel#sectionTitle {
+                color: #ffffff;
+                font-weight: bold;
+                font-size: 12px;
+            }
+            
+            QWidget#sectionContent {
+                background-color: #2a2a2a;
+                border: 1px solid #3a3a3a;
+                border-radius: 6px;
+                border-top: none;
+                border-top-left-radius: 0px;
+                border-top-right-radius: 0px;
+                margin-top: 0px;
+            }
+            
+            /* 滚动区域样式 */
+            QScrollArea#scrollableContent {
+                border: none;
+                background: transparent;
+            }
+            
+            QScrollBar:vertical {
+                background: rgba(255, 255, 255, 0.1);
+                width: 8px;
+                border-radius: 4px;
+                margin: 0;
+            }
+            
+            QScrollBar::handle:vertical {
+                background: rgba(255, 255, 255, 0.3);
+                border-radius: 4px;
+                min-height: 20px;
+            }
+            
+            QScrollBar::handle:vertical:hover {
+                background: rgba(255, 255, 255, 0.5);
+            }
+            
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0;
+                border: none;
+                background: none;
+            }
+            
+            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+                background: none;
+            }
+            """
+        else:
+            return """
+            /* 可折叠区域样式 - 白天模式 */
+            QWidget#collapsibleSection {
+                background-color: transparent;
+                border: none;
+                margin: 2px 0px;
+            }
+            
+            QWidget#sectionHeader {
+                background-color: #f0f0f0;
+                border: 1px solid #c0c0c0;
+                border-radius: 6px;
+                padding: 4px;
+            }
+            
+            QWidget#sectionHeader:hover {
+                background-color: #e0e0e0;
+                border-color: #0078d4;
+            }
+            
+            QLabel#collapseIndicator {
+                color: #333333;
+                font-weight: bold;
+                font-size: 12px;
+            }
+            
+            QLabel#sectionTitle {
+                color: #333333;
+                font-weight: bold;
+                font-size: 12px;
+            }
+            
+            QWidget#sectionContent {
+                background-color: #fafafa;
+                border: 1px solid #d0d0d0;
+                border-radius: 6px;
+                border-top: none;
+                border-top-left-radius: 0px;
+                border-top-right-radius: 0px;
+                margin-top: 0px;
+            }
+            
+            /* 滚动区域样式 - 白天模式 */
+            QScrollArea#scrollableContent {
+                border: none;
+                background: transparent;
+            }
+            
+            QScrollBar:vertical {
+                background: rgba(0, 0, 0, 0.1);
+                width: 8px;
+                border-radius: 4px;
+                margin: 0;
+            }
+            
+            QScrollBar::handle:vertical {
+                background: rgba(0, 0, 0, 0.3);
+                border-radius: 4px;
+                min-height: 20px;
+            }
+            
+            QScrollBar::handle:vertical:hover {
+                background: rgba(0, 0, 0, 0.5);
+            }
+            
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0;
+                border: none;
+                background: none;
+            }
+            
+            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+                background: none;
+            }
+            """
+    
     def toggle_theme(self) -> None:
         """切换主题"""
         self.is_dark_theme = not self.is_dark_theme
@@ -518,8 +672,15 @@ class ToolbarThemeManager:
     
     def update_content_widget_style(self) -> None:
         """更新内容区域的样式"""
-        bg_color = "#1a1a1a" if self.is_dark_theme else "#ffffff"
-        self.toolbar.content_widget.setStyleSheet(f"background-color: {bg_color}; border-radius: 0px 0px 8px 8px;")
+        if hasattr(self.toolbar, 'content_widget') and self.toolbar.content_widget:
+            # 传统内容区域样式
+            bg_color = "#1a1a1a" if self.is_dark_theme else "#ffffff"
+            self.toolbar.content_widget.setStyleSheet(f"background-color: {bg_color}; border-radius: 0px 0px 8px 8px;")
+        
+        if hasattr(self.toolbar, 'scrollable_content') and self.toolbar.scrollable_content:
+            # 可滚动内容区域样式
+            scrollable_styles = self.get_scrollable_components_stylesheet()
+            self.toolbar.scrollable_content.setStyleSheet(scrollable_styles)
     
     def update_color_button_style(self, color: QColor) -> None:
         """更新颜色按钮的显示样式
