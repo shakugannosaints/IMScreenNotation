@@ -117,8 +117,8 @@ class ToolbarWidgetBuilder:
         ]
     
     def _create_tool_button_rows(self, layout: QVBoxLayout, tool_buttons: List[Tuple[str, str]]) -> None:
-        """创建工具按钮行（自动排列，每行4个工具）"""
-        buttons_per_row = 4
+        """创建工具按钮行（自动排列，每行3个工具，布局更均匀）"""
+        buttons_per_row = 4  # 或许可以改为每行3个，9个工具刚好分成3行
         
         # 计算需要的行数
         total_buttons = len(tool_buttons)
@@ -128,6 +128,7 @@ class ToolbarWidgetBuilder:
         for row_index in range(rows_needed):
             row_layout = QHBoxLayout()
             row_layout.setSpacing(4)
+            row_layout.setContentsMargins(0, 0, 0, 0)
             
             # 计算当前行的按钮范围
             start_index = row_index * buttons_per_row
@@ -138,10 +139,17 @@ class ToolbarWidgetBuilder:
                 btn = self._create_tool_button(name, tool)
                 row_layout.addWidget(btn)
             
-            # 如果最后一行按钮数量不足4个，添加占位符保持布局美观
+            # 为了保持布局一致性，即使最后一行按钮不足也要保持固定尺寸
             buttons_in_row = end_index - start_index
             if buttons_in_row < buttons_per_row:
-                row_layout.addStretch()
+                # 添加空白占位，确保按钮左对齐且保持一致的布局
+                for _ in range(buttons_per_row - buttons_in_row):
+                    spacer = QWidget()
+                    # 使用与按钮相同的最小尺寸
+                    spacer.setMinimumSize(70, 28)
+                    spacer.setMaximumSize(100, 32)  # 稍微宽一点以适应不同按钮宽度
+                    spacer.setSizePolicy(spacer.sizePolicy().Fixed, spacer.sizePolicy().Fixed)
+                    row_layout.addWidget(spacer)
             
             layout.addLayout(row_layout)
     
@@ -150,8 +158,15 @@ class ToolbarWidgetBuilder:
         btn = QPushButton(name)
         btn.setProperty("class", "tool")
         btn.setCheckable(True)
-        btn.setMinimumSize(70, 28)
-        btn.setMaximumSize(85, 32)
+        # 根据文本长度动态调整按钮宽度，确保文本能完整显示
+        text_width = btn.fontMetrics().boundingRect(name).width()
+        min_width = max(70, text_width + 20)  # 至少70像素，或文本宽度+20像素边距
+        max_width = max(85, text_width + 25)  # 至少85像素，或文本宽度+25像素边距
+        
+        btn.setMinimumSize(min_width, 28)
+        btn.setMaximumSize(max_width, 32)
+        # 设置固定尺寸策略，确保按钮大小一致
+        btn.setSizePolicy(btn.sizePolicy().Fixed, btn.sizePolicy().Fixed)
         tool_name = str(tool)
         btn.clicked.connect(lambda checked, tool_name=tool_name: self.main_window.select_tool(tool_name))
         self.toolbar.tool_button_group[tool] = btn
@@ -398,6 +413,7 @@ class ToolbarWidgetBuilder:
         for row_index in range(rows_needed):
             row_layout = QHBoxLayout()
             row_layout.setSpacing(6)
+            row_layout.setContentsMargins(0, 0, 0, 0)
             
             # 计算当前行的按钮范围
             start_index = row_index * buttons_per_row
@@ -405,12 +421,19 @@ class ToolbarWidgetBuilder:
             
             # 添加当前行的按钮
             for button in buttons[start_index:end_index]:
+                # 确保按钮有一致的尺寸策略
+                button.setSizePolicy(button.sizePolicy().Expanding, button.sizePolicy().Fixed)
                 row_layout.addWidget(button)
             
-            # 如果最后一行按钮数量不足，添加占位符保持布局美观
+            # 为了保持布局一致性，最后一行如果按钮不足也要保持对齐
             buttons_in_row = end_index - start_index
             if buttons_in_row < buttons_per_row:
-                row_layout.addStretch()
+                # 添加空白占位，确保按钮分布均匀
+                for _ in range(buttons_per_row - buttons_in_row):
+                    spacer = QWidget()
+                    spacer.setSizePolicy(spacer.sizePolicy().Expanding, spacer.sizePolicy().Fixed)
+                    spacer.setMinimumHeight(32)
+                    row_layout.addWidget(spacer)
             
             layout.addLayout(row_layout)
     
