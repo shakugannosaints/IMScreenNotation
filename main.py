@@ -9,19 +9,14 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
 from PyQt5.QtGui import QColor, QIcon, QCloseEvent, QPixmap, QPainter
 from PyQt5.QtCore import Qt, QTimer, QPoint, QEvent
 from gui import DrawingCanvas
-from hotkey.hotkey_manager import HotkeyManager
 from config import load_config, save_config
-from hotkey.hotkey_settings import HotkeySettingsDialog
-from toolbar.toolbar import AnnotationToolbar
-
-# 导入新的模块化组件
-from manager.window_manager import WindowManager
-from manager.transparency_manager import TransparencyManager
-from manager.tool_manager import ToolManager
-from manager.tray_manager import TrayManager
 from file_operations import FileOperations
-from hotkey.hotkey_handler import HotkeyHandler
-from manager.config_manager import ConfigManager
+
+# 导入模块化组件 - 使用更规范的导入方式
+from hotkey import HotkeyManager, HotkeyHandler, HotkeySettingsDialog
+from manager import (WindowManager, TransparencyManager, ToolManager, 
+                     TrayManager, ConfigManager)
+from toolbar import AnnotationToolbar
 from constants import TOOLBAR_CHECK_INTERVAL, STATUS_MESSAGE_TIMEOUT
 
 # 显式导入所有必需的模块确保PyInstaller能正确打包
