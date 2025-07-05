@@ -113,7 +113,8 @@ class HotkeySettingsDialog(QDialog):
             ("tool_filled_freehand", "填充绘制"),
             ("tool_point", "点工具"),
             ("tool_laser_pointer", "激光笔"),
-            ("tool_text", "文本工具")
+            ("tool_text", "文本工具"),
+            ("tool_eraser", "橡皮擦工具")
         ]
         
         for i, (key, label) in enumerate(tool_hotkeys):
@@ -200,7 +201,9 @@ class HotkeySettingsDialog(QDialog):
             "tool_freehand": "<ctrl>+5",
             "tool_filled_freehand": "<ctrl>+<shift>+5",
             "tool_point": "<ctrl>+6",
-            "tool_laser_pointer": "<ctrl>+7"
+            "tool_laser_pointer": "<ctrl>+7",
+            "tool_text": "<ctrl>+8",
+            "tool_eraser": "<ctrl>+9"
         }
         
         for key, hotkey in default_hotkeys.items():

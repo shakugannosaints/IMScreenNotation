@@ -63,7 +63,8 @@ def load_config():
                 "tool_filled_freehand": "<ctrl>+<shift>+5",
                 "tool_point": "<ctrl>+6",
                 "tool_laser_pointer": "<ctrl>+7",
-                "tool_text": "<ctrl>+8"
+                "tool_text": "<ctrl>+8",
+                "tool_eraser": "<ctrl>+9"
             },
             "current_color": QColor(255, 0, 0, 255),  # RGBA for red
             "current_thickness": 3,
@@ -108,7 +109,8 @@ def load_config():
                 "tool_filled_freehand": "<ctrl>+<shift>+5",
                 "tool_point": "<ctrl>+6",
                 "tool_laser_pointer": "<ctrl>+7",
-                "tool_text": "<ctrl>+8"
+                "tool_text": "<ctrl>+8",
+                "tool_eraser": "<ctrl>+9"
             },
             "current_color": QColor(255, 0, 0, 255),  # RGBA for red
             "current_thickness": 3,

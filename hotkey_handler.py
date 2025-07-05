@@ -108,7 +108,8 @@ class HotkeyHandler:
             "tool_filled_freehand": "filled_freehand",
             "tool_point": "point",
             "tool_laser_pointer": "laser_pointer",
-            "tool_text": "text"
+            "tool_text": "text",
+            "tool_eraser": "eraser"
         }
         
         for hotkey_name, tool_name in tool_hotkeys.items():

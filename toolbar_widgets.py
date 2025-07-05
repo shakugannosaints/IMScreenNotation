@@ -113,12 +113,13 @@ class ToolbarWidgetBuilder:
             ("填充绘制", "filled_freehand"),
             ("点", "point"),
             ("激光笔", "laser_pointer"),
-            ("文本", "text")
+            ("文本", "text"),
+            ("橡皮擦", "eraser")
         ]
     
     def _create_tool_button_rows(self, layout: QVBoxLayout, tool_buttons: List[Tuple[str, str]]) -> None:
         """创建工具按钮行（自动排列，每行3个工具，布局更均匀）"""
-        buttons_per_row = 4  # 或许可以改为每行3个，9个工具刚好分成3行
+        buttons_per_row = 3  # 改为每行3个，10个工具可以分成4行（3+3+3+1）
         
         # 计算需要的行数
         total_buttons = len(tool_buttons)

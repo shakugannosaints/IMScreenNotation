@@ -620,3 +620,180 @@ class Text(Shape):
         )
 
 
+class Eraser(Shape):
+    """橡皮擦类 - 用圆形表示擦除区域"""
+    
+    def __init__(self, points, **kwargs):
+        # 橡皮擦不需要颜色，只需要大小信息
+        super().__init__(**kwargs)
+        self.points = points  # 擦除路径上的点
+        # 橡皮擦是特殊的形状，用于标记需要删除的区域
+        
+    def draw(self, painter):
+        """绘制橡皮擦预览 - 显示为半透明的圆形"""
+        if not self.points:
+            return
+            
+        # 保存当前状态
+        old_pen = painter.pen()
+        old_brush = painter.brush()
+        
+        from PyQt5.QtGui import QPen, QBrush
+        from PyQt5.QtCore import Qt
+        
+        # 设置橡皮擦预览样式 - 半透明的白色圆圈
+        preview_color = QColor(255, 255, 255, 100)  # 半透明白色
+        preview_pen = QPen(preview_color, 2, Qt.DashLine)
+        preview_brush = QBrush(QColor(255, 255, 255, 50))  # 更透明的填充
+        
+        painter.setPen(preview_pen)
+        painter.setBrush(preview_brush)
+        
+        # 在每个点绘制圆形橡皮擦预览
+        radius = self.thickness * 2  # 橡皮擦大小基于粗细设置
+        for point in self.points:
+            painter.drawEllipse(point, radius, radius)
+        
+        # 恢复状态
+        painter.setPen(old_pen)
+        painter.setBrush(old_brush)
+    
+    def to_dict(self):
+        """序列化为字典 - 橡皮擦不需要保存，因为它是删除操作"""
+        data = super().to_dict()
+        data.update({
+            'points': [{'x': p.x(), 'y': p.y()} for p in self.points]
+        })
+        return data
+    
+    @classmethod
+    def from_dict(cls, data):
+        """从字典反序列化 - 橡皮擦通常不需要从文件恢复"""
+        color = QColor(*data["color"])
+        points = [QPointF(p['x'], p['y']) for p in data['points']]
+        return cls(points, color=color, thickness=data["thickness"], opacity=data["opacity"])
+    
+    def get_eraser_radius(self):
+        """获取橡皮擦半径"""
+        return self.thickness * 2
+    
+    def intersects_with_shape(self, shape):
+        """检查橡皮擦是否与指定形状相交"""
+        if not self.points:
+            return False
+            
+        eraser_radius = self.get_eraser_radius()
+        
+        # 对于不同类型的形状，使用不同的相交检测算法
+        if isinstance(shape, Point):
+            return self._intersects_with_point(shape, eraser_radius)
+        elif isinstance(shape, (Freehand, FilledFreehand)):
+            return self._intersects_with_freehand(shape, eraser_radius)
+        elif isinstance(shape, Line):
+            return self._intersects_with_line(shape, eraser_radius)
+        elif isinstance(shape, Rectangle):
+            return self._intersects_with_rectangle(shape, eraser_radius)
+        elif isinstance(shape, Circle):
+            return self._intersects_with_circle(shape, eraser_radius)
+        elif isinstance(shape, Arrow):
+            return self._intersects_with_arrow(shape, eraser_radius)
+        elif isinstance(shape, Text):
+            return self._intersects_with_text(shape, eraser_radius)
+        else:
+            return False
+    
+    def _intersects_with_point(self, point_shape, eraser_radius):
+        """检查与点的相交"""
+        for eraser_point in self.points:
+            distance = ((eraser_point.x() - point_shape.center_point.x())**2 + 
+                       (eraser_point.y() - point_shape.center_point.y())**2)**0.5
+            if distance <= eraser_radius + point_shape.thickness:
+                return True
+        return False
+    
+    def _intersects_with_freehand(self, freehand_shape, eraser_radius):
+        """检查与自由绘制的相交"""
+        for eraser_point in self.points:
+            for shape_point in freehand_shape.points:
+                distance = ((eraser_point.x() - shape_point.x())**2 + 
+                           (eraser_point.y() - shape_point.y())**2)**0.5
+                if distance <= eraser_radius + freehand_shape.thickness:
+                    return True
+        return False
+    
+    def _intersects_with_line(self, line_shape, eraser_radius):
+        """检查与直线的相交"""
+        for eraser_point in self.points:
+            # 计算点到线段的距离
+            if self._point_to_line_distance(eraser_point, line_shape.start_point, line_shape.end_point) <= eraser_radius + line_shape.thickness:
+                return True
+        return False
+    
+    def _intersects_with_rectangle(self, rect_shape, eraser_radius):
+        """检查与矩形的相交"""
+        rect = rect_shape.rect
+        for eraser_point in self.points:
+            # 检查点是否在矩形内或距离矩形边缘足够近
+            if (rect.contains(eraser_point) or 
+                self._point_to_rect_distance(eraser_point, rect) <= eraser_radius + rect_shape.thickness):
+                return True
+        return False
+    
+    def _intersects_with_circle(self, circle_shape, eraser_radius):
+        """检查与圆形的相交"""
+        for eraser_point in self.points:
+            center_distance = ((eraser_point.x() - circle_shape.center_point.x())**2 + 
+                              (eraser_point.y() - circle_shape.center_point.y())**2)**0.5
+            # 检查橡皮擦是否与圆的边缘相交
+            if abs(center_distance - circle_shape.radius) <= eraser_radius + circle_shape.thickness:
+                return True
+        return False
+    
+    def _intersects_with_arrow(self, arrow_shape, eraser_radius):
+        """检查与箭头的相交"""
+        # 箭头主要由线段组成，检查与线段的相交
+        return self._intersects_with_line(arrow_shape, eraser_radius)
+    
+    def _intersects_with_text(self, text_shape, eraser_radius):
+        """检查与文本的相交"""
+        for eraser_point in self.points:
+            # 简单的文本边界框检测
+            distance = ((eraser_point.x() - text_shape.position.x())**2 + 
+                       (eraser_point.y() - text_shape.position.y())**2)**0.5
+            if distance <= eraser_radius + 20:  # 给文本一个固定的检测范围
+                return True
+        return False
+    
+    def _point_to_line_distance(self, point, line_start, line_end):
+        """计算点到线段的最短距离"""
+        # 向量计算
+        line_vec = QPointF(line_end.x() - line_start.x(), line_end.y() - line_start.y())
+        point_vec = QPointF(point.x() - line_start.x(), point.y() - line_start.y())
+        
+        line_len_sq = line_vec.x()**2 + line_vec.y()**2
+        if line_len_sq == 0:
+            # 线段退化为点
+            return ((point.x() - line_start.x())**2 + (point.y() - line_start.y())**2)**0.5
+        
+        # 投影比例
+        t = max(0, min(1, (point_vec.x() * line_vec.x() + point_vec.y() * line_vec.y()) / line_len_sq))
+        
+        # 投影点
+        projection = QPointF(line_start.x() + t * line_vec.x(), line_start.y() + t * line_vec.y())
+        
+        # 距离
+        return ((point.x() - projection.x())**2 + (point.y() - projection.y())**2)**0.5
+    
+    def _point_to_rect_distance(self, point, rect):
+        """计算点到矩形的最短距离"""
+        # 如果点在矩形内，距离为0
+        if rect.contains(point):
+            return 0
+        
+        # 计算到矩形边的最短距离
+        dx = max(0, max(rect.left() - point.x(), point.x() - rect.right()))
+        dy = max(0, max(rect.top() - point.y(), point.y() - rect.bottom()))
+        
+        return (dx**2 + dy**2)**0.5
+
+

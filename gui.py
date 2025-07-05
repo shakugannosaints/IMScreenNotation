@@ -3,10 +3,10 @@ from PyQt5.QtGui import QPainter, QColor, QPen, QFont
 from PyQt5.QtCore import Qt, QPoint, QRect, QPointF
 import json
 from typing import List, Union, Optional
-from shapes import Line, Rectangle, Circle, Arrow, Freehand, Point, LaserPointer, FilledFreehand, Text
+from shapes import Line, Rectangle, Circle, Arrow, Freehand, Point, LaserPointer, FilledFreehand, Text, Eraser
 
 # 定义Shape类型联合
-ShapeType = Union[Line, Rectangle, Circle, Arrow, Freehand, Point, LaserPointer, FilledFreehand, Text]
+ShapeType = Union[Line, Rectangle, Circle, Arrow, Freehand, Point, LaserPointer, FilledFreehand, Text, Eraser]
 
 class DrawingCanvas(QWidget):
     def __init__(self, parent=None):
@@ -146,6 +146,10 @@ class DrawingCanvas(QWidget):
                 self.current_shape = LaserPointer(event.pos(), color=self.current_color, thickness=self.current_thickness, opacity=self.current_opacity)
                 self.update() # 立即更新显示激光笔
                 return # 激光笔是临时的，不添加到shapes列表中，也不保存状态
+            elif self.current_tool == 'eraser':
+                # 橡皮擦工具：开始擦除操作
+                self.save_state_to_undo_stack()
+                self.current_shape = Eraser([self.start_point], color=self.current_color, thickness=self.current_thickness, opacity=self.current_opacity)
             else:
                 # 其他工具（line, rectangle, circle, arrow）在释放鼠标时保存状态
                 self.current_shape = None # Reset current shape
@@ -174,6 +178,10 @@ class DrawingCanvas(QWidget):
                 self.current_shape = LaserPointer(event.pos(), color=self.current_color, thickness=self.current_thickness, opacity=self.current_opacity)
                 self.update()
                 return # 激光笔是临时的，不添加到shapes列表中
+            elif self.current_tool == 'eraser':
+                # 橡皮擦：添加擦除点
+                if isinstance(self.current_shape, Eraser):
+                    self.current_shape.points.append(self.end_point)
             self.update()
 
     def mouseReleaseEvent(self, event):
@@ -184,15 +192,19 @@ class DrawingCanvas(QWidget):
                 if self.current_tool in ['line', 'rectangle', 'circle', 'arrow']:
                     self.save_state_to_undo_stack()
                 
-                if self.single_draw_mode:
-                    self.shapes.clear()
-                    # 单次绘制模式下，清空撤销栈并重新开始
-                    self.undo_stack.clear()
-                    self.redo_stack.clear()
-                    # 保存空白状态
-                    self.undo_stack.append([])  # 空的序列化状态列表
-                
-                self.shapes.append(self.current_shape)
+                # 橡皮擦特殊处理：执行擦除操作
+                if self.current_tool == 'eraser' and isinstance(self.current_shape, Eraser):
+                    self.perform_erase_operation(self.current_shape)
+                else:
+                    if self.single_draw_mode:
+                        self.shapes.clear()
+                        # 单次绘制模式下，清空撤销栈并重新开始
+                        self.undo_stack.clear()
+                        self.redo_stack.clear()
+                        # 保存空白状态
+                        self.undo_stack.append([])  # 空的序列化状态列表
+                    
+                    self.shapes.append(self.current_shape)
             self.current_shape = None
             self.update()
 
@@ -258,6 +270,9 @@ class DrawingCanvas(QWidget):
                 shape = Text.from_dict(shape_dict)
             elif shape_type == "LaserPointer":
                 # 跳过激光笔，因为它不应该被保存/恢复
+                continue
+            elif shape_type == "Eraser":
+                # 跳过橡皮擦，因为它不应该被保存/恢复（它是删除操作）
                 continue
             else:
                 continue # Skip unknown shape types
@@ -349,102 +364,30 @@ class DrawingCanvas(QWidget):
             # 重置绘制状态
             self.drawing = False
             self.current_shape = None
-
-    def set_text_font_family(self, font_family):
-        """设置文本字体族"""
-        self.text_font_family = font_family
-
-    def set_text_font_size(self, font_size):
-        """设置文本字体大小"""
-        self.text_font_size = font_size
-
-    def set_text_font_bold(self, bold):
-        """设置文本粗体"""
-        self.text_font_bold = bold
-
-    def set_text_font_italic(self, italic):
-        """设置文本斜体"""
-        self.text_font_italic = italic
-
-    def set_text_color(self, color):
-        """设置文本颜色"""
-        self.text_color = color
-
-    def set_text_background_color(self, color):
-        """设置文本背景颜色"""
-        self.text_background_color = color
-
-    def set_text_border_color(self, color):
-        """设置文本边框颜色"""
-        self.text_border_color = color
-
-    def set_text_border_width(self, width):
-        """设置文本边框宽度"""
-        self.text_border_width = width
-
-    def set_text_padding(self, padding):
-        """设置文本内边距"""
-        self.text_padding = padding
-
-    def open_text_style_dialog(self):
-        """打开文本样式配置对话框"""
-        try:
-            # 尝试使用打包修复模块
-            try:
-                import packaging_fix
-                dialog = packaging_fix.create_safe_dialog(self, self)
-                if dialog:
-                    return dialog
-            except ImportError:
-                pass
+    
+    def perform_erase_operation(self, eraser_shape):
+        """执行橡皮擦操作 - 删除与橡皮擦相交的形状"""
+        if not isinstance(eraser_shape, Eraser):
+            return
             
-            # 回退到原始方法
-            from PyQt5.QtCore import QTimer, QCoreApplication
-            from PyQt5.QtWidgets import QApplication
-            
-            # 动态导入，确保在打包环境中正常工作
-            try:
-                from text_style_dialog import TextStyleDialog
-            except ImportError:
-                # 如果直接导入失败，尝试从当前目录导入
-                import sys
-                import os
-                current_dir = os.path.dirname(os.path.abspath(__file__))
-                if current_dir not in sys.path:
-                    sys.path.insert(0, current_dir)
-                from text_style_dialog import TextStyleDialog
-            
-            # 强制处理所有待处理的事件
-            QCoreApplication.processEvents()
-            
-            # 创建对话框
-            dialog = TextStyleDialog(self, self)
-            
-            # 设置对话框属性以确保正常显示
-            dialog.setWindowModality(Qt.ApplicationModal)
-            dialog.setAttribute(Qt.WA_DeleteOnClose)
-            dialog.setWindowFlags(Qt.Dialog | Qt.WindowCloseButtonHint)
-            dialog.raise_()
-            dialog.activateWindow()
-            
-            # 使用非阻塞方式显示对话框
-            dialog.show()
-            
-            # 手动处理对话框的模态行为
-            def on_dialog_finished():
-                QCoreApplication.processEvents()
+        # 收集需要删除的形状
+        shapes_to_remove = []
+        
+        for shape in self.shapes:
+            # 跳过激光笔和橡皮擦本身
+            if isinstance(shape, (LaserPointer, Eraser)):
+                continue
                 
-            dialog.finished.connect(on_dialog_finished)
-            
-            # 在打包环境中使用 show() 而不是 exec_()
-            # 因为 exec_() 可能导致事件循环阻塞
-            return dialog
-            
-        except Exception as e:
-            print(f"Error opening text style dialog: {e}")
-            import traceback
-            traceback.print_exc()
-            return None
+            # 检查形状是否与橡皮擦相交
+            if eraser_shape.intersects_with_shape(shape):
+                shapes_to_remove.append(shape)
+        
+        # 删除相交的形状
+        for shape in shapes_to_remove:
+            if shape in self.shapes:
+                self.shapes.remove(shape)
+        
+        print(f"橡皮擦删除了 {len(shapes_to_remove)} 个形状")
 
 # Example usage (for testing purposes, will be integrated into main app later)
 if __name__ == '__main__':
