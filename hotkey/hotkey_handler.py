@@ -3,7 +3,7 @@
 处理热键设置和回调函数的注册
 """
 from typing import TYPE_CHECKING
-from hotkey_settings import HotkeySettingsDialog
+from .hotkey_settings import HotkeySettingsDialog
 from constants import STATUS_MESSAGE_TIMEOUT_LONG
 
 if TYPE_CHECKING:

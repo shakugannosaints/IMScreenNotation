@@ -12,10 +12,10 @@ from PyQt5.QtCore import Qt, QPoint, QEvent
 from PyQt5 import QtCore
 
 # 导入拆分的模块
-from toolbar_theme import ToolbarThemeManager
-from toolbar_widgets import ToolbarWidgetBuilder
-from toolbar_events import ToolbarEventHandler
-from toolbar_scrollable import ScrollableToolbarContent, ToolbarSizeManager
+from .toolbar_theme import ToolbarThemeManager
+from .toolbar_widgets import ToolbarWidgetBuilder
+from .toolbar_events import ToolbarEventHandler
+from .toolbar_scrollable import ScrollableToolbarContent, ToolbarSizeManager
 
 
 class AnnotationToolbar(QWidget):
