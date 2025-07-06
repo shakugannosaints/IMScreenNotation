@@ -53,7 +53,14 @@ class AnnotationToolbar(QWidget):
         self.setup_toolbar()
     
     def _init_widget_attributes(self) -> None:
-        """初始化控件属性（占位符，实际在widget_builder中创建）"""
+        """初始化控件属性声明
+        注意：这些属性在此处声明为占位符，实际的控件对象
+        将在 ToolbarWidgetBuilder.setup_*() 方法中创建和赋值。
+        这样做是为了：
+        1. 提供类型提示支持
+        2. 确保属性在使用前已定义
+        3. 清晰展示类的控件结构
+        """
         # 基本控件
         self.color_btn: Optional[QPushButton] = None
         self.thickness_slider: Optional[QSlider] = None
