@@ -191,7 +191,7 @@ def build_with_optimized_spec():
 
 def build_with_minimal_approach():
     """使用最小化方法构建（备选方案）"""
-    print("🎯 使用最小化方法构建...")
+    safe_print("  [MINIMAL] 使用最小化方法构建...")
     
     cmd = [
         'pyinstaller',
@@ -255,38 +255,38 @@ def build_with_minimal_approach():
     ]
     
     try:
-        print(" 开始最小化构建...")
+        safe_print("  [BUILDING] 开始最小化构建...")
         result = subprocess.run(cmd, capture_output=True, text=True, cwd='.')
         
         if result.returncode == 0:
-            print(" 最小化构建成功!")
+            safe_print("  [OK] 最小化构建成功!")
             return True
         else:
-            print(f" 最小化构建失败: {result.stderr}")
+            safe_print(f"  [ERROR] 最小化构建失败: {result.stderr}")
             return False
     
     except Exception as e:
-        print(f" 最小化构建错误: {e}")
+        safe_print(f"  [ERROR] 最小化构建错误: {e}")
         return False
 
 def analyze_build_result():
     """分析构建结果"""
-    print("分析构建结果...")
+    safe_print("[RESULT] 分析构建结果...")
     
     dist_dir = Path('dist')
     if not dist_dir.exists():
-        print(" dist目录不存在")
+        safe_print("  [ERROR] dist目录不存在")
         return False
     
     # 检查dist目录内容
     all_files = list(dist_dir.iterdir())
-    print(f"  dist目录包含 {len(all_files)} 个文件/目录:")
+    safe_print(f"  [INFO] dist目录包含 {len(all_files)} 个文件/目录:")
     for item in all_files:
         if item.is_file():
             size_mb = item.stat().st_size / 1024 / 1024
-            print(f"     {item.name}: {size_mb:.2f} MB")
+            safe_print(f"    [FILE] {item.name}: {size_mb:.2f} MB")
         else:
-            print(f"    {item.name}/")
+            safe_print(f"    [DIR] {item.name}/")
     
     # 查找可执行文件（包括不同平台的可执行文件）
     executable_files = []
@@ -299,10 +299,10 @@ def analyze_build_result():
         # Windows: 查找.exe文件
         exe_files = list(dist_dir.glob('*.exe'))
         executable_files.extend(exe_files)
-        print(f"  🔍 在Windows上查找.exe文件: 找到 {len(exe_files)} 个")
+        safe_print(f"  [INFO] 在Windows上查找.exe文件: 找到 {len(exe_files)} 个")
     else:
         # Linux/macOS: 查找无扩展名的可执行文件
-        print(f"  🔍 在{platform.system()}上查找可执行文件...")
+        safe_print(f"  [INFO] 在{platform.system()}上查找可执行文件...")
         
         # 优先查找已知的可执行文件名
         known_names = ['IMScreenNotation', 'IMScreenNotation_minimal', 'main']
@@ -310,7 +310,7 @@ def analyze_build_result():
             exe_path = dist_dir / name
             if exe_path.exists() and exe_path.is_file():
                 executable_files.append(exe_path)
-                print(f"    找到已知可执行文件: {name}")
+                safe_print(f"    [FOUND] 找到已知可执行文件: {name}")
         
         # 如果没找到已知文件，查找所有无扩展名且可执行的文件
         if not executable_files:
@@ -320,56 +320,56 @@ def analyze_build_result():
                     if (os.access(item, os.X_OK) or 
                         any(keyword in item.name.lower() for keyword in ['imscreen', 'notation', 'main', 'app'])):
                         executable_files.append(item)
-                        print(f"    找到可执行文件: {item.name}")
+                        safe_print(f"    [FOUND] 找到可执行文件: {item.name}")
     
     # 也检查任何大文件（可能是打包的可执行文件）
     if not executable_files:
-        print("  🔍 未找到明确的可执行文件，检查大文件...")
+        safe_print("  [WARN] 未找到明确的可执行文件，检查大文件...")
         large_files = [f for f in all_files if f.is_file() and f.stat().st_size > 10 * 1024 * 1024]  # 大于10MB
         if large_files:
-            print(f"    发现 {len(large_files)} 个大文件，可能是可执行文件:")
+            safe_print(f"    [INFO] 发现 {len(large_files)} 个大文件，可能是可执行文件:")
             for f in large_files:
                 size_mb = f.stat().st_size / 1024 / 1024
-                print(f"   {f.name}: {size_mb:.2f} MB")
+                safe_print(f"      [FILE] {f.name}: {size_mb:.2f} MB")
             executable_files.extend(large_files)
     
     if not executable_files:
-        print(" 未找到任何可执行文件")
-        print("  构建可能失败或可执行文件在其他位置")
+        safe_print("  [ERROR] 未找到任何可执行文件")
+        safe_print("  [INFO] 构建可能失败或可执行文件在其他位置")
         return False
     
-    print(f"  分析 {len(executable_files)} 个可执行文件:")
+    safe_print(f"  [ANALYSIS] 分析 {len(executable_files)} 个可执行文件:")
     for exe_file in executable_files:
         file_size = exe_file.stat().st_size / 1024 / 1024
-        print(f"   {exe_file.name}: {file_size:.2f} MB")
+        safe_print(f"    [SIZE] {exe_file.name}: {file_size:.2f} MB")
         
         # 提供体积评估
         if file_size < 30:
-            print(f"    优秀！体积很小")
+            safe_print(f"      [EXCELLENT] 优秀！体积很小")
         elif file_size < 50:
-            print(f"     良好！体积合理")
+            safe_print(f"      [GOOD] 良好！体积合理")
         elif file_size < 80:
-            print(f"      一般，还有优化空间")
+            safe_print(f"      [OK] 一般，还有优化空间")
         else:
-            print(f"   体积过大，需要进一步优化")
+            safe_print(f"      [LARGE] 体积过大，需要进一步优化")
     
     return True
 
 def provide_optimization_tips():
     """提供进一步优化建议"""
-    print("\n进一步优化建议:")
-    print("1. 如果体积仍然过大，考虑:")
-    print("   - 移除不必要的功能模块")
-    print("   - 使用更轻量的GUI框架（如tkinter）")
-    print("   - 考虑使用目录模式而非单文件模式")
+    safe_print("\n[TIPS] 进一步优化建议:")
+    safe_print("  1. 如果体积仍然过大，考虑:")
+    safe_print("     - 移除不必要的功能模块")
+    safe_print("     - 使用更轻量的GUI框架（如tkinter）")
+    safe_print("     - 考虑使用目录模式而非单文件模式")
     
-    print("\n2. 替代压缩方案:")
-    print("   - 7-Zip压缩最终的exe文件")
-    print("   - 使用NSIS创建安装程序")
+    safe_print("\n  2. 替代压缩方案:")
+    safe_print("     - 7-Zip压缩最终的exe文件")
+    safe_print("     - 使用NSIS创建安装程序")
     
-    print("\n3. 运行时优化:")
-    print("   - 延迟加载某些模块")
-    print("   - 使用插件架构")
+    safe_print("\n  3. 运行时优化:")
+    safe_print("     - 延迟加载某些模块")
+    safe_print("     - 使用插件架构")
 
 def main():
     safe_print("=" * 50)
