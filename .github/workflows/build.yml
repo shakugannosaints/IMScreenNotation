@@ -44,7 +44,8 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y \
-          libgl1-mesa-glx \
+          libgl1-mesa-dev \
+          libglu1-mesa-dev \
           libxcb-xinerama0 \
           libxcb-cursor0 \
           libxkbcommon-x11-0 \
@@ -54,7 +55,7 @@ jobs:
           libxcb-randr0 \
           libxcb-render-util0 \
           libxcb-shape0 \
-          libegl1-mesa \
+          libegl1-mesa-dev \
           libfontconfig1 \
           libxrender1 \
           libxi6 \
