@@ -60,19 +60,33 @@ jobs:
           libxrender1 \
           libxi6 \
           libxtst6 \
-          xvfb
+          xvfb \
+          upx-ucl
 
     # macOS特定设置
     - name: Install macOS dependencies
       if: matrix.platform == 'macos'
       run: |
-        # macOS通常不需要额外的系统依赖
+        # 安装UPX
+        brew install upx
 
     # Windows特定设置
     - name: Install Windows dependencies
       if: matrix.platform == 'windows'
       run: |
-        # Windows通常不需要额外的系统依赖
+        # 安装UPX
+        choco install upx
+
+    # 验证UPX安装
+    - name: Verify UPX installation
+      shell: bash
+      run: |
+        if command -v upx &> /dev/null; then
+          echo "✅ UPX installed successfully"
+          upx --version
+        else
+          echo "⚠️ UPX not found, build will continue without compression"
+        fi
 
     - name: Install Python dependencies
       run: |

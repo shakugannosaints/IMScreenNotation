@@ -76,11 +76,17 @@ def install_upx():
     """安装UPX压缩工具"""
     print("🔧 检查UPX压缩工具...")
     
-    # 检查多个可能的UPX路径
+    # 检查是否在CI环境中
+    is_ci = any(env_var in os.environ for env_var in ['CI', 'GITHUB_ACTIONS', 'GITHUB_WORKFLOW'])
+    
+    # 检查多个可能的UPX路径（包括GitHub Actions常用路径）
     upx_paths = [
         r"C:\ProgramData\chocolatey\bin\upx.exe",
-        r"C:\tools\upx\upx.exe",
+        r"C:\tools\upx\upx.exe", 
         "upx.exe",  # PATH中
+        "/usr/bin/upx",  # Linux路径
+        "/usr/local/bin/upx",  # Linux路径
+        "upx",  # 通用命令
     ]
     
     for upx_path in upx_paths:
@@ -89,16 +95,28 @@ def install_upx():
             return upx_path
     
     print("  ❌ 未找到UPX压缩工具")
-    print("  💡 建议安装UPX以获得更好的压缩效果:")
-    print("     方法1: choco install upx")
-    print("     方法2: 从 https://upx.github.io/ 下载")
     
-    # 询问是否继续
-    response = input("  是否继续构建（不使用UPX）？ [y/N]: ")
-    if response.lower() != 'y':
-        return None
-    
-    return False
+    if is_ci:
+        print("  🤖 在CI环境中运行，自动继续构建（不使用UPX）")
+        print("  💡 可以在GitHub Actions中安装UPX:")
+        print("     - 添加步骤: sudo apt-get install upx-ucl (Ubuntu)")
+        print("     - 添加步骤: choco install upx (Windows)")
+        return False
+    else:
+        print("  💡 建议安装UPX以获得更好的压缩效果:")
+        print("     方法1: choco install upx")
+        print("     方法2: 从 https://upx.github.io/ 下载")
+        
+        # 询问是否继续（仅在非CI环境中）
+        try:
+            response = input("  是否继续构建（不使用UPX）？ [y/N]: ")
+            if response.lower() != 'y':
+                return None
+        except (EOFError, KeyboardInterrupt):
+            # 处理在无交互环境中运行的情况
+            print("  🤖 检测到无交互环境，自动继续构建")
+        
+        return False
 
 def build_with_optimized_spec():
     """使用优化的spec文件构建"""
