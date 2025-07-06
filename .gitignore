@@ -1,6 +1,6 @@
 *.pyc
-*.json
-1.ico
+config.json
+1.json
 build/main/Analysis-00.toc
 build/main/base_library.zip
 build/main/EXE-00.toc
