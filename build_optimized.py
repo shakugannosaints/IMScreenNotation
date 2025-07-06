@@ -137,14 +137,41 @@ def build_with_optimized_spec():
     
     try:
         print("  🔄 开始构建...")
+        print(f"  📝 执行命令: {' '.join(cmd)}")
         result = subprocess.run(cmd, capture_output=True, text=True, cwd='.')
+        
+        print(f"  📤 标准输出:")
+        if result.stdout:
+            # 只显示最后几行重要输出
+            stdout_lines = result.stdout.strip().split('\n')
+            for line in stdout_lines[-10:]:  # 显示最后10行
+                print(f"    {line}")
+        
+        if result.stderr:
+            print(f"  ⚠️  标准错误:")
+            stderr_lines = result.stderr.strip().split('\n')
+            for line in stderr_lines[-5:]:  # 显示最后5行错误
+                print(f"    {line}")
         
         if result.returncode == 0:
             print("  ✅ 构建成功!")
+            
+            # 立即检查构建结果
+            print("  🔍 检查构建输出:")
+            dist_dir = Path('dist')
+            if dist_dir.exists():
+                files = list(dist_dir.iterdir())
+                print(f"    📁 dist目录包含 {len(files)} 个项目:")
+                for item in files:
+                    if item.is_file():
+                        size_mb = item.stat().st_size / 1024 / 1024
+                        print(f"      📄 {item.name}: {size_mb:.2f} MB")
+                    else:
+                        print(f"      📁 {item.name}/")
+            
             return True
         else:
             print(f"  ❌ 构建失败，退出代码: {result.returncode}")
-            print(f"  错误输出: {result.stderr}")
             return False
     
     except Exception as e:
@@ -240,12 +267,68 @@ def analyze_build_result():
         print("  ❌ dist目录不存在")
         return False
     
-    exe_files = list(dist_dir.glob('*.exe'))
-    if not exe_files:
-        print("  ❌ 未找到可执行文件")
+    # 检查dist目录内容
+    all_files = list(dist_dir.iterdir())
+    print(f"  📁 dist目录包含 {len(all_files)} 个文件/目录:")
+    for item in all_files:
+        if item.is_file():
+            size_mb = item.stat().st_size / 1024 / 1024
+            print(f"    📄 {item.name}: {size_mb:.2f} MB")
+        else:
+            print(f"    📁 {item.name}/")
+    
+    # 查找可执行文件（包括不同平台的可执行文件）
+    executable_files = []
+    
+    # 检测操作系统
+    import platform
+    is_windows = platform.system() == 'Windows'
+    
+    if is_windows:
+        # Windows: 查找.exe文件
+        exe_files = list(dist_dir.glob('*.exe'))
+        executable_files.extend(exe_files)
+        print(f"  🔍 在Windows上查找.exe文件: 找到 {len(exe_files)} 个")
+    else:
+        # Linux/macOS: 查找无扩展名的可执行文件
+        print(f"  🔍 在{platform.system()}上查找可执行文件...")
+        
+        # 优先查找已知的可执行文件名
+        known_names = ['IMScreenNotation', 'IMScreenNotation_minimal', 'main']
+        for name in known_names:
+            exe_path = dist_dir / name
+            if exe_path.exists() and exe_path.is_file():
+                executable_files.append(exe_path)
+                print(f"    ✅ 找到已知可执行文件: {name}")
+        
+        # 如果没找到已知文件，查找所有无扩展名且可执行的文件
+        if not executable_files:
+            for item in dist_dir.iterdir():
+                if item.is_file() and not item.suffix:
+                    # 检查是否是可执行文件（有执行权限或包含特定关键词）
+                    if (os.access(item, os.X_OK) or 
+                        any(keyword in item.name.lower() for keyword in ['imscreen', 'notation', 'main', 'app'])):
+                        executable_files.append(item)
+                        print(f"    ✅ 找到可执行文件: {item.name}")
+    
+    # 也检查任何大文件（可能是打包的可执行文件）
+    if not executable_files:
+        print("  🔍 未找到明确的可执行文件，检查大文件...")
+        large_files = [f for f in all_files if f.is_file() and f.stat().st_size > 10 * 1024 * 1024]  # 大于10MB
+        if large_files:
+            print(f"    发现 {len(large_files)} 个大文件，可能是可执行文件:")
+            for f in large_files:
+                size_mb = f.stat().st_size / 1024 / 1024
+                print(f"    � {f.name}: {size_mb:.2f} MB")
+            executable_files.extend(large_files)
+    
+    if not executable_files:
+        print("  ❌ 未找到任何可执行文件")
+        print("  💡 构建可能失败或可执行文件在其他位置")
         return False
     
-    for exe_file in exe_files:
+    print(f"  ✅ 分析 {len(executable_files)} 个可执行文件:")
+    for exe_file in executable_files:
         file_size = exe_file.stat().st_size / 1024 / 1024
         print(f"  📦 {exe_file.name}: {file_size:.2f} MB")
         
