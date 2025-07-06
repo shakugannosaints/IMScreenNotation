@@ -182,7 +182,7 @@ jobs:
         find . -name "*.py" -not -path "./.git/*" -not -path "./build/*" -not -path "./dist/*" -exec wc -l {} + | tail -1 >> quality_report.md
 
     - name: Upload quality report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: quality-report
         path: quality_report.md

@@ -130,7 +130,7 @@ jobs:
 
     # 上传构建产物
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.artifact-name }}
         path: |
@@ -163,7 +163,7 @@ jobs:
         fi
 
     - name: Upload build info
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: build-info-${{ matrix.platform }}
         path: build-info-${{ matrix.platform }}.txt
@@ -180,13 +180,15 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Download all artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
 
     - name: Prepare release assets
       run: |
         mkdir -p release-assets
         # 移动所有构建产物到release目录
-        find . -name "*.zip" -o -name "*.tar.gz" | while read file; do
+        find artifacts/ -name "*.zip" -o -name "*.tar.gz" | while read file; do
           cp "$file" release-assets/
         done
         # 创建release notes
@@ -222,11 +224,10 @@ jobs:
     
     steps:
     - name: Delete old artifacts
-      uses: geekyeggo/delete-artifact@v2
+      uses: geekyeggo/delete-artifact@v5
       with:
         name: |
           IMScreenNotation-*
           build-info-*
-        skipIfNotFound: true
         useGlob: true
         failOnError: false
