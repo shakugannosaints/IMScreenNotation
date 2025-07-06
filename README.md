@@ -26,6 +26,10 @@
    python main.py
    ```
 
+### 构建
+
+1. windows:直接使用build_optimized.py即可。注意使用目录中的spec文件。
+
 ## 功能特点
 
 ### 多样化的绘图工具
