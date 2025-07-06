@@ -88,51 +88,7 @@ jobs:
     - name: Security check
       run: |
         echo "🔒 Running basic security checks..."
-        python -c "
-        import os
-        import re
-        
-        def check_security_issues(filename):
-            try:
-                with open(filename, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                
-                issues = []
-                
-                # 检查硬编码密码或密钥
-                if re.search(r'password\s*=\s*[\"\'\"]\w+[\"\'\""]', content, re.IGNORECASE):
-                    issues.append('Possible hardcoded password')
-                
-                # 检查API密钥
-                if re.search(r'(api_key|secret_key|access_key)\s*=\s*[\"\'\"]\w+[\"\'\""]', content, re.IGNORECASE):
-                    issues.append('Possible hardcoded API key')
-                
-                # 检查eval使用
-                if 'eval(' in content:
-                    issues.append('Use of eval() function')
-                
-                # 检查exec使用  
-                if 'exec(' in content:
-                    issues.append('Use of exec() function')
-                
-                # 检查pickle使用（可能不安全）
-                if 'pickle.loads(' in content:
-                    issues.append('Use of pickle.loads() - potential security risk')
-                
-                if issues:
-                    print(f'⚠️ {filename}: {issues}')
-                else:
-                    print(f'✅ {filename}: No security issues found')
-                    
-            except FileNotFoundError:
-                print(f'⚠️ File not found: {filename}')
-            except Exception as e:
-                print(f'❌ Error checking {filename}: {e}')
-        
-        files_to_check = ['main.py', 'gui.py', 'config.py', 'file_operations.py', 'utils.py']
-        for file in files_to_check:
-            check_security_issues(file)
-        "
+        python security_check.py
 
     - name: Check dependencies
       run: |
