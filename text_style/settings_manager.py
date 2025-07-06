@@ -16,51 +16,51 @@ class TextStyleSettingsManager:
         
     def ensure_canvas_text_attributes(self):
         """确保画布有必要的文本属性"""
-        if not hasattr(self.canvas, 'text_font_family'):
-            self.canvas.text_font_family = 'Arial'
-        if not hasattr(self.canvas, 'text_font_size'):
-            self.canvas.text_font_size = 16
-        if not hasattr(self.canvas, 'text_font_bold'):
-            self.canvas.text_font_bold = False
-        if not hasattr(self.canvas, 'text_font_italic'):
-            self.canvas.text_font_italic = False
-        if not hasattr(self.canvas, 'text_color'):
-            self.canvas.text_color = QColor(255, 0, 0, 255)
-        if not hasattr(self.canvas, 'text_background_color'):
-            self.canvas.text_background_color = None
-        if not hasattr(self.canvas, 'text_border_color'):
-            self.canvas.text_border_color = None
-        if not hasattr(self.canvas, 'text_border_enabled'):
-            self.canvas.text_border_enabled = True
-        if not hasattr(self.canvas, 'text_border_width'):
-            self.canvas.text_border_width = 1
-        if not hasattr(self.canvas, 'text_padding'):
-            self.canvas.text_padding = 5
+        if not hasattr(self.canvas.properties, 'text_font_family'):
+            self.canvas.set_text_font_family('Arial')
+        if not hasattr(self.canvas.properties, 'text_font_size'):
+            self.canvas.set_text_font_size(16)
+        if not hasattr(self.canvas.properties, 'text_font_bold'):
+            self.canvas.set_text_font_bold(False)
+        if not hasattr(self.canvas.properties, 'text_font_italic'):
+            self.canvas.set_text_font_italic(False)
+        if not hasattr(self.canvas.properties, 'text_color'):
+            self.canvas.set_text_color(QColor(255, 0, 0, 255))
+        if not hasattr(self.canvas.properties, 'text_background_color'):
+            self.canvas.set_text_background_color(None)
+        if not hasattr(self.canvas.properties, 'text_border_color'):
+            self.canvas.set_text_border_color(None)
+        if not hasattr(self.canvas.properties, 'text_border_enabled'):
+            self.canvas.set_text_border_enabled(True)
+        if not hasattr(self.canvas.properties, 'text_border_width'):
+            self.canvas.set_text_border_width(1)
+        if not hasattr(self.canvas.properties, 'text_padding'):
+            self.canvas.set_text_padding(5)
         
     def load_current_settings(self):
         """加载当前画布的文本设置"""
         try:
             # 字体设置 - 使用 getattr 提供默认值
-            font_family = getattr(self.canvas, 'text_font_family', 'Arial')
+            font_family = getattr(self.canvas.properties, 'text_font_family', 'Arial')
             font_family_index = self.dialog.font_family_combo.findText(font_family)
             if font_family_index >= 0:
                 self.dialog.font_family_combo.setCurrentIndex(font_family_index)
             
-            font_size = getattr(self.canvas, 'text_font_size', 16)
+            font_size = getattr(self.canvas.properties, 'text_font_size', 16)
             self.dialog.font_size_spin.setValue(font_size)
             
-            font_bold = getattr(self.canvas, 'text_font_bold', False)
+            font_bold = getattr(self.canvas.properties, 'text_font_bold', False)
             self.dialog.font_bold_check.setChecked(font_bold)
             
-            font_italic = getattr(self.canvas, 'text_font_italic', False)
+            font_italic = getattr(self.canvas.properties, 'text_font_italic', False)
             self.dialog.font_italic_check.setChecked(font_italic)
             
             # 颜色设置
-            text_color = getattr(self.canvas, 'text_color', QColor(255, 0, 0, 255))
+            text_color = getattr(self.canvas.properties, 'text_color', QColor(255, 0, 0, 255))
             self.dialog.theme_manager.update_color_button(self.dialog.text_color_btn, text_color)
             
             # 背景色设置
-            bg_color = getattr(self.canvas, 'text_background_color', None)
+            bg_color = getattr(self.canvas.properties, 'text_background_color', None)
             if bg_color:
                 self.dialog.theme_manager.update_color_button(self.dialog.bg_color_btn, bg_color)
                 self.dialog.bg_transparent_check.setChecked(False)
@@ -68,7 +68,7 @@ class TextStyleSettingsManager:
                 self.dialog.bg_transparent_check.setChecked(True)
             
             # 边框设置 - 暂时断开信号连接以避免在加载设置时触发toggle方法
-            border_enabled = getattr(self.canvas, 'text_border_enabled', True)
+            border_enabled = getattr(self.canvas.properties, 'text_border_enabled', True)
             
             # 断开信号连接
             self.dialog.border_enable_check.toggled.disconnect(self.dialog.event_handler.toggle_border_enable)
@@ -76,21 +76,21 @@ class TextStyleSettingsManager:
             # 重新连接信号
             self.dialog.border_enable_check.toggled.connect(self.dialog.event_handler.toggle_border_enable)
             
-            border_color = getattr(self.canvas, 'text_border_color', None)
+            border_color = getattr(self.canvas.properties, 'text_border_color', None)
             if border_color:
                 self.dialog.theme_manager.update_color_button(self.dialog.border_color_btn, border_color)
             else:
                 # 如果没有边框颜色但启用了边框，使用默认黑色
                 if border_enabled:
                     default_border_color = QColor(0, 0, 0)
-                    setattr(self.canvas, 'text_border_color', default_border_color)
+                    self.canvas.set_text_border_color(default_border_color)
                     self.dialog.theme_manager.update_color_button(self.dialog.border_color_btn, default_border_color)
                     
-            border_width = getattr(self.canvas, 'text_border_width', 1)
+            border_width = getattr(self.canvas.properties, 'text_border_width', 1)
             self.dialog.border_width_spin.setValue(border_width)
             
             # 其他设置
-            padding = getattr(self.canvas, 'text_padding', 5)
+            padding = getattr(self.canvas.properties, 'text_padding', 5)
             self.dialog.padding_spin.setValue(padding)
             
             # 在最后调用 toggle_border_enable 来正确设置UI状态（但不修改画布状态）
@@ -116,21 +116,21 @@ class TextStyleSettingsManager:
     def apply_settings(self):
         """应用设置到画布"""
         try:
-            # 字体设置 - 使用 setattr 安全设置属性
-            setattr(self.canvas, 'text_font_family', self.dialog.font_family_combo.currentText())
-            setattr(self.canvas, 'text_font_size', self.dialog.font_size_spin.value())
-            setattr(self.canvas, 'text_font_bold', self.dialog.font_bold_check.isChecked())
-            setattr(self.canvas, 'text_font_italic', self.dialog.font_italic_check.isChecked())
+            # 字体设置 - 使用画布的setter方法
+            self.canvas.set_text_font_family(self.dialog.font_family_combo.currentText())
+            self.canvas.set_text_font_size(self.dialog.font_size_spin.value())
+            self.canvas.set_text_font_bold(self.dialog.font_bold_check.isChecked())
+            self.canvas.set_text_font_italic(self.dialog.font_italic_check.isChecked())
             
             # 边框设置
-            setattr(self.canvas, 'text_border_enabled', self.dialog.border_enable_check.isChecked())
+            self.canvas.set_text_border_enabled(self.dialog.border_enable_check.isChecked())
             if self.dialog.border_enable_check.isChecked():
-                setattr(self.canvas, 'text_border_width', self.dialog.border_width_spin.value())
+                self.canvas.set_text_border_width(self.dialog.border_width_spin.value())
             else:
-                setattr(self.canvas, 'text_border_color', None)
+                self.canvas.set_text_border_color(None)
                 
             # 其他设置
-            setattr(self.canvas, 'text_padding', self.dialog.padding_spin.value())
+            self.canvas.set_text_padding(self.dialog.padding_spin.value())
             
         except Exception as e:
             print(f"Error applying settings: {e}")

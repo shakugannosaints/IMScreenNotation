@@ -15,8 +15,14 @@ binaries = []
 
 # 隐藏导入 - 包含所有必需的模块
 hiddenimports = [
-    # 自定义模块
-    'gui',
+    # canvas 模块（替代原来的gui模块）
+    'canvas',
+    'canvas.drawing_canvas',
+    'canvas.events',
+    'canvas.painter',
+    'canvas.properties',
+    'canvas.state_manager',
+    'canvas.types',
     'toolbar.toolbar',
     'toolbar.toolbar_widgets',
     'toolbar.toolbar_events', 

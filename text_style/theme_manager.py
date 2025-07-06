@@ -89,13 +89,13 @@ class TextStyleThemeManager:
             
             # 更新所有颜色按钮
             if hasattr(self.dialog, 'text_color_btn'):
-                self.update_color_button(self.dialog.text_color_btn, self.dialog.canvas.text_color)
+                self.update_color_button(self.dialog.text_color_btn, self.dialog.canvas.properties.text_color)
             
-            if hasattr(self.dialog, 'bg_color_btn') and self.dialog.canvas.text_background_color:
-                self.update_color_button(self.dialog.bg_color_btn, self.dialog.canvas.text_background_color)
+            if hasattr(self.dialog, 'bg_color_btn') and self.dialog.canvas.properties.text_background_color:
+                self.update_color_button(self.dialog.bg_color_btn, self.dialog.canvas.properties.text_background_color)
                 
-            if hasattr(self.dialog, 'border_color_btn') and self.dialog.canvas.text_border_color:
-                self.update_color_button(self.dialog.border_color_btn, self.dialog.canvas.text_border_color)
+            if hasattr(self.dialog, 'border_color_btn') and self.dialog.canvas.properties.text_border_color:
+                self.update_color_button(self.dialog.border_color_btn, self.dialog.canvas.properties.text_border_color)
                 
         except Exception as e:
             print(f"Error refreshing theme: {e}")

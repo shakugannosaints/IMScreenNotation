@@ -32,30 +32,25 @@
         0,
         0,
         0,
-        1
+        204
     ],
-    "canvas_opacity": 0.0,
-    "passthrough_opacity": 0.0,
-    "non_passthrough_opacity": 0.0,
+    "canvas_opacity": 0.8,
+    "passthrough_opacity": 0.1,
+    "non_passthrough_opacity": 0.8,
     "toolbar_font_size": 11,
     "text_font_family": "Arial",
-    "text_font_size": 30,
-    "text_font_bold": true,
-    "text_font_italic": true,
+    "text_font_size": 16,
+    "text_font_bold": false,
+    "text_font_italic": false,
     "text_color": [
-        119,
         255,
-        28,
+        0,
+        0,
         255
     ],
     "text_background_color": null,
-    "text_border_color": [
-        0,
-        0,
-        0,
-        255
-    ],
+    "text_border_color": null,
     "text_border_enabled": true,
     "text_border_width": 1,
-    "text_padding": 10
+    "text_padding": 5
 }

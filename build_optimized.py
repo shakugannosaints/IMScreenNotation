@@ -62,7 +62,13 @@ def check_dependencies():
     
     required_files = [
         'main.py',
-        'gui.py', 
+        'canvas/__init__.py',  # canvas 现在是一个包，替代原来的gui.py
+        'canvas/drawing_canvas.py',  # 主要的画布组件
+        'canvas/events.py',  # 事件处理
+        'canvas/painter.py',  # 绘制功能
+        'canvas/properties.py',  # 属性管理
+        'canvas/state_manager.py',  # 状态管理
+        'canvas/types.py',  # 类型定义
         'toolbar/toolbar.py',
         'hotkey/hotkey_manager.py',
         'config.py',
@@ -210,7 +216,13 @@ def build_with_minimal_approach():
         '--add-data=config.json;.',
         
         # 只包含必需的模块
-        '--hidden-import=gui',
+        '--hidden-import=canvas',  # 替代原来的gui模块
+        '--hidden-import=canvas.drawing_canvas',
+        '--hidden-import=canvas.events',
+        '--hidden-import=canvas.painter',
+        '--hidden-import=canvas.properties',
+        '--hidden-import=canvas.state_manager',
+        '--hidden-import=canvas.types',
         '--hidden-import=toolbar.toolbar',
         '--hidden-import=toolbar.toolbar_widgets',
         '--hidden-import=toolbar.toolbar_events',

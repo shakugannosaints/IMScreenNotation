@@ -21,11 +21,11 @@ class ConfigManager:
         config = self.main_window.config
         
         # 保存画布相关配置
-        config["current_color"] = self.main_window.canvas.current_color
-        config["current_thickness"] = self.main_window.canvas.current_thickness
-        config["current_opacity"] = self.main_window.canvas.current_opacity
-        config["canvas_color"] = self.main_window.canvas.canvas_color
-        config["canvas_opacity"] = self.main_window.canvas.canvas_opacity
+        config["current_color"] = self.main_window.canvas.properties.current_color
+        config["current_thickness"] = self.main_window.canvas.properties.current_thickness
+        config["current_opacity"] = self.main_window.canvas.properties.current_opacity
+        config["canvas_color"] = self.main_window.canvas.properties.canvas_color
+        config["canvas_opacity"] = self.main_window.canvas.properties.canvas_opacity
         
         # 保存透明度设置
         if hasattr(self.main_window, 'user_passthrough_opacity'):
@@ -52,8 +52,8 @@ class ConfigManager:
         ]
         
         for key in text_config_keys:
-            if hasattr(self.main_window.canvas, key):
-                config[key] = getattr(self.main_window.canvas, key)
+            if hasattr(self.main_window.canvas.properties, key):
+                config[key] = getattr(self.main_window.canvas.properties, key)
     
     def load_and_apply_config(self) -> None:
         """加载并应用配置"""
@@ -88,7 +88,7 @@ class ConfigManager:
             canvas.set_text_color(config["text_color"])
             canvas.set_text_background_color(config["text_background_color"])
             canvas.set_text_border_color(config["text_border_color"])
-            canvas.text_border_enabled = config["text_border_enabled"]
+            canvas.set_text_border_enabled(config["text_border_enabled"])
             canvas.set_text_border_width(config["text_border_width"])
             canvas.set_text_padding(config["text_padding"])
         except Exception as e:
@@ -100,23 +100,24 @@ class ConfigManager:
         """确保画布有基本的文本默认值"""
         from PyQt5.QtGui import QColor
         
-        if not hasattr(canvas, 'text_font_family') or canvas.text_font_family is None:
-            canvas.text_font_family = 'Arial'
-        if not hasattr(canvas, 'text_font_size') or canvas.text_font_size is None:
-            canvas.text_font_size = 16
-        if not hasattr(canvas, 'text_font_bold') or canvas.text_font_bold is None:
-            canvas.text_font_bold = False
-        if not hasattr(canvas, 'text_font_italic') or canvas.text_font_italic is None:
-            canvas.text_font_italic = False
-        if not hasattr(canvas, 'text_color') or canvas.text_color is None:
-            canvas.text_color = QColor(255, 0, 0, 255)
-        if not hasattr(canvas, 'text_background_color'):
-            canvas.text_background_color = None
-        if not hasattr(canvas, 'text_border_color'):
-            canvas.text_border_color = None
-        if not hasattr(canvas, 'text_border_enabled') or canvas.text_border_enabled is None:
-            canvas.text_border_enabled = True
-        if not hasattr(canvas, 'text_border_width') or canvas.text_border_width is None:
-            canvas.text_border_width = 1
-        if not hasattr(canvas, 'text_padding') or canvas.text_padding is None:
-            canvas.text_padding = 5
+        # 使用新的properties结构来检查和设置默认值
+        if not hasattr(canvas.properties, 'text_font_family') or canvas.properties.text_font_family is None:
+            canvas.set_text_font_family('Arial')
+        if not hasattr(canvas.properties, 'text_font_size') or canvas.properties.text_font_size is None:
+            canvas.set_text_font_size(16)
+        if not hasattr(canvas.properties, 'text_font_bold') or canvas.properties.text_font_bold is None:
+            canvas.set_text_font_bold(False)
+        if not hasattr(canvas.properties, 'text_font_italic') or canvas.properties.text_font_italic is None:
+            canvas.set_text_font_italic(False)
+        if not hasattr(canvas.properties, 'text_color') or canvas.properties.text_color is None:
+            canvas.set_text_color(QColor(255, 0, 0, 255))
+        if not hasattr(canvas.properties, 'text_background_color'):
+            canvas.set_text_background_color(None)
+        if not hasattr(canvas.properties, 'text_border_color'):
+            canvas.set_text_border_color(None)
+        if not hasattr(canvas.properties, 'text_border_enabled') or canvas.properties.text_border_enabled is None:
+            canvas.set_text_border_enabled(True)
+        if not hasattr(canvas.properties, 'text_border_width') or canvas.properties.text_border_width is None:
+            canvas.set_text_border_width(1)
+        if not hasattr(canvas.properties, 'text_padding') or canvas.properties.text_padding is None:
+            canvas.set_text_padding(5)

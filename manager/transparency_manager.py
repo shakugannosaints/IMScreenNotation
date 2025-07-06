@@ -31,16 +31,16 @@ class TransparencyManager:
         # 设置初始透明度
         if self.main_window.passthrough_state:
             self.main_window.setWindowFlags(self.main_window.windowFlags() | Qt.WindowTransparentForInput)
-            if self.main_window.canvas.canvas_opacity != self.main_window.user_passthrough_opacity:
+            if self.main_window.canvas.properties.canvas_opacity != self.main_window.user_passthrough_opacity:
                 self.main_window.canvas.set_canvas_opacity(self.main_window.user_passthrough_opacity)
             if self.main_window.toolbar.toggle_passthrough_btn:
                 self.main_window.toolbar.toggle_passthrough_btn.setChecked(True)
                 self.main_window.toolbar.toggle_passthrough_btn.setText("🖱️ 非穿透")
         else:
-            if self.main_window.canvas.canvas_opacity == 0.0:
+            if self.main_window.canvas.properties.canvas_opacity == 0.0:
                 self.main_window.canvas.set_canvas_opacity(self.main_window.user_non_passthrough_opacity)
             else:
-                self.main_window.user_non_passthrough_opacity = self.main_window.canvas.canvas_opacity
+                self.main_window.user_non_passthrough_opacity = self.main_window.canvas.properties.canvas_opacity
             if self.main_window.toolbar.toggle_passthrough_btn:
                 self.main_window.toolbar.toggle_passthrough_btn.setChecked(False)
                 self.main_window.toolbar.toggle_passthrough_btn.setText("🖱️ 穿透")

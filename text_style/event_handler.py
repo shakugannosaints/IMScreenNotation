@@ -21,9 +21,9 @@ class TextStyleEventHandler:
             # 强制处理所有待处理的事件
             QCoreApplication.processEvents()
             
-            color = QColorDialog.getColor(self.canvas.text_color, self.dialog, "选择文本颜色")
+            color = QColorDialog.getColor(self.canvas.properties.text_color, self.dialog, "选择文本颜色")
             if color.isValid():
-                self.canvas.text_color = color
+                self.canvas.set_text_color(color)
                 self.dialog.theme_manager.update_color_button(self.dialog.text_color_btn, color)
                 
             # 强制处理所有待处理的事件
@@ -38,10 +38,10 @@ class TextStyleEventHandler:
             # 强制处理所有待处理的事件
             QCoreApplication.processEvents()
             
-            current_color = self.canvas.text_background_color or QColor(255, 255, 255)
+            current_color = self.canvas.properties.text_background_color or QColor(255, 255, 255)
             color = QColorDialog.getColor(current_color, self.dialog, "选择背景颜色")
             if color.isValid():
-                self.canvas.text_background_color = color
+                self.canvas.set_text_background_color(color)
                 self.dialog.theme_manager.update_color_button(self.dialog.bg_color_btn, color)
                 self.dialog.bg_transparent_check.setChecked(False)
                 
@@ -57,10 +57,10 @@ class TextStyleEventHandler:
             # 强制处理所有待处理的事件
             QCoreApplication.processEvents()
             
-            current_color = self.canvas.text_border_color or QColor(0, 0, 0)
+            current_color = self.canvas.properties.text_border_color or QColor(0, 0, 0)
             color = QColorDialog.getColor(current_color, self.dialog, "选择边框颜色")
             if color.isValid():
-                self.canvas.text_border_color = color
+                self.canvas.set_text_border_color(color)
                 self.dialog.theme_manager.update_color_button(self.dialog.border_color_btn, color)
                 
             # 强制处理所有待处理的事件
@@ -72,15 +72,15 @@ class TextStyleEventHandler:
     def toggle_background_transparency(self):
         """切换背景透明度"""
         if self.dialog.bg_transparent_check.isChecked():
-            self.canvas.text_background_color = None
+            self.canvas.set_text_background_color(None)
             self.dialog.bg_color_btn.setStyleSheet("")
         else:
             # 如果没有背景颜色，设置默认白色
-            if not self.canvas.text_background_color:
-                self.canvas.text_background_color = QColor(255, 255, 255)
+            if not self.canvas.properties.text_background_color:
+                self.canvas.set_text_background_color(QColor(255, 255, 255))
                 self.dialog.theme_manager.update_color_button(
                     self.dialog.bg_color_btn, 
-                    self.canvas.text_background_color
+                    self.canvas.properties.text_background_color
                 )
                 
     def toggle_border_enable(self):
@@ -90,16 +90,16 @@ class TextStyleEventHandler:
         self.dialog.border_width_spin.setEnabled(enabled)
         
         # 立即更新canvas的边框启用状态
-        setattr(self.canvas, 'text_border_enabled', enabled)
+        self.canvas.set_text_border_enabled(enabled)
         
         if enabled:
-            current_border_color = getattr(self.canvas, 'text_border_color', None)
+            current_border_color = getattr(self.canvas.properties, 'text_border_color', None)
             if not current_border_color:
                 border_color = QColor(0, 0, 0)
-                setattr(self.canvas, 'text_border_color', border_color)
+                self.canvas.set_text_border_color(border_color)
                 self.dialog.theme_manager.update_color_button(self.dialog.border_color_btn, border_color)
         else:
-            setattr(self.canvas, 'text_border_color', None)
+            self.canvas.set_text_border_color(None)
             self.dialog.border_color_btn.setStyleSheet("")
             
     def accept_settings(self):

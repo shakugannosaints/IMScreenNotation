@@ -223,13 +223,13 @@ class ToolbarWidgetBuilder:
         thickness_layout.setContentsMargins(0, 0, 0, 0)
         thickness_layout.setSpacing(6)
         
-        self.toolbar.thickness_label = QLabel(f"粗细: {self.canvas.current_thickness}")
+        self.toolbar.thickness_label = QLabel(f"粗细: {self.canvas.properties.current_thickness}")
         self.toolbar.thickness_label.setMinimumHeight(20)
         
         self.toolbar.thickness_slider = QSlider(Qt.Horizontal)
         self.toolbar.thickness_slider.setMinimum(1)
         self.toolbar.thickness_slider.setMaximum(20)
-        self.toolbar.thickness_slider.setValue(self.canvas.current_thickness)
+        self.toolbar.thickness_slider.setValue(self.canvas.properties.current_thickness)
         self.toolbar.thickness_slider.setMinimumHeight(24)
         self.toolbar.thickness_slider.valueChanged.connect(self.toolbar.change_thickness)
         
@@ -244,13 +244,13 @@ class ToolbarWidgetBuilder:
         draw_opacity_layout.setContentsMargins(0, 0, 0, 0)
         draw_opacity_layout.setSpacing(6)
         
-        self.toolbar.drawing_opacity_label = QLabel(f"绘制不透明度: {int(self.canvas.current_opacity * 100)}%")
+        self.toolbar.drawing_opacity_label = QLabel(f"绘制不透明度: {int(self.canvas.properties.current_opacity * 100)}%")
         self.toolbar.drawing_opacity_label.setMinimumHeight(20)
         
         self.toolbar.drawing_opacity_slider = QSlider(Qt.Horizontal)
         self.toolbar.drawing_opacity_slider.setMinimum(0)
         self.toolbar.drawing_opacity_slider.setMaximum(100)
-        self.toolbar.drawing_opacity_slider.setValue(int(self.canvas.current_opacity * 100))
+        self.toolbar.drawing_opacity_slider.setValue(int(self.canvas.properties.current_opacity * 100))
         self.toolbar.drawing_opacity_slider.setMinimumHeight(24)
         self.toolbar.drawing_opacity_slider.valueChanged.connect(self.toolbar.change_drawing_opacity)
         
@@ -265,13 +265,13 @@ class ToolbarWidgetBuilder:
         canvas_opacity_layout.setContentsMargins(0, 0, 0, 0)
         canvas_opacity_layout.setSpacing(6)
         
-        self.toolbar.canvas_opacity_label = QLabel(f"画布不透明度: {int(self.canvas.canvas_opacity * 100)}%")
+        self.toolbar.canvas_opacity_label = QLabel(f"画布不透明度: {int(self.canvas.properties.canvas_opacity * 100)}%")
         self.toolbar.canvas_opacity_label.setMinimumHeight(20)
         
         self.toolbar.canvas_opacity_slider = QSlider(Qt.Horizontal)
         self.toolbar.canvas_opacity_slider.setMinimum(0)
         self.toolbar.canvas_opacity_slider.setMaximum(100)
-        self.toolbar.canvas_opacity_slider.setValue(int(self.canvas.canvas_opacity * 100))
+        self.toolbar.canvas_opacity_slider.setValue(int(self.canvas.properties.canvas_opacity * 100))
         self.toolbar.canvas_opacity_slider.setMinimumHeight(24)
         self.toolbar.canvas_opacity_slider.valueChanged.connect(self.toolbar.change_canvas_opacity)
         

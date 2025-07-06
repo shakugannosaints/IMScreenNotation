@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                              QSystemTrayIcon, QMenu, QStyle)
 from PyQt5.QtGui import QColor, QIcon, QCloseEvent, QPixmap, QPainter
 from PyQt5.QtCore import Qt, QTimer, QPoint, QEvent
-from gui import DrawingCanvas
+from canvas import DrawingCanvas
 from config import load_config, save_config
 from file_operations import FileOperations
 

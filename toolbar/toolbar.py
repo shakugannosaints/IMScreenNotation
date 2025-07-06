@@ -185,7 +185,7 @@ class AnnotationToolbar(QWidget):
     # 主题和样式相关方法（委托给theme_manager）
     def update_color_button(self) -> None:
         """更新颜色按钮的显示"""
-        color: QColor = self.canvas.current_color
+        color: QColor = self.canvas.properties.current_color
         self.theme_manager.update_color_button_style(color)
 
     def update_font_size(self, size: int) -> None:

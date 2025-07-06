@@ -25,7 +25,7 @@ class ToolbarEventHandler:
     def handle_color_selection(self) -> None:
         """处理颜色选择事件"""
         # 创建一个独立的颜色选择对话框
-        dialog: QColorDialog = QColorDialog(self.canvas.current_color, self.toolbar)
+        dialog: QColorDialog = QColorDialog(self.canvas.properties.current_color, self.toolbar)
         
         # 设置对话框选项，确保它总是在最前面
         dialog.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.Dialog)
@@ -200,7 +200,7 @@ class ToolbarEventHandler:
     
     def update_canvas_opacity_display(self) -> None:
         """更新画布透明度显示，确保与实际画布透明度一致"""
-        current_opacity: float = self.canvas.canvas_opacity
+        current_opacity: float = self.canvas.properties.canvas_opacity
         percentage: int = int(current_opacity * 100)
         
         # 更新滑动条值（防止触发信号循环）
