@@ -1,0 +1,189 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  lint-and-test:
+    name: Code Quality Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 black mypy
+        pip install -r requirements.txt
+
+    - name: Code formatting check with Black
+      run: |
+        echo "🎨 Checking code formatting..."
+        black --check --diff . || echo "⚠️ Code formatting issues found"
+
+    - name: Lint with flake8
+      run: |
+        echo "🔍 Running flake8 linting..."
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || echo "⚠️ Critical linting issues found"
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Type checking with mypy
+      run: |
+        echo "🔎 Running type checking..."
+        mypy --ignore-missing-imports main.py || echo "⚠️ Type checking issues found"
+
+    - name: Check import structure
+      run: |
+        echo "📦 Checking import structure..."
+        python -c "
+        import ast
+        import sys
+        
+        def check_imports(filename):
+            try:
+                with open(filename, 'r', encoding='utf-8') as f:
+                    tree = ast.parse(f.read())
+                
+                imports = []
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.Import):
+                        for alias in node.names:
+                            imports.append(alias.name)
+                    elif isinstance(node, ast.ImportFrom):
+                        module = node.module or ''
+                        for alias in node.names:
+                            imports.append(f'{module}.{alias.name}' if module else alias.name)
+                
+                print(f'✅ {filename}: {len(imports)} imports found')
+                return True
+            except Exception as e:
+                print(f'❌ {filename}: Import check failed - {e}')
+                return False
+        
+        files_to_check = ['main.py', 'gui.py', 'config.py']
+        success = True
+        for file in files_to_check:
+            try:
+                if not check_imports(file):
+                    success = False
+            except FileNotFoundError:
+                print(f'⚠️ File not found: {file}')
+        
+        if success:
+            print('✅ All import checks passed')
+        else:
+            print('⚠️ Some import checks failed')
+        "
+
+    - name: Security check
+      run: |
+        echo "🔒 Running basic security checks..."
+        python -c "
+        import os
+        import re
+        
+        def check_security_issues(filename):
+            try:
+                with open(filename, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                
+                issues = []
+                
+                # 检查硬编码密码或密钥
+                if re.search(r'password\s*=\s*[\"\']\w+[\"\'']', content, re.IGNORECASE):
+                    issues.append('Possible hardcoded password')
+                
+                # 检查eval使用
+                if 'eval(' in content:
+                    issues.append('Use of eval() function')
+                
+                # 检查exec使用  
+                if 'exec(' in content:
+                    issues.append('Use of exec() function')
+                
+                if issues:
+                    print(f'⚠️ {filename}: {issues}')
+                else:
+                    print(f'✅ {filename}: No security issues found')
+                    
+            except FileNotFoundError:
+                print(f'⚠️ File not found: {filename}')
+        
+        for file in ['main.py', 'gui.py', 'config.py']:
+            check_security_issues(file)
+        "
+
+    - name: Check dependencies
+      run: |
+        echo "📋 Checking dependencies..."
+        pip list --format=freeze > installed_packages.txt
+        echo "Currently installed packages:"
+        cat installed_packages.txt
+        
+        echo "Checking for security vulnerabilities..."
+        pip install safety
+        safety check || echo "⚠️ Security vulnerabilities found in dependencies"
+
+    - name: Project structure check
+      run: |
+        echo "🏗️ Checking project structure..."
+        python -c "
+        import os
+        
+        required_files = [
+            'main.py',
+            'requirements.txt',
+            'README.md',
+            'config.py'
+        ]
+        
+        recommended_dirs = [
+            'hotkey',
+            'manager', 
+            'shapes',
+            'toolbar'
+        ]
+        
+        print('Required files:')
+        for file in required_files:
+            if os.path.exists(file):
+                print(f'  ✅ {file}')
+            else:
+                print(f'  ❌ {file} (missing)')
+        
+        print('Recommended directories:')
+        for dir in recommended_dirs:
+            if os.path.isdir(dir):
+                print(f'  ✅ {dir}/')
+            else:
+                print(f'  ⚠️ {dir}/ (missing)')
+        "
+
+    - name: Generate quality report
+      run: |
+        echo "📊 Generating code quality report..."
+        echo "# Code Quality Report" > quality_report.md
+        echo "Generated on: $(date)" >> quality_report.md
+        echo "" >> quality_report.md
+        echo "## Files analyzed:" >> quality_report.md
+        find . -name "*.py" -not -path "./.git/*" -not -path "./build/*" -not -path "./dist/*" | wc -l | xargs echo "Python files:" >> quality_report.md
+        echo "" >> quality_report.md
+        echo "## Lines of code:" >> quality_report.md
+        find . -name "*.py" -not -path "./.git/*" -not -path "./build/*" -not -path "./dist/*" -exec wc -l {} + | tail -1 >> quality_report.md
+
+    - name: Upload quality report
+      uses: actions/upload-artifact@v3
+      with:
+        name: quality-report
+        path: quality_report.md
+        retention-days: 30

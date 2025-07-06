@@ -1,0 +1,232 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ main, master, develop ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows
+            artifact-name: IMScreenNotation-Windows
+            executable-ext: .exe
+          - os: ubuntu-latest
+            platform: linux
+            artifact-name: IMScreenNotation-Linux
+            executable-ext: ""
+          - os: macos-latest
+            platform: macos
+            artifact-name: IMScreenNotation-macOS
+            executable-ext: ""
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'  # 使用稳定版本的Python
+
+    # Linux特定设置
+    - name: Install Linux dependencies
+      if: matrix.platform == 'linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libgl1-mesa-glx \
+          libxcb-xinerama0 \
+          libxcb-cursor0 \
+          libxkbcommon-x11-0 \
+          libxcb-icccm4 \
+          libxcb-image0 \
+          libxcb-keysyms1 \
+          libxcb-randr0 \
+          libxcb-render-util0 \
+          libxcb-shape0 \
+          libegl1-mesa \
+          libfontconfig1 \
+          libxrender1 \
+          libxi6 \
+          libxtst6 \
+          xvfb
+
+    # macOS特定设置
+    - name: Install macOS dependencies
+      if: matrix.platform == 'macos'
+      run: |
+        # macOS通常不需要额外的系统依赖
+
+    # Windows特定设置
+    - name: Install Windows dependencies
+      if: matrix.platform == 'windows'
+      run: |
+        # Windows通常不需要额外的系统依赖
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+
+    - name: Verify installation
+      run: |
+        python --version
+        pip list
+        python -c "import PyQt5; print('PyQt5 imported successfully')"
+
+    # Linux构建（使用虚拟显示）
+    - name: Build application (Linux)
+      if: matrix.platform == 'linux'
+      run: |
+        export DISPLAY=:99
+        Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+        sleep 3
+        python build_optimized.py
+      env:
+        QT_QPA_PLATFORM: offscreen
+
+    # Windows和macOS构建
+    - name: Build application (Windows/macOS)
+      if: matrix.platform != 'linux'
+      run: |
+        python build_optimized.py
+
+    - name: Verify build output
+      shell: bash
+      run: |
+        if [ -d "dist" ]; then
+          echo "✅ Build directory exists"
+          ls -la dist/
+          # 查找可执行文件
+          find dist/ -name "*IMScreenNotation*" -type f || echo "⚠️ No executable found"
+        else
+          echo "❌ Build directory not found"
+          exit 1
+        fi
+
+    - name: Package artifacts
+      shell: bash
+      run: |
+        cd dist
+        if [ "${{ matrix.platform }}" = "windows" ]; then
+          # Windows: 创建zip包
+          7z a ../IMScreenNotation-${{ matrix.platform }}.zip *
+        else
+          # Linux/macOS: 创建tar.gz包
+          tar -czf ../IMScreenNotation-${{ matrix.platform }}.tar.gz *
+        fi
+        cd ..
+
+    # 上传构建产物
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.artifact-name }}
+        path: |
+          IMScreenNotation-${{ matrix.platform }}.zip
+          IMScreenNotation-${{ matrix.platform }}.tar.gz
+        retention-days: 30
+
+    # 收集构建信息
+    - name: Collect build info
+      shell: bash
+      run: |
+        echo "Build Information:" > build-info-${{ matrix.platform }}.txt
+        echo "Platform: ${{ matrix.platform }}" >> build-info-${{ matrix.platform }}.txt
+        echo "Python Version: $(python --version)" >> build-info-${{ matrix.platform }}.txt
+        echo "Build Date: $(date)" >> build-info-${{ matrix.platform }}.txt
+        echo "Commit: ${{ github.sha }}" >> build-info-${{ matrix.platform }}.txt
+        if [ -d "dist" ]; then
+          echo "Files in dist/:" >> build-info-${{ matrix.platform }}.txt
+          ls -la dist/ >> build-info-${{ matrix.platform }}.txt
+          # 计算文件大小
+          if [ "${{ matrix.platform }}" = "windows" ]; then
+            if [ -f "IMScreenNotation-${{ matrix.platform }}.zip" ]; then
+              echo "Package size: $(du -h IMScreenNotation-${{ matrix.platform }}.zip)" >> build-info-${{ matrix.platform }}.txt
+            fi
+          else
+            if [ -f "IMScreenNotation-${{ matrix.platform }}.tar.gz" ]; then
+              echo "Package size: $(du -h IMScreenNotation-${{ matrix.platform }}.tar.gz)" >> build-info-${{ matrix.platform }}.txt
+            fi
+          fi
+        fi
+
+    - name: Upload build info
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-info-${{ matrix.platform }}
+        path: build-info-${{ matrix.platform }}.txt
+
+  # 创建Release（仅在tag推送时）
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+
+    - name: Prepare release assets
+      run: |
+        mkdir -p release-assets
+        # 移动所有构建产物到release目录
+        find . -name "*.zip" -o -name "*.tar.gz" | while read file; do
+          cp "$file" release-assets/
+        done
+        # 创建release notes
+        echo "# IMScreenNotation Release ${{ github.ref_name }}" > release-notes.md
+        echo "" >> release-notes.md
+        echo "## 下载说明" >> release-notes.md
+        echo "- Windows用户请下载 \`IMScreenNotation-windows.zip\`" >> release-notes.md
+        echo "- Linux用户请下载 \`IMScreenNotation-linux.tar.gz\`" >> release-notes.md
+        echo "- macOS用户请下载 \`IMScreenNotation-macos.tar.gz\`" >> release-notes.md
+        echo "" >> release-notes.md
+        echo "## 更新内容" >> release-notes.md
+        echo "请查看最新的commit记录获取详细更新内容。" >> release-notes.md
+        echo "" >> release-notes.md
+        echo "## 构建信息" >> release-notes.md
+        echo "- Commit: ${{ github.sha }}" >> release-notes.md
+        echo "- Build Date: $(date)" >> release-notes.md
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: release-assets/*
+        body_path: release-notes.md
+        draft: false
+        prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # 清理旧的artifacts（可选）
+  cleanup:
+    name: Cleanup old artifacts
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Delete old artifacts
+      uses: geekyeggo/delete-artifact@v2
+      with:
+        name: |
+          IMScreenNotation-*
+          build-info-*
+        skipIfNotFound: true
+        useGlob: true
+        failOnError: false

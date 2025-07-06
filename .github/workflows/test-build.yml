@@ -1,0 +1,57 @@
+name: Test Build
+
+on:
+  push:
+    branches: [ test, feature/* ]
+  pull_request:
+    branches: [ test ]
+  workflow_dispatch:
+
+jobs:
+  test-build:
+    name: Test Build on Windows
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+
+    - name: Test import
+      run: |
+        python -c "import PyQt5; print('✅ PyQt5 imported successfully')"
+        python -c "import pynput; print('✅ pynput imported successfully')"
+        python -c "from main import AnnotationTool; print('✅ Main module imported successfully')"
+
+    - name: Quick build test
+      run: |
+        echo "Testing basic PyInstaller command..."
+        pyinstaller --version
+        pyinstaller --onefile --windowed --name IMScreenNotation_test main.py
+        
+    - name: Verify test build
+      run: |
+        if (Test-Path "dist/IMScreenNotation_test.exe") {
+          echo "✅ Test build successful"
+          Get-ChildItem dist/ | Format-Table
+        } else {
+          echo "❌ Test build failed"
+          exit 1
+        }
+
+    - name: Upload test artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-build
+        path: dist/IMScreenNotation_test.exe
+        retention-days: 7
