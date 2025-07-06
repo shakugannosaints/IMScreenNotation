@@ -9,6 +9,12 @@ on:
     branches: [ main, master ]
   workflow_dispatch:  # 允许手动触发
 
+# 添加必要的权限
+permissions:
+  contents: write
+  actions: read
+  packages: read
+
 jobs:
   build:
     name: Build on ${{ matrix.os }}
@@ -189,6 +195,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+      actions: read
     
     steps:
     - name: Checkout code
@@ -224,12 +233,14 @@ jobs:
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
+        tag_name: ${{ github.ref_name }}
+        name: Release ${{ github.ref_name }}
         files: release-assets/*
         body_path: release-notes.md
         draft: false
         prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        generate_release_notes: true
+        token: ${{ github.token }}
 
   # 清理旧的artifacts（可选）
   cleanup:
