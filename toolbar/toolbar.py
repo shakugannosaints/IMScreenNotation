@@ -103,10 +103,13 @@ class AnnotationToolbar(QWidget):
             self.theme_manager.font_size = self.main_window.config['toolbar_font_size']
         
         self.setWindowTitle("标注工具")
-        # 确保工具栏始终在最顶层
+        # 确保工具栏始终在最顶层，使用Qt.Tool避免在任务栏显示
+        # 添加Qt.X11BypassWindowManagerHint在X11系统上避免窗口管理器干预
         self.setWindowFlags(Qt.Tool | Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
         self.setAttribute(Qt.WA_DeleteOnClose, False)
         self.setAttribute(Qt.WA_AlwaysShowToolTips)
+        # 设置为不接受焦点，避免抢夺其他应用的焦点
+        self.setAttribute(Qt.WA_ShowWithoutActivating)
         
         # 启用鼠标追踪
         self.setMouseTracking(True)

@@ -46,7 +46,9 @@ class ToolbarEventHandler:
         # 恢复主窗口可见性
         if main_visible:
             self.main_window.show()
-            self.main_window.activateWindow()
+            # 只在非穿透模式下激活主窗口，避免抢夺焦点
+            if not getattr(self.main_window, 'passthrough_state', False):
+                self.main_window.activateWindow()
             self.main_window.raise_()
         
         # 确保工具栏在最前面
@@ -156,8 +158,9 @@ class ToolbarEventHandler:
             import traceback
             traceback.print_exc()
         finally:
-            # 恢复工具栏定时器
-            if hasattr(self.main_window, 'toolbar_timer'):
+            # 恢复工具栏定时器（仅在非穿透模式下）
+            if (hasattr(self.main_window, 'toolbar_timer') and 
+                not getattr(self.main_window, 'passthrough_state', False)):
                 self.main_window.toolbar_timer.start(1000)
     
     def handle_mouse_events(self, obj: QWidget, event: QEvent) -> bool:

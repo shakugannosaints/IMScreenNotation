@@ -64,7 +64,6 @@ class HotkeyManager(QObject):
                 # 确保功能键格式统一为 "f1", "f2" 等
                 main_key = main_key.lower()
             
-            print(f"解析热键 '{hotkey_str}' -> 修饰键: {modifiers}, 主键: {main_key}")
             return modifiers, main_key
         except Exception as e:
             print(f"Error parsing hotkey '{hotkey_str}': {e}")
@@ -188,7 +187,6 @@ class HotkeyManager(QObject):
                 match = key_str == main_key
             
             # 增加调试信息
-            print(f"    主键匹配检查: 期望='{main_key}', 实际='{key_str}', 匹配={match}")
             
             return match
         except Exception as e:
@@ -200,9 +198,7 @@ class HotkeyManager(QObject):
     def _execute_hotkey_callback(self, hotkey_str, callback):
         """在主线程中执行热键回调"""
         try:
-            print(f"在主线程中执行热键回调: {hotkey_str}")
             callback()
-            print(f"✓ 热键回调执行成功: {hotkey_str}")
         except Exception as e:
             print(f"✗ 热键回调执行失败: {hotkey_str}, 错误: {e}")
             import traceback
@@ -218,7 +214,6 @@ class HotkeyManager(QObject):
             # 记录按键信息，方便调试
             key_str = self.key_to_string(key)
             pressed_str = [self.key_to_string(k) for k in self.pressed_keys if k is not None]
-            print(f"按键按下: {key_str} (原始key: {key}) -> 当前组合: {pressed_str}")
             
             # 如果按下的是修饰键，不需要立即检查热键
             if key in self.modifier_keys:
@@ -258,12 +253,7 @@ class HotkeyManager(QObject):
                             current_modifiers.add(self.modifier_keys[mod_key])
                     
                     modifiers_matched = required_modifiers.issubset(current_modifiers)
-                    
-                    # 打印详细匹配信息
-                    print(f"  检查热键 '{hotkey_str}': 修饰键匹配={modifiers_matched}, 主键匹配={key_matched}")
-                    print(f"    需要修饰键={required_modifiers}, 当前修饰键={current_modifiers}")
-                    print(f"    期望主键='{main_key}', 实际主键='{pressed_key_str}'")
-                    
+
                     # 如果主键和修饰键都匹配，触发回调
                     if key_matched and modifiers_matched:
                         # 防止重复触发同一个热键
@@ -292,17 +282,14 @@ class HotkeyManager(QObject):
             if key in self.pressed_keys:
                 self.pressed_keys.remove(key)
                 key_str = self.key_to_string(key)
-                print(f"按键释放: {key_str}")
                 
                 # 如果释放的是主键（非修饰键），重置最后触发的热键
                 if key not in self.modifier_keys:
                     self.last_triggered_hotkey = None
-                    print("主键释放，重置热键状态")
                 
                 # 如果所有键都释放了，也重置状态
                 if not self.pressed_keys:
                     self.last_triggered_hotkey = None
-                    print("所有按键已释放，重置热键状态")
         except Exception as e:
             print(f"Error in on_release: {e}")
             import traceback
@@ -318,7 +305,6 @@ class HotkeyManager(QObject):
                     suppress=False  # 不拦截按键，让其他应用也能接收
                 )
                 self.listener.start()
-                print("热键监听已启动")
                 return True
             except Exception as e:
                 print(f"启动热键监听失败: {e}")
@@ -335,7 +321,6 @@ class HotkeyManager(QObject):
                 self.listener = None
                 self.pressed_keys.clear()
                 self.last_triggered_hotkey = None
-                print("热键监听已停止")
             except Exception as e:
                 print(f"停止热键监听失败: {e}")
                 import traceback

@@ -19,21 +19,48 @@ class WindowManager:
     
     def setup_window_properties(self) -> None:
         """设置窗口属性"""
-        # 获取屏幕尺寸
+        # 获取完整屏幕区域（包括任务栏等系统界面）
         screen = QApplication.primaryScreen()
         if screen:
-            screen_geometry = screen.geometry()
+            screen_geometry = screen.geometry()  # 使用完整屏幕几何，包括任务栏
+            print(f"主屏幕几何: {screen_geometry}")
         else:
             # 如果无法获取主屏幕，使用默认值
             screen_geometry = QRect(0, 0, 1920, 1080)
+        
+        # 隐藏状态栏，避免占用空间
+        if self.main_window._status_bar:
+            self.main_window._status_bar.hide()
+            self.main_window._status_bar.setMaximumHeight(0)
+        
+        # 设置主窗口的内容边距为0
+        if hasattr(self.main_window, 'central_widget'):
+            self.main_window.central_widget.setContentsMargins(0, 0, 0, 0)
         
         # 设置窗口覆盖整个屏幕，去除所有边距
         self.main_window.setGeometry(screen_geometry)
         self.main_window.setFixedSize(screen_geometry.size())
         
-        # 确保画布也覆盖整个窗口
-        self.main_window.main_layout.setContentsMargins(0, 0, 0, 0)
-        self.main_window.main_layout.setSpacing(0)
+        # 移除布局管理器对画布的约束，直接设置画布为中心控件
+        if hasattr(self.main_window, 'canvas') and self.main_window.canvas:
+            print(f"画布创建前的窗口几何: {self.main_window.geometry()}")
+            
+            # 从原来的布局中移除画布
+            if self.main_window.main_layout.count() > 0:
+                self.main_window.main_layout.removeWidget(self.main_window.canvas)
+            
+            # 直接将画布设置为中心控件，不使用布局管理器
+            self.main_window.setCentralWidget(self.main_window.canvas)
+            
+            # 确保画布没有边距和spacing
+            self.main_window.canvas.setContentsMargins(0, 0, 0, 0)
+            
+            # 确保画布的几何与窗口匹配
+            self.main_window.canvas.setGeometry(0, 0, screen_geometry.width(), screen_geometry.height())
+            self.main_window.canvas.setFixedSize(screen_geometry.size())
+            
+            print(f"设置后的画布几何: {self.main_window.canvas.geometry()}")
+            print(f"设置后的画布尺寸: {self.main_window.canvas.size()}")
         
         # 设置窗口属性使其成为透明覆盖层
         self.main_window.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
@@ -45,6 +72,9 @@ class WindowManager:
         if menu_bar:
             menu_bar.setVisible(False)
             menu_bar.setMaximumHeight(0)
+            menu_bar.setFixedHeight(0)
+            # 确保菜单栏不占用任何空间
+            menu_bar.setContentsMargins(0, 0, 0, 0)
     
     def toggle_visibility(self) -> None:
         """切换主窗口显示/隐藏"""
@@ -88,6 +118,11 @@ class WindowManager:
         if (hasattr(self.main_window, 'toolbar') and 
             self.main_window.toolbar and 
             not self.main_window.toolbar_completely_hidden):
+            # 使用raise_()确保在Z-order中处于最前面，但不抢夺焦点
             self.main_window.toolbar.raise_()
-            self.main_window.toolbar.activateWindow()
-            self.main_window.toolbar.show()
+            # 只在非穿透模式下激活工具栏窗口，避免抢夺焦点
+            if not getattr(self.main_window, 'passthrough_state', False):
+                self.main_window.toolbar.activateWindow()
+            # 确保工具栏可见
+            if not self.main_window.toolbar.isVisible():
+                self.main_window.toolbar.show()

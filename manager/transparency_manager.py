@@ -3,7 +3,7 @@
 """
 from typing import TYPE_CHECKING
 from PyQt5.QtCore import Qt
-from constants import STATUS_MESSAGE_TIMEOUT
+from constants import STATUS_MESSAGE_TIMEOUT, TOOLBAR_CHECK_INTERVAL
 
 if TYPE_CHECKING:
     from main import AnnotationTool
@@ -63,6 +63,10 @@ class TransparencyManager:
                 self.main_window.toolbar.toggle_passthrough_btn.setText("🖱️ 穿透")
                 self.main_window.toolbar.toggle_passthrough_btn.setProperty("class", "action")
             self.main_window._status_bar.showMessage("鼠标非穿透模式", STATUS_MESSAGE_TIMEOUT)
+            
+            # 退出穿透模式时重新启动定时器
+            if hasattr(self.main_window, 'toolbar_timer') and self.main_window.toolbar_timer:
+                self.main_window.toolbar_timer.start(TOOLBAR_CHECK_INTERVAL)  # 恢复定时器
         else:
             # Currently in non-pass-through mode, switch to pass-through
             new_flags = current_flags | Qt.WindowTransparentForInput
@@ -75,6 +79,10 @@ class TransparencyManager:
                 self.main_window.toolbar.toggle_passthrough_btn.setText("🖱️ 非穿透")
                 self.main_window.toolbar.toggle_passthrough_btn.setProperty("class", "action active")
             self.main_window._status_bar.showMessage("鼠标穿透模式", STATUS_MESSAGE_TIMEOUT)
+            
+            # 进入穿透模式时停止定时器，避免抢夺焦点
+            if hasattr(self.main_window, 'toolbar_timer') and self.main_window.toolbar_timer:
+                self.main_window.toolbar_timer.stop()
         
         # 更新GUI滑动条以同步画布透明度
         self.main_window.toolbar.update_canvas_opacity_ui()
@@ -91,7 +99,9 @@ class TransparencyManager:
         
         # 必须重新显示窗口以应用新的标志
         self.main_window.show()
-        self.main_window.activateWindow()
+        # 只在非穿透模式下激活主窗口，避免抢夺焦点
+        if not self.main_window.passthrough_state:
+            self.main_window.activateWindow()
         self.main_window.raise_()
         
         # 确保工具栏在主窗口之上
@@ -100,8 +110,12 @@ class TransparencyManager:
             self.main_window.toolbar and 
             not self.main_window.toolbar_completely_hidden):
             self.main_window.toolbar.raise_()
-            self.main_window.toolbar.activateWindow()
-            self.main_window.toolbar.show()
+            # 只在非穿透模式下激活工具栏窗口，避免抢夺焦点
+            if not self.main_window.passthrough_state:
+                self.main_window.toolbar.activateWindow()
+            # 确保工具栏可见
+            if not self.main_window.toolbar.isVisible():
+                self.main_window.toolbar.show()
     
     def change_canvas_opacity(self, value: int) -> None:
         """通过工具栏处理画布透明度变化"""

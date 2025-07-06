@@ -4,7 +4,7 @@
         "toggle_passthrough": "<ctrl>+<alt>+p",
         "toggle_canvas_visibility": "<ctrl>+<alt>+v",
         "toggle_toolbar_collapse": "<ctrl>+<alt>+t",
-        "toggle_complete_hide": "<f12>",
+        "toggle_complete_hide": "",
         "clear_canvas": "<ctrl>+<alt>+c",
         "undo": "<ctrl>+z",
         "redo": "<ctrl>+y",
@@ -18,7 +18,7 @@
         "tool_point": "<ctrl>+6",
         "tool_laser_pointer": "<ctrl>+7",
         "tool_text": "<ctrl>+8",
-        "tool_eraser": "<f1>"
+        "tool_eraser": "<ctrl>+9"
     },
     "current_color": [
         255,
@@ -26,7 +26,7 @@
         0,
         255
     ],
-    "current_thickness": 9,
+    "current_thickness": 3,
     "current_opacity": 1.0,
     "canvas_color": [
         0,
@@ -39,18 +39,23 @@
     "non_passthrough_opacity": 0.0,
     "toolbar_font_size": 11,
     "text_font_family": "Arial",
-    "text_font_size": 16,
-    "text_font_bold": false,
-    "text_font_italic": false,
+    "text_font_size": 30,
+    "text_font_bold": true,
+    "text_font_italic": true,
     "text_color": [
+        119,
         255,
+        28,
+        255
+    ],
+    "text_background_color": null,
+    "text_border_color": [
+        0,
         0,
         0,
         255
     ],
-    "text_background_color": null,
-    "text_border_color": null,
     "text_border_enabled": true,
     "text_border_width": 1,
-    "text_padding": 5
+    "text_padding": 10
 }

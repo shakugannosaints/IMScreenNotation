@@ -48,14 +48,21 @@ class AnnotationTool(QMainWindow):
         #类型注解
         self._status_bar: QStatusBar = self.statusBar()
         
-        # 设置状态栏
+        # 先创建画布
+        self.canvas: DrawingCanvas = DrawingCanvas()
+        
+        # 暂时创建一个空的中心控件和布局（将在window_manager中被替换）
         self.central_widget: QWidget = QWidget()
         self.setCentralWidget(self.central_widget)
         self.main_layout: QVBoxLayout = QVBoxLayout(self.central_widget)
+        
+        # 确保主窗口和中心控件没有边距
+        self.setContentsMargins(0, 0, 0, 0)
+        self.central_widget.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setSpacing(0)
 
         self.config: Dict[str, Any] = load_config()
-
-        self.canvas: DrawingCanvas = DrawingCanvas()
         
         # 初始化管理器
         self.window_manager = WindowManager(self)
@@ -76,7 +83,8 @@ class AnnotationTool(QMainWindow):
             print("首次运行，创建默认配置文件...")
             self.config_manager.save_current_config()
         
-        self.main_layout.addWidget(self.canvas)
+        # 注意：画布将在window_manager.setup_window_properties()中被设置为中心控件
+        # 这里暂时不添加到布局中
         
         # 初始化热键管理器
         self.hotkey_manager: HotkeyManager = HotkeyManager(self)
@@ -114,7 +122,9 @@ class AnnotationTool(QMainWindow):
         # 设置定时器定期确保工具栏在最前面
         self.toolbar_timer = QTimer()
         self.toolbar_timer.timeout.connect(self.window_manager.ensure_toolbar_on_top)
-        self.toolbar_timer.start(TOOLBAR_CHECK_INTERVAL)  # 每秒检查一次
+        # 只在非穿透模式下启动定时器，避免在穿透模式下抢夺焦点
+        if not getattr(self, 'passthrough_state', False):
+            self.toolbar_timer.start(TOOLBAR_CHECK_INTERVAL)  # 每秒检查一次
         
         # 初始化系统托盘
         self.tray_manager.setup_system_tray()
@@ -178,13 +188,24 @@ class AnnotationTool(QMainWindow):
         self.tray_manager.show_from_tray()
 
     def toggle_toolbar_complete_hide(self) -> None:
-        """完全隐藏/显示工具栏和主窗口"""
+        """完全隐藏/显示工具栏（不影响画布）"""
         if self.toolbar_completely_hidden:
-            # 当前完全隐藏，需要显示 - 从托盘恢复
-            self.tray_manager.show_from_tray()
+            # 当前完全隐藏，需要显示工具栏
+            if hasattr(self, 'toolbar'):
+                self.toolbar.show()
+                self.toolbar_completely_hidden = False
+                # 确保工具栏在最前面
+                self.toolbar.raise_()
+                # 只在非穿透模式下激活工具栏，避免抢夺焦点
+                if not getattr(self, 'passthrough_state', False):
+                    self.toolbar.activateWindow()
+                self._status_bar.showMessage("工具栏已显示", STATUS_MESSAGE_TIMEOUT)
         else:
-            # 当前显示，需要完全隐藏到托盘
-            self.tray_manager.hide_to_tray()
+            # 当前显示，需要完全隐藏工具栏
+            if hasattr(self, 'toolbar'):
+                self.toolbar.hide()
+                self.toolbar_completely_hidden = True
+                self._status_bar.showMessage("工具栏已隐藏", STATUS_MESSAGE_TIMEOUT)
 
     def toggle_single_draw_mode(self, checked: bool) -> None:
         """切换单次绘制模式"""

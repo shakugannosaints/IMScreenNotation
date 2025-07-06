@@ -99,7 +99,9 @@ class TrayManager:
         """从托盘恢复窗口显示"""
         # 显示主窗口和工具栏
         self.main_window.show()
-        self.main_window.activateWindow()
+        # 只在非穿透模式下激活主窗口，避免抢夺焦点
+        if not getattr(self.main_window, 'passthrough_state', False):
+            self.main_window.activateWindow()
         self.main_window.raise_()
         
         # 显示工具栏
@@ -111,7 +113,9 @@ class TrayManager:
                 self.main_window.toolbar and 
                 not self.main_window.toolbar_completely_hidden):
                 self.main_window.toolbar.raise_()
-                self.main_window.toolbar.activateWindow()
+                # 只在非穿透模式下激活工具栏，避免抢夺焦点
+                if not getattr(self.main_window, 'passthrough_state', False):
+                    self.main_window.toolbar.activateWindow()
                 self.main_window.toolbar.show()
         
         # 隐藏托盘图标

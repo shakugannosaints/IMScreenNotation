@@ -17,7 +17,6 @@ class ToolManager:
     
     def select_tool(self, tool: str) -> None:
         """选择工具并更新按钮状态"""
-        print(f"select_tool 被调用，工具名称: {tool}")
         
         # 检查工具名称是否有效
         if not tool:
@@ -33,14 +32,11 @@ class ToolManager:
             self.main_window.toolbar.tool_button_group[tool].setChecked(True)
             
             # 设置画布工具
-            print(f"当前画布工具: {self.main_window.canvas.current_tool}, 准备切换到: {tool}")
             self.main_window.canvas.set_current_tool(tool)
-            print(f"画布工具已切换: {self.main_window.canvas.current_tool}")
             
             # 状态栏显示工具切换信息
             tool_name = TOOL_NAMES.get(tool, tool)
             self.main_window._status_bar.showMessage(f"已切换到{tool_name}工具", STATUS_MESSAGE_TIMEOUT)
-            print(f"工具已切换到: {tool}")
             
             # 强制更新画布
             self.main_window.canvas.update()
