@@ -1,5 +1,4 @@
 *.pyc
-config.json
 1.json
 build/main/Analysis-00.toc
 build/main/base_library.zip
@@ -30,3 +29,4 @@ packaging_fix.py
 build/IMScreenNotation_safe/base_library.zip
 /build
 assets/github.svg
+/dist
