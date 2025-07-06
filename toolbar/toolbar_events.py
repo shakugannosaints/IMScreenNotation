@@ -124,7 +124,7 @@ class ToolbarEventHandler:
         
         try:
             # 确保在主线程中执行
-            from text_style_dialog import TextStyleDialog
+            from text_style import TextStyleDialog
             
             # 强制处理所有待处理的事件
             QCoreApplication.processEvents()

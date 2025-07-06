@@ -67,6 +67,8 @@ def check_dependencies():
         'hotkey/hotkey_manager.py',
         'config.py',
         'shapes/__init__.py',  # shapes 现在是一个包
+        'text_style/__init__.py',  # text_style 现在是一个包
+        'text_style/text_style_dialog.py',  # 主对话框文件
         '1.ico',
         'config.json'
     ]
@@ -222,7 +224,12 @@ def build_with_minimal_approach():
         '--hidden-import=shapes.basic',
         '--hidden-import=shapes.advanced',
         '--hidden-import=shapes.interactive',
-        '--hidden-import=text_style_dialog',
+        '--hidden-import=text_style',
+        '--hidden-import=text_style.text_style_dialog',
+        '--hidden-import=text_style.ui_builder',
+        '--hidden-import=text_style.event_handler',
+        '--hidden-import=text_style.theme_manager',
+        '--hidden-import=text_style.settings_manager',
         '--hidden-import=packaging_fix',
         '--hidden-import=manager.window_manager',
         '--hidden-import=manager.transparency_manager',

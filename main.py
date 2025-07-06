@@ -21,10 +21,10 @@ from constants import TOOLBAR_CHECK_INTERVAL, STATUS_MESSAGE_TIMEOUT
 
 # 显式导入所有必需的模块确保PyInstaller能正确打包
 try:
-    import text_style_dialog
-    print("Successfully imported text_style_dialog")
+    import text_style
+    print("Successfully imported text_style")
 except ImportError as e:
-    print(f"Warning: text_style_dialog module not found: {e}")
+    print(f"Warning: text_style module not found: {e}")
 
 try:
     from PyQt5.QtWidgets import QColorDialog, QInputDialog, QFontDialog
