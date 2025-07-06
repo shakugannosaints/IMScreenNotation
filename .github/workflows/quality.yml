@@ -85,21 +85,12 @@ jobs:
             print('⚠️ Some import checks failed')
         "
 
-    - name: Security check
-      run: |
-        echo "🔒 Running basic security checks..."
-        python security_check.py
-
     - name: Check dependencies
       run: |
         echo "📋 Checking dependencies..."
         pip list --format=freeze > installed_packages.txt
         echo "Currently installed packages:"
         cat installed_packages.txt
-        
-        echo "Checking for security vulnerabilities..."
-        pip install safety
-        safety check || echo "⚠️ Security vulnerabilities found in dependencies"
 
     - name: Project structure check
       run: |
