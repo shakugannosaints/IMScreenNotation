@@ -7,7 +7,7 @@
 from typing import Dict, Any, Optional, Callable
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
                              QColorDialog, QSlider, QLabel, QFrame, QGraphicsDropShadowEffect)
-from PyQt5.QtGui import QColor, QFont, QMouseEvent
+from PyQt5.QtGui import QColor, QFont, QMouseEvent, QShowEvent
 from PyQt5.QtCore import Qt, QPoint, QEvent
 from PyQt5 import QtCore
 
@@ -22,7 +22,7 @@ class AnnotationToolbar(QWidget):
     """屏幕标注工具栏（重构版）"""
     
     def __init__(self, main_window, canvas):
-        super().__init__()
+        super().__init__(main_window)  # 设置主窗口为父窗口
         self.main_window = main_window
         self.canvas = canvas
         
@@ -93,6 +93,10 @@ class AnnotationToolbar(QWidget):
         self.save_config_btn: Optional[QPushButton] = None
         self.text_style_btn: Optional[QPushButton] = None
         
+        # 标尺相关按钮
+        self.ruler_settings_btn: Optional[QPushButton] = None
+        self.ruler_calibration_btn: Optional[QPushButton] = None
+        
         # 可滚动内容区域
         self.scrollable_content: Optional[ScrollableToolbarContent] = None
         
@@ -103,13 +107,15 @@ class AnnotationToolbar(QWidget):
             self.theme_manager.font_size = self.main_window.config['toolbar_font_size']
         
         self.setWindowTitle("标注工具")
-        # 确保工具栏始终在最顶层，使用Qt.Tool避免在任务栏显示
-        # 添加Qt.X11BypassWindowManagerHint在X11系统上避免窗口管理器干预
+        # 确保工具栏始终在最顶层，但允许接受焦点以保持响应性
+        # 使用 Qt.Tool 避免在任务栏显示，但移除 Qt.WindowDoesNotAcceptFocus 避免冲突
         self.setWindowFlags(Qt.Tool | Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
         self.setAttribute(Qt.WA_DeleteOnClose, False)
         self.setAttribute(Qt.WA_AlwaysShowToolTips)
-        # 设置为不接受焦点，避免抢夺其他应用的焦点
+        # 设置为不抢夺焦点，但仍然可以接受焦点
         self.setAttribute(Qt.WA_ShowWithoutActivating)
+        # 设置为始终在顶层
+        self.setAttribute(Qt.WA_MacAlwaysShowToolWindow)
         
         # 启用鼠标追踪
         self.setMouseTracking(True)
@@ -143,7 +149,37 @@ class AnnotationToolbar(QWidget):
         # 计算并设置自适应尺寸
         self.calculate_and_set_size()
         self.move(50, 50)
+        
+        # 显示工具栏并确保在最顶层
         self.show()
+        self.raise_()  # 确保在Z-order中处于最前面
+        
+        # 强制重新应用窗口属性以确保顶层显示
+        from PyQt5.QtCore import QTimer
+        QTimer.singleShot(100, self._ensure_on_top_after_show)
+
+    def showEvent(self, event) -> None:
+        """重写显示事件，确保工具栏在显示时始终在最前面"""
+        super().showEvent(event)
+        # 延迟执行以确保所有窗口都已完全显示
+        from PyQt5.QtCore import QTimer
+        QTimer.singleShot(50, self._ensure_on_top_after_show)
+
+    def raise_(self) -> None:
+        """重写 raise_ 方法，确保工具栏真正处于最前面"""
+        super().raise_()
+        # 额外确保在最前面
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+        if not self.isVisible():
+            self.show()
+
+    def _ensure_on_top_after_show(self) -> None:
+        """在显示后确保工具栏在最顶层"""
+        # 使用简单的方法确保在最顶层
+        self.raise_()
+        # 只在需要时激活窗口
+        if not self.isActiveWindow():
+            self.activateWindow()
 
     # 事件处理方法（委托给event_handler）
     def pick_color(self) -> None:

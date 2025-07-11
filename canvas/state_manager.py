@@ -2,14 +2,19 @@
 Canvas state management (undo/redo functionality)
 """
 import json
-from shapes import Line, Rectangle, Circle, Arrow, Freehand, Point, LaserPointer, FilledFreehand, Text, Eraser
+from PyQt5.QtCore import QObject, pyqtSignal
+from shapes import Line, Rectangle, Circle, Arrow, Freehand, Point, LaserPointer, FilledFreehand, Text, Eraser, LineRuler, CircleRuler
 from .types import ShapeType
 
 
-class CanvasStateManager:
+class CanvasStateManager(QObject):
     """管理画布状态，包括撤销/重做功能"""
     
+    # 信号
+    shape_added = pyqtSignal(object)  # 当添加新形状时发出
+    
     def __init__(self, canvas):
+        super().__init__()
         self.canvas = canvas
         self.undo_stack = []  # For undo functionality - stores canvas states
         self.redo_stack = []  # For redo functionality - stores canvas states
@@ -90,6 +95,10 @@ class CanvasStateManager:
                 shape = Point.from_dict(shape_dict)
             elif shape_type == "Text":
                 shape = Text.from_dict(shape_dict)
+            elif shape_type == "LineRuler":
+                shape = LineRuler.from_dict(shape_dict)
+            elif shape_type == "CircleRuler":
+                shape = CircleRuler.from_dict(shape_dict)
             elif shape_type == "LaserPointer":
                 # 跳过激光笔，因为它不应该被保存/恢复
                 continue

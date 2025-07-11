@@ -3,7 +3,7 @@ Canvas event handling (mouse events, etc.)
 """
 from PyQt5.QtCore import Qt, QPoint, QRect, QPointF
 from PyQt5.QtWidgets import QInputDialog
-from shapes import Line, Rectangle, Circle, Arrow, Freehand, Point, LaserPointer, FilledFreehand, Text, Eraser
+from shapes import Line, Rectangle, Circle, Arrow, Freehand, Point, LaserPointer, FilledFreehand, Text, Eraser, LineRuler, CircleRuler
 from .types import ShapeType
 
 
@@ -133,6 +133,30 @@ class CanvasEventHandler:
                 # 橡皮擦：添加擦除点
                 if isinstance(self.canvas.current_shape, Eraser):
                     self.canvas.current_shape.points.append(self.canvas.end_point)
+            elif self.canvas.properties.current_tool == 'line_ruler':
+                # 直线标尺
+                self.canvas.current_shape = LineRuler(
+                    self.canvas.start_point, self.canvas.end_point,
+                    pixel_length=getattr(self.canvas, 'ruler_pixel_length', 100),
+                    real_length=getattr(self.canvas, 'ruler_real_length', 10.0),
+                    unit=getattr(self.canvas, 'ruler_unit', 'cm'),
+                    color=self.canvas.properties.current_color,
+                    thickness=self.canvas.properties.current_thickness,
+                    opacity=self.canvas.properties.current_opacity
+                )
+            elif self.canvas.properties.current_tool == 'circle_ruler':
+                # 圆形标尺
+                radius = int(((self.canvas.end_point.x() - self.canvas.start_point.x())**2 + 
+                             (self.canvas.end_point.y() - self.canvas.start_point.y())**2)**0.5)
+                self.canvas.current_shape = CircleRuler(
+                    self.canvas.start_point, radius,
+                    pixel_length=getattr(self.canvas, 'ruler_pixel_length', 100),
+                    real_length=getattr(self.canvas, 'ruler_real_length', 10.0),
+                    unit=getattr(self.canvas, 'ruler_unit', 'cm'),
+                    color=self.canvas.properties.current_color,
+                    thickness=self.canvas.properties.current_thickness,
+                    opacity=self.canvas.properties.current_opacity
+                )
             
             self.canvas.update()
 
@@ -144,8 +168,8 @@ class CanvasEventHandler:
                 self.canvas.properties.current_tool != 'point' and 
                 self.canvas.properties.current_tool != 'laser_pointer'):
                 
-                # 对于需要拖拽的工具（line, rectangle, circle, arrow），在释放时保存状态
-                if self.canvas.properties.current_tool in ['line', 'rectangle', 'circle', 'arrow']:
+                # 对于需要拖拽的工具（line, rectangle, circle, arrow, ruler），在释放时保存状态
+                if self.canvas.properties.current_tool in ['line', 'rectangle', 'circle', 'arrow', 'line_ruler', 'circle_ruler']:
                     self.canvas.state_manager.save_state_to_undo_stack()
                 
                 # 橡皮擦特殊处理：执行擦除操作
@@ -162,6 +186,9 @@ class CanvasEventHandler:
                         self.canvas.state_manager.undo_stack.append([])  # 空的序列化状态列表
                     
                     self.canvas.shapes.append(self.canvas.current_shape)
+                    
+                    # 发出形状添加信号
+                    self.canvas.state_manager.shape_added.emit(self.canvas.current_shape)
             
             self.canvas.current_shape = None
             self.canvas.update()

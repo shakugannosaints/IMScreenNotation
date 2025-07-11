@@ -104,18 +104,8 @@ class TransparencyManager:
             self.main_window.activateWindow()
         self.main_window.raise_()
         
-        # 确保工具栏在主窗口之上
-        # 直接调用确保工具栏在最前面的逻辑
-        if (hasattr(self.main_window, 'toolbar') and 
-            self.main_window.toolbar and 
-            not self.main_window.toolbar_completely_hidden):
-            self.main_window.toolbar.raise_()
-            # 只在非穿透模式下激活工具栏窗口，避免抢夺焦点
-            if not self.main_window.passthrough_state:
-                self.main_window.toolbar.activateWindow()
-            # 确保工具栏可见
-            if not self.main_window.toolbar.isVisible():
-                self.main_window.toolbar.show()
+        # 确保工具栏在主窗口之上 - 使用更强的方法
+        self.main_window.window_manager.ensure_toolbar_on_top()
     
     def change_canvas_opacity(self, value: int) -> None:
         """通过工具栏处理画布透明度变化"""

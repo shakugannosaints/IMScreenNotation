@@ -34,6 +34,9 @@ class HotkeyHandler:
         # 添加测试热键 F9
         self.main_window.hotkey_manager.register_hotkey("f9", self.test_hotkey_function)
         
+        # 注册标尺功能热键
+        self._register_ruler_hotkeys(hotkeys)
+        
         print(f"热键设置完成，共注册 {len(self.main_window.hotkey_manager.hotkeys)} 个热键")
     
     def _register_basic_hotkeys(self, hotkeys: dict) -> None:
@@ -109,12 +112,30 @@ class HotkeyHandler:
             "tool_point": "point",
             "tool_laser_pointer": "laser_pointer",
             "tool_text": "text",
-            "tool_eraser": "eraser"
+            "tool_eraser": "eraser",
+            "tool_line_ruler": "line_ruler",
+            "tool_circle_ruler": "circle_ruler"
         }
         
         for hotkey_name, tool_name in tool_hotkeys.items():
             if hotkeys.get(hotkey_name) and hasattr(self.main_window, 'tool_manager'):
                 self.main_window.tool_manager.add_tool_hotkey(hotkeys[hotkey_name], tool_name)
+    
+    def _register_ruler_hotkeys(self, hotkeys: dict) -> None:
+        """注册标尺功能热键"""
+        # 标尺设置
+        if hotkeys.get("ruler_settings") and hasattr(self.main_window, 'ruler_manager'):
+            self.main_window.hotkey_manager.register_hotkey(
+                hotkeys["ruler_settings"], 
+                self.main_window.ruler_manager.open_ruler_settings
+            )
+        
+        # 快速标定
+        if hotkeys.get("ruler_calibration") and hasattr(self.main_window, 'ruler_manager'):
+            self.main_window.hotkey_manager.register_hotkey(
+                hotkeys["ruler_calibration"], 
+                self.main_window.ruler_manager.start_quick_calibration
+            )
     
     def test_hotkey_function(self) -> None:
         """测试热键功能"""

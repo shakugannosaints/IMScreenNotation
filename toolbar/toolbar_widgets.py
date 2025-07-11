@@ -114,7 +114,9 @@ class ToolbarWidgetBuilder:
             ("点", "point"),
             ("激光笔", "laser_pointer"),
             ("文本", "text"),
-            ("橡皮擦", "eraser")
+            ("橡皮擦", "eraser"),
+            ("直线标尺", "line_ruler"),
+            ("圆形标尺", "circle_ruler")
         ]
     
     def _create_tool_button_rows(self, layout: QVBoxLayout, tool_buttons: List[Tuple[str, str]]) -> None:
@@ -389,6 +391,19 @@ class ToolbarWidgetBuilder:
         self.toolbar.settings_btn.setMinimumHeight(32)
         self.toolbar.settings_btn.clicked.connect(self.main_window.open_hotkey_settings)
         buttons.append(self.toolbar.settings_btn)
+        
+        # 标尺功能按钮
+        self.toolbar.ruler_settings_btn = QPushButton("📏 标尺设置")
+        self.toolbar.ruler_settings_btn.setProperty("class", "action")
+        self.toolbar.ruler_settings_btn.setMinimumHeight(32)
+        self.toolbar.ruler_settings_btn.clicked.connect(self.main_window.open_ruler_settings)
+        buttons.append(self.toolbar.ruler_settings_btn)
+
+        self.toolbar.ruler_calibration_btn = QPushButton("📐 快速标定")
+        self.toolbar.ruler_calibration_btn.setProperty("class", "action")
+        self.toolbar.ruler_calibration_btn.setMinimumHeight(32)
+        self.toolbar.ruler_calibration_btn.clicked.connect(self.main_window.start_ruler_calibration)
+        buttons.append(self.toolbar.ruler_calibration_btn)
         
         self.toolbar.exit_btn = QPushButton("❌ 退出")
         self.toolbar.exit_btn.setProperty("class", "action danger")

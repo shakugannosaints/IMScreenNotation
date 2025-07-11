@@ -64,7 +64,11 @@ def load_config():
                 "tool_point": "<ctrl>+6",
                 "tool_laser_pointer": "<ctrl>+7",
                 "tool_text": "<ctrl>+8",
-                "tool_eraser": "<ctrl>+9"
+                "tool_eraser": "<ctrl>+9",
+                "tool_line_ruler": "<ctrl>+<shift>+1",
+                "tool_circle_ruler": "<ctrl>+<shift>+2",
+                "ruler_settings": "<f6>",
+                "ruler_calibration": "<f7>"
             },
             "current_color": QColor(255, 0, 0, 255),  # RGBA for red
             "current_thickness": 3,
@@ -110,7 +114,11 @@ def load_config():
                 "tool_point": "<ctrl>+6",
                 "tool_laser_pointer": "<ctrl>+7",
                 "tool_text": "<ctrl>+8",
-                "tool_eraser": "<ctrl>+9"
+                "tool_eraser": "<ctrl>+9",
+                "tool_line_ruler": "<ctrl>+<shift>+1",
+                "tool_circle_ruler": "<ctrl>+<shift>+2",
+                "ruler_settings": "<f6>",
+                "ruler_calibration": "<f7>"
             },
             "current_color": QColor(255, 0, 0, 255),  # RGBA for red
             "current_thickness": 3,

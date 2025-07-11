@@ -114,7 +114,9 @@ class HotkeySettingsDialog(QDialog):
             ("tool_point", "点工具"),
             ("tool_laser_pointer", "激光笔"),
             ("tool_text", "文本工具"),
-            ("tool_eraser", "橡皮擦工具")
+            ("tool_eraser", "橡皮擦工具"),
+            ("tool_line_ruler", "直线标尺"),
+            ("tool_circle_ruler", "圆形标尺")
         ]
         
         for i, (key, label) in enumerate(tool_hotkeys):
@@ -125,6 +127,23 @@ class HotkeySettingsDialog(QDialog):
             tool_layout.addWidget(input_field, i, 1)
         
         scroll_layout.addWidget(tool_group)
+        
+        # 标尺功能组
+        ruler_group = QGroupBox("标尺功能")
+        ruler_layout = QGridLayout(ruler_group)
+        ruler_hotkeys = [
+            ("ruler_settings", "标尺设置"),
+            ("ruler_calibration", "快速标定")
+        ]
+        
+        for i, (key, label) in enumerate(ruler_hotkeys):
+            ruler_layout.addWidget(QLabel(label + ":"), i, 0)
+            input_field = QLineEdit()
+            input_field.setPlaceholderText("例如: f6")
+            self.hotkey_inputs[key] = input_field
+            ruler_layout.addWidget(input_field, i, 1)
+        
+        scroll_layout.addWidget(ruler_group)
         
         # 界面设置组
         ui_group = QGroupBox("界面设置")
@@ -203,7 +222,11 @@ class HotkeySettingsDialog(QDialog):
             "tool_point": "<ctrl>+6",
             "tool_laser_pointer": "<ctrl>+7",
             "tool_text": "<ctrl>+8",
-            "tool_eraser": "<ctrl>+9"
+            "tool_eraser": "<ctrl>+9",
+            "tool_line_ruler": "<ctrl>+<shift>+1",
+            "tool_circle_ruler": "<ctrl>+<shift>+2",
+            "ruler_settings": "<f6>",
+            "ruler_calibration": "<f7>"
         }
         
         for key, hotkey in default_hotkeys.items():
@@ -283,3 +306,20 @@ class HotkeySettingsDialog(QDialog):
         
         QMessageBox.information(self, "设置已保存", "热键设置和界面设置已成功保存并应用。")
         self.accept()
+
+    def closeEvent(self, event):
+        """重写关闭事件以确保工具栏回到最前面"""
+        try:
+            # 立即确保工具栏回到最前面，并延迟再次确保
+            if (hasattr(self, 'main_window') and 
+                self.main_window and 
+                hasattr(self.main_window, 'window_manager')):
+                self.main_window.window_manager.ensure_toolbar_on_top()
+                # 延迟再次确保，给对话框更多时间完全关闭
+                from PyQt5.QtCore import QTimer
+                QTimer.singleShot(300, self.main_window.window_manager.ensure_toolbar_on_top)
+            
+            super().closeEvent(event)
+        except Exception as e:
+            print(f"Error in closeEvent: {e}")
+            event.accept()

@@ -35,6 +35,11 @@ class DrawingCanvas(QWidget):
         self.drawing = False
         self.start_point = QPoint()
         self.end_point = QPoint()
+        
+        # 标尺设置
+        self.ruler_pixel_length = 100
+        self.ruler_real_length = 10.0
+        self.ruler_unit = "cm"
 
     # 属性设置方法的代理
     def set_current_tool(self, tool: str) -> None:

@@ -118,11 +118,16 @@ class WindowManager:
         if (hasattr(self.main_window, 'toolbar') and 
             self.main_window.toolbar and 
             not self.main_window.toolbar_completely_hidden):
-            # 使用raise_()确保在Z-order中处于最前面，但不抢夺焦点
-            self.main_window.toolbar.raise_()
-            # 只在非穿透模式下激活工具栏窗口，避免抢夺焦点
-            if not getattr(self.main_window, 'passthrough_state', False):
-                self.main_window.toolbar.activateWindow()
-            # 确保工具栏可见
+            
+            # 首先确保工具栏可见
             if not self.main_window.toolbar.isVisible():
                 self.main_window.toolbar.show()
+            
+            # 将工具栏置顶
+            self.main_window.toolbar.raise_()
+            self.main_window.toolbar.repaint()  # 强制重绘
+            
+            # 只在非穿透模式下才激活窗口，避免在穿透模式下抢夺焦点
+            if not getattr(self.main_window, 'passthrough_state', False):
+                self.main_window.toolbar.activateWindow()
+                self.main_window.toolbar.setFocus()  # 确保获得焦点

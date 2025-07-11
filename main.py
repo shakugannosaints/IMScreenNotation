@@ -17,6 +17,7 @@ from hotkey import HotkeyManager, HotkeyHandler, HotkeySettingsDialog
 from manager import (WindowManager, TransparencyManager, ToolManager, 
                      TrayManager, ConfigManager)
 from toolbar import AnnotationToolbar
+from ruler import RulerManager
 from constants import TOOLBAR_CHECK_INTERVAL, STATUS_MESSAGE_TIMEOUT
 
 # 显式导入所有必需的模块确保PyInstaller能正确打包
@@ -72,6 +73,10 @@ class AnnotationTool(QMainWindow):
         self.file_operations = FileOperations(self)
         self.hotkey_handler = HotkeyHandler(self)
         self.config_manager = ConfigManager(self)
+        self.ruler_manager = RulerManager(self)
+        
+        # 连接标尺管理器信号
+        self.ruler_manager.ruler_settings_changed.connect(self.update_canvas_ruler_settings)
         
         # 应用配置到画布
         self.config_manager._apply_canvas_config(self.config)
@@ -104,8 +109,8 @@ class AnnotationTool(QMainWindow):
         self.user_non_passthrough_opacity: float
 
         self.window_manager.setup_menubar()
-        self.setup_toolbar()
-        self.window_manager.setup_window_properties()
+        self.window_manager.setup_window_properties()  # 先设置窗口属性，包括画布
+        self.setup_toolbar()  # 然后创建工具栏
         self.transparency_manager.initialize_transparency_settings()
         self.hotkey_handler.setup_hotkeys()  # 设置热键
         self.hotkey_manager.start_listening()  # 启动热键监听
@@ -125,6 +130,12 @@ class AnnotationTool(QMainWindow):
         # 只在非穿透模式下启动定时器，避免在穿透模式下抢夺焦点
         if not getattr(self, 'passthrough_state', False):
             self.toolbar_timer.start(TOOLBAR_CHECK_INTERVAL)  # 每秒检查一次
+        
+        # 安装应用程序级别的事件过滤器，用于处理对话框关闭事件
+        from PyQt5.QtWidgets import QApplication
+        app = QApplication.instance()
+        if app:
+            app.installEventFilter(self)
         
         # 初始化系统托盘
         self.tray_manager.setup_system_tray()
@@ -219,6 +230,21 @@ class AnnotationTool(QMainWindow):
         """保存当前配置"""
         self.config_manager.save_current_config()
 
+    # 委托方法 - 标尺功能
+    def open_ruler_settings(self) -> None:
+        """打开标尺设置对话框"""
+        self.ruler_manager.open_ruler_settings()
+
+    def start_ruler_calibration(self) -> None:
+        """开始标尺快速标定"""
+        self.ruler_manager.start_quick_calibration()
+
+    def update_canvas_ruler_settings(self, settings: dict) -> None:
+        """更新画布的标尺设置"""
+        self.canvas.ruler_pixel_length = settings.get('pixel_length', 100)
+        self.canvas.ruler_real_length = settings.get('real_length', 10.0)
+        self.canvas.ruler_unit = settings.get('unit', 'cm')
+
     def closeEvent(self, event: QCloseEvent) -> None:
         """关闭事件处理"""
         # 在退出前自动保存当前配置
@@ -237,6 +263,15 @@ class AnnotationTool(QMainWindow):
 
     def eventFilter(self, obj: QWidget, event: QEvent) -> bool:
         """事件过滤器"""
+        # 监听对话框关闭事件，确保工具栏回到最前面
+        if (event.type() == QEvent.Close and 
+            hasattr(obj, 'isModal') and 
+            obj.isModal() and 
+            obj != self and
+            obj != self.toolbar):
+            # 延迟确保工具栏在最前面，等待对话框完全关闭
+            QTimer.singleShot(500, self.ensure_toolbar_on_top)  # 增加延迟到500ms
+        
         # 让事件继续正常处理
         return super().eventFilter(obj, event)
 

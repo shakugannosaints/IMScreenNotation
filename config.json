@@ -18,7 +18,11 @@
         "tool_point": "<ctrl>+6",
         "tool_laser_pointer": "<ctrl>+7",
         "tool_text": "<ctrl>+8",
-        "tool_eraser": "<ctrl>+9"
+        "tool_eraser": "<ctrl>+9",
+        "tool_line_ruler": "<ctrl>+<shift>+1",
+        "tool_circle_ruler": "<ctrl>+<shift>+2",
+        "ruler_settings": "<f6>",
+        "ruler_calibration": "<f7>"
     },
     "current_color": [
         255,
@@ -27,16 +31,16 @@
         255
     ],
     "current_thickness": 3,
-    "current_opacity": 1.0,
+    "current_opacity": 0.85,
     "canvas_color": [
         0,
         0,
         0,
-        204
+        1
     ],
-    "canvas_opacity": 0.8,
+    "canvas_opacity": 0.0,
     "passthrough_opacity": 0.1,
-    "non_passthrough_opacity": 0.8,
+    "non_passthrough_opacity": 0.0,
     "toolbar_font_size": 11,
     "text_font_family": "Arial",
     "text_font_size": 16,

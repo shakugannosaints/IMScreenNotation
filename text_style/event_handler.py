@@ -134,6 +134,16 @@ class TextStyleEventHandler:
             
             # 确保所有事件都被处理
             QCoreApplication.processEvents()
+            
+            # 立即确保工具栏回到最前面，并延迟再次确保
+            if (hasattr(self.dialog, 'parent_widget') and 
+                self.dialog.parent_widget and 
+                hasattr(self.dialog.parent_widget, 'window_manager')):
+                self.dialog.parent_widget.window_manager.ensure_toolbar_on_top()  # type: ignore
+                # 延迟再次确保，给对话框更多时间完全关闭
+                from PyQt5.QtCore import QTimer
+                QTimer.singleShot(300, self.dialog.parent_widget.window_manager.ensure_toolbar_on_top)  # type: ignore
+            
             event.accept()
             # 强制清理资源
             self.dialog.deleteLater()
