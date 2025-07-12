@@ -62,19 +62,28 @@ def check_dependencies():
     
     required_files = [
         'main.py',
-        'canvas/__init__.py',  # canvas 现在是一个包，替代原来的gui.py
+        'canvas/__init__.py',  # canvas 包
         'canvas/drawing_canvas.py',  # 主要的画布组件
         'canvas/events.py',  # 事件处理
         'canvas/painter.py',  # 绘制功能
         'canvas/properties.py',  # 属性管理
         'canvas/state_manager.py',  # 状态管理
         'canvas/types.py',  # 类型定义
+        'toolbar/__init__.py',  # toolbar 包
         'toolbar/toolbar.py',
+        'hotkey/__init__.py',  # hotkey 包
         'hotkey/hotkey_manager.py',
+        'manager/__init__.py',  # manager 包
+        'manager/window_manager.py',
+        'ruler/__init__.py',  # ruler 包
+        'ruler/ruler_manager.py',
         'config.py',
-        'shapes/__init__.py',  # shapes 现在是一个包
-        'text_style/__init__.py',  # text_style 现在是一个包
+        'shapes/__init__.py',  # shapes 包
+        'text_style/__init__.py',  # text_style 包
         'text_style/text_style_dialog.py',  # 主对话框文件
+        'constants.py',
+        'utils.py',
+        'file_operations.py',
         '1.ico',
         'config.json'
     ]
@@ -216,40 +225,46 @@ def build_with_minimal_approach():
         '--add-data=config.json;.',
         
         # 只包含必需的模块
-        '--hidden-import=canvas',  # 替代原来的gui模块
+        '--hidden-import=canvas',
         '--hidden-import=canvas.drawing_canvas',
         '--hidden-import=canvas.events',
         '--hidden-import=canvas.painter',
         '--hidden-import=canvas.properties',
         '--hidden-import=canvas.state_manager',
         '--hidden-import=canvas.types',
+        '--hidden-import=toolbar',
         '--hidden-import=toolbar.toolbar',
         '--hidden-import=toolbar.toolbar_widgets',
         '--hidden-import=toolbar.toolbar_events',
         '--hidden-import=toolbar.toolbar_scrollable', 
         '--hidden-import=toolbar.toolbar_theme',
+        '--hidden-import=hotkey',
         '--hidden-import=hotkey.hotkey_manager',
+        '--hidden-import=hotkey.hotkey_handler',
         '--hidden-import=hotkey.hotkey_settings',
+        '--hidden-import=manager',
+        '--hidden-import=manager.window_manager',
+        '--hidden-import=manager.transparency_manager',
+        '--hidden-import=manager.tool_manager',
+        '--hidden-import=manager.tray_manager',
+        '--hidden-import=manager.config_manager',
+        '--hidden-import=ruler',
+        '--hidden-import=ruler.ruler_manager',
+        '--hidden-import=ruler.ruler_settings',
         '--hidden-import=config',
         '--hidden-import=shapes',
         '--hidden-import=shapes.base',
         '--hidden-import=shapes.basic',
         '--hidden-import=shapes.advanced',
         '--hidden-import=shapes.interactive',
+        '--hidden-import=shapes.ruler',
         '--hidden-import=text_style',
         '--hidden-import=text_style.text_style_dialog',
         '--hidden-import=text_style.ui_builder',
         '--hidden-import=text_style.event_handler',
         '--hidden-import=text_style.theme_manager',
         '--hidden-import=text_style.settings_manager',
-        '--hidden-import=packaging_fix',
-        '--hidden-import=manager.window_manager',
-        '--hidden-import=manager.transparency_manager',
-        '--hidden-import=manager.tool_manager',
-        '--hidden-import=manager.tray_manager',
         '--hidden-import=file_operations',
-        '--hidden-import=hotkey.hotkey_handler',
-        '--hidden-import=manager.config_manager',
         '--hidden-import=constants',
         '--hidden-import=utils',
         '--hidden-import=inspect',  # PyInstaller需要

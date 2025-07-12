@@ -15,7 +15,7 @@ binaries = []
 
 # 隐藏导入 - 包含所有必需的模块
 hiddenimports = [
-    # canvas 模块（替代原来的gui模块）
+    # canvas 模块
     'canvas',
     'canvas.drawing_canvas',
     'canvas.events',
@@ -23,34 +23,53 @@ hiddenimports = [
     'canvas.properties',
     'canvas.state_manager',
     'canvas.types',
+    
+    # toolbar 模块
+    'toolbar',
     'toolbar.toolbar',
     'toolbar.toolbar_widgets',
     'toolbar.toolbar_events', 
     'toolbar.toolbar_scrollable',
     'toolbar.toolbar_theme',
+    
+    # hotkey 模块
+    'hotkey',
     'hotkey.hotkey_manager',
+    'hotkey.hotkey_handler',
     'hotkey.hotkey_settings',
-    'config',
+    
+    # manager 模块
+    'manager',
+    'manager.window_manager',
+    'manager.transparency_manager',
+    'manager.tool_manager',
+    'manager.tray_manager',
+    'manager.config_manager',
+    
+    # ruler 模块
+    'ruler',
+    'ruler.ruler_manager',
+    'ruler.ruler_settings',
+    
     # shapes 包及其子模块
     'shapes',
     'shapes.base',
     'shapes.basic',
     'shapes.advanced',
     'shapes.interactive',
+    'shapes.ruler',
+    
+    # text_style 模块
     'text_style',
     'text_style.text_style_dialog',
     'text_style.ui_builder', 
     'text_style.event_handler',
     'text_style.theme_manager',
     'text_style.settings_manager',
-    'packaging_fix',
-    'manager.window_manager',
-    'manager.transparency_manager',
-    'manager.tool_manager',
-    'manager.tray_manager',
-    'manager.config_manager',
+    
+    # 其他核心模块
+    'config',
     'file_operations',
-    'hotkey.hotkey_handler',
     'constants',
     'utils',
     

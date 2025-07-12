@@ -357,6 +357,7 @@ class Eraser(Shape):
         # 对于不同类型的形状，使用不同的相交检测算法
         from .basic import Point, Line, Rectangle, Circle
         from .advanced import Freehand, FilledFreehand, Arrow
+        from .ruler import LineRuler, CircleRuler
         
         if isinstance(shape, Point):
             return self._intersects_with_point(shape, eraser_radius)
@@ -372,6 +373,10 @@ class Eraser(Shape):
             return self._intersects_with_arrow(shape, eraser_radius)
         elif isinstance(shape, Text):
             return self._intersects_with_text(shape, eraser_radius)
+        elif isinstance(shape, LineRuler):
+            return self._intersects_with_line_ruler(shape, eraser_radius)
+        elif isinstance(shape, CircleRuler):
+            return self._intersects_with_circle_ruler(shape, eraser_radius)
         else:
             return False
     
@@ -435,6 +440,80 @@ class Eraser(Shape):
                        (eraser_point.y() - text_shape.position.y())**2)**0.5
             if distance <= eraser_radius + 20:  # 给文本一个固定的检测范围
                 return True
+        return False
+    
+    def _intersects_with_line_ruler(self, ruler_shape, eraser_radius):
+        """检查与直线标尺的相交"""
+        # 直线标尺主要由主线和刻度线组成
+        # 首先检查与主线的相交
+        for eraser_point in self.points:
+            # 检查与主线的相交
+            if self._point_to_line_distance(eraser_point, ruler_shape.start_point, ruler_shape.end_point) <= eraser_radius + ruler_shape.thickness:
+                return True
+            
+            # 检查与刻度线的相交（如果显示刻度）
+            if hasattr(ruler_shape, 'show_ticks') and ruler_shape.show_ticks:
+                if self._intersects_with_ruler_ticks(eraser_point, ruler_shape, eraser_radius):
+                    return True
+        return False
+    
+    def _intersects_with_circle_ruler(self, ruler_shape, eraser_radius):
+        """检查与圆形标尺的相交"""
+        for eraser_point in self.points:
+            center_distance = ((eraser_point.x() - ruler_shape.center_point.x())**2 + 
+                              (eraser_point.y() - ruler_shape.center_point.y())**2)**0.5
+            
+            # 检查橡皮擦是否与圆的边缘相交
+            if abs(center_distance - ruler_shape.radius) <= eraser_radius + ruler_shape.thickness:
+                return True
+                
+            # 检查与直径线的相交（如果显示直径线）
+            if hasattr(ruler_shape, 'show_diameter_line') and ruler_shape.show_diameter_line:
+                # 水平直径线
+                horizontal_start = QPointF(ruler_shape.center_point.x() - ruler_shape.radius, ruler_shape.center_point.y())
+                horizontal_end = QPointF(ruler_shape.center_point.x() + ruler_shape.radius, ruler_shape.center_point.y())
+                if self._point_to_line_distance(eraser_point, horizontal_start, horizontal_end) <= eraser_radius + ruler_shape.thickness:
+                    return True
+                    
+                # 垂直直径线
+                vertical_start = QPointF(ruler_shape.center_point.x(), ruler_shape.center_point.y() - ruler_shape.radius)
+                vertical_end = QPointF(ruler_shape.center_point.x(), ruler_shape.center_point.y() + ruler_shape.radius)
+                if self._point_to_line_distance(eraser_point, vertical_start, vertical_end) <= eraser_radius + ruler_shape.thickness:
+                    return True
+        return False
+    
+    def _intersects_with_ruler_ticks(self, eraser_point, ruler_shape, eraser_radius):
+        """检查与标尺刻度线的相交"""
+        if not hasattr(ruler_shape, 'tick_count') or ruler_shape.tick_count <= 0:
+            return False
+            
+        # 计算刻度位置并检查相交
+        for i in range(ruler_shape.tick_count + 1):
+            t = i / ruler_shape.tick_count
+            tick_x = ruler_shape.start_point.x() + t * (ruler_shape.end_point.x() - ruler_shape.start_point.x())
+            tick_y = ruler_shape.start_point.y() + t * (ruler_shape.end_point.y() - ruler_shape.start_point.y())
+            
+            # 计算刻度线的垂直方向
+            dx = ruler_shape.end_point.x() - ruler_shape.start_point.x()
+            dy = ruler_shape.end_point.y() - ruler_shape.start_point.y()
+            import math
+            length = math.sqrt(dx * dx + dy * dy)
+            
+            if length > 0:
+                # 刻度线长度
+                tick_length = 5 if i % 5 == 0 else 3
+                
+                # 垂直方向单位向量
+                perp_x = -dy / length * tick_length
+                perp_y = dx / length * tick_length
+                
+                # 刻度线的起点和终点
+                tick_start = QPointF(tick_x - perp_x, tick_y - perp_y)
+                tick_end = QPointF(tick_x + perp_x, tick_y + perp_y)
+                
+                # 检查与刻度线的相交
+                if self._point_to_line_distance(eraser_point, tick_start, tick_end) <= eraser_radius + ruler_shape.thickness:
+                    return True
         return False
     
     def _point_to_line_distance(self, point, line_start, line_end):
