@@ -36,7 +36,7 @@ class RulerSettingsDialog(QDialog):
             'real_length': 10.0,
             'unit': 'cm',
             'show_ticks': True,
-            'tick_count': 10,
+            'tick_interval': 1.0,  # 改为刻度间隔
             'show_diameter_line': True
         }
         
@@ -108,10 +108,10 @@ class RulerSettingsDialog(QDialog):
         calibration_layout.addRow("实际长度:", self.real_length_spin)
         
         # 单位
-        self.unit_combo = QComboBox()
-        self.unit_combo.addItems(["mm", "cm", "dm", "m", "km", "in", "ft", "yd"])
-        self.unit_combo.setToolTip("长度单位")
-        calibration_layout.addRow("单位:", self.unit_combo)
+        self.unit_edit = QLineEdit()
+        self.unit_edit.setPlaceholderText("例如: cm, mm, m, in, ft 等")
+        self.unit_edit.setToolTip("长度单位（可自定义输入）")
+        calibration_layout.addRow("单位:", self.unit_edit)
         
         calibration_group.setLayout(calibration_layout)
         layout.addWidget(calibration_group)
@@ -144,11 +144,13 @@ class RulerSettingsDialog(QDialog):
         self.show_ticks_check.setToolTip("是否在直线标尺上显示刻度线")
         line_layout.addRow(self.show_ticks_check)
         
-        # 刻度数量
-        self.tick_count_spin = QSpinBox()
-        self.tick_count_spin.setRange(0, 50)
-        self.tick_count_spin.setToolTip("刻度线的数量")
-        line_layout.addRow("刻度数量:", self.tick_count_spin)
+        # 刻度间隔
+        self.tick_interval_spin = QDoubleSpinBox()
+        self.tick_interval_spin.setRange(0.01, 1000.0)
+        self.tick_interval_spin.setDecimals(2)
+        self.tick_interval_spin.setSingleStep(0.1)
+        self.tick_interval_spin.setToolTip("刻度间隔（实际长度单位）")
+        line_layout.addRow("刻度间隔:", self.tick_interval_spin)
         
         line_group.setLayout(line_layout)
         layout.addWidget(line_group)
@@ -174,9 +176,9 @@ class RulerSettingsDialog(QDialog):
         """加载当前设置到界面"""
         self.pixel_length_spin.setValue(int(self.settings['pixel_length']))
         self.real_length_spin.setValue(float(self.settings['real_length']))
-        self.unit_combo.setCurrentText(self.settings['unit'])
+        self.unit_edit.setText(self.settings['unit'])
         self.show_ticks_check.setChecked(self.settings['show_ticks'])
-        self.tick_count_spin.setValue(int(self.settings['tick_count']))
+        self.tick_interval_spin.setValue(float(self.settings.get('tick_interval', 1.0)))
         self.show_diameter_line_check.setChecked(self.settings['show_diameter_line'])
     
     def get_settings(self):
@@ -184,9 +186,9 @@ class RulerSettingsDialog(QDialog):
         return {
             'pixel_length': self.pixel_length_spin.value(),
             'real_length': self.real_length_spin.value(),
-            'unit': self.unit_combo.currentText(),
+            'unit': self.unit_edit.text().strip() or 'cm',
             'show_ticks': self.show_ticks_check.isChecked(),
-            'tick_count': self.tick_count_spin.value(),
+            'tick_interval': self.tick_interval_spin.value(),
             'show_diameter_line': self.show_diameter_line_check.isChecked()
         }
     
@@ -194,9 +196,9 @@ class RulerSettingsDialog(QDialog):
         """重置为默认设置"""
         self.pixel_length_spin.setValue(100)
         self.real_length_spin.setValue(10.0)
-        self.unit_combo.setCurrentText('cm')
+        self.unit_edit.setText('cm')
         self.show_ticks_check.setChecked(True)
-        self.tick_count_spin.setValue(10)
+        self.tick_interval_spin.setValue(1.0)
         self.show_diameter_line_check.setChecked(True)
     
     def accept(self):
@@ -309,10 +311,10 @@ class QuickRulerCalibrationDialog(QDialog):
         input_layout.addRow("实际长度:", self.real_length_edit)
         
         # 单位
-        self.unit_combo = QComboBox()
-        self.unit_combo.addItems(["mm", "cm", "dm", "m", "km", "in", "ft", "yd"])
-        self.unit_combo.setCurrentText("cm")
-        input_layout.addRow("单位:", self.unit_combo)
+        self.unit_edit = QLineEdit()
+        self.unit_edit.setText("cm")
+        self.unit_edit.setPlaceholderText("例如: cm, mm, m, in, ft 等")
+        input_layout.addRow("单位:", self.unit_edit)
         
         layout.addLayout(input_layout)
         
@@ -328,7 +330,7 @@ class QuickRulerCalibrationDialog(QDialog):
         """获取标定数据"""
         try:
             real_length = float(self.real_length_edit.text())
-            unit = self.unit_combo.currentText()
+            unit = self.unit_edit.text().strip() or 'cm'
             return real_length, unit
         except ValueError:
             return None, None

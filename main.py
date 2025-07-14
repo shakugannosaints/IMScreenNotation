@@ -50,7 +50,7 @@ class AnnotationTool(QMainWindow):
         self._status_bar: QStatusBar = self.statusBar()
         
         # 先创建画布
-        self.canvas: DrawingCanvas = DrawingCanvas()
+        self.canvas: DrawingCanvas = DrawingCanvas(self)
         
         # 暂时创建一个空的中心控件和布局（将在window_manager中被替换）
         self.central_widget: QWidget = QWidget()
@@ -244,6 +244,20 @@ class AnnotationTool(QMainWindow):
         self.canvas.ruler_pixel_length = settings.get('pixel_length', 100)
         self.canvas.ruler_real_length = settings.get('real_length', 10.0)
         self.canvas.ruler_unit = settings.get('unit', 'cm')
+        
+        # 更新画布中已存在的标尺形状的显示设置
+        from shapes.ruler import LineRuler, CircleRuler
+        for shape in self.canvas.shapes:
+            # 检查是否为直线标尺
+            if isinstance(shape, LineRuler):
+                shape.show_ticks = settings.get('show_ticks', True)
+                shape.tick_interval = settings.get('tick_interval', 1.0)
+            # 检查是否为圆形标尺
+            elif isinstance(shape, CircleRuler):
+                shape.show_diameter_line = settings.get('show_diameter_line', True)
+        
+        # 重新绘制画布以应用新设置
+        self.canvas.update()
 
     def closeEvent(self, event: QCloseEvent) -> None:
         """关闭事件处理"""

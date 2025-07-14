@@ -24,7 +24,7 @@ class RulerManager(QObject):
             'real_length': 10.0,
             'unit': 'cm',
             'show_ticks': True,
-            'tick_count': 10,
+            'tick_interval': 1.0,  # 刻度间隔
             'show_diameter_line': True
         }
         
@@ -162,7 +162,7 @@ class RulerManager(QObject):
         """创建直线标尺"""
         from shapes.ruler import LineRuler
         
-        return LineRuler(
+        ruler = LineRuler(
             start_point=start_point,
             end_point=end_point,
             pixel_length=self.ruler_settings['pixel_length'],
@@ -172,12 +172,18 @@ class RulerManager(QObject):
             thickness=self.canvas.properties.current_thickness,
             opacity=self.canvas.properties.current_opacity
         )
+        
+        # 设置刻度相关属性
+        ruler.show_ticks = self.ruler_settings.get('show_ticks', True)
+        ruler.tick_interval = self.ruler_settings.get('tick_interval', 1.0)
+        
+        return ruler
     
     def create_circle_ruler(self, center_point, radius):
         """创建圆形标尺"""
         from shapes.ruler import CircleRuler
         
-        return CircleRuler(
+        ruler = CircleRuler(
             center_point=center_point,
             radius=radius,
             pixel_length=self.ruler_settings['pixel_length'],
@@ -187,6 +193,11 @@ class RulerManager(QObject):
             thickness=self.canvas.properties.current_thickness,
             opacity=self.canvas.properties.current_opacity
         )
+        
+        # 设置显示相关属性
+        ruler.show_diameter_line = self.ruler_settings.get('show_diameter_line', True)
+        
+        return ruler
     
     def get_scale_info(self):
         """获取当前缩放信息"""

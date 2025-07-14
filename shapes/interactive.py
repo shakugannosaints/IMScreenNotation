@@ -484,37 +484,84 @@ class Eraser(Shape):
     
     def _intersects_with_ruler_ticks(self, eraser_point, ruler_shape, eraser_radius):
         """检查与标尺刻度线的相交"""
-        if not hasattr(ruler_shape, 'tick_count') or ruler_shape.tick_count <= 0:
+        if not hasattr(ruler_shape, 'show_ticks') or not ruler_shape.show_ticks:
             return False
-            
-        # 计算刻度位置并检查相交
-        for i in range(ruler_shape.tick_count + 1):
-            t = i / ruler_shape.tick_count
-            tick_x = ruler_shape.start_point.x() + t * (ruler_shape.end_point.x() - ruler_shape.start_point.x())
-            tick_y = ruler_shape.start_point.y() + t * (ruler_shape.end_point.y() - ruler_shape.start_point.y())
-            
-            # 计算刻度线的垂直方向
-            dx = ruler_shape.end_point.x() - ruler_shape.start_point.x()
-            dy = ruler_shape.end_point.y() - ruler_shape.start_point.y()
-            import math
-            length = math.sqrt(dx * dx + dy * dy)
-            
-            if length > 0:
-                # 刻度线长度
-                tick_length = 5 if i % 5 == 0 else 3
-                
-                # 垂直方向单位向量
-                perp_x = -dy / length * tick_length
-                perp_y = dx / length * tick_length
-                
-                # 刻度线的起点和终点
-                tick_start = QPointF(tick_x - perp_x, tick_y - perp_y)
-                tick_end = QPointF(tick_x + perp_x, tick_y + perp_y)
-                
-                # 检查与刻度线的相交
-                if self._point_to_line_distance(eraser_point, tick_start, tick_end) <= eraser_radius + ruler_shape.thickness:
-                    return True
+        
+        # 使用新的刻度间隔逻辑
+        if hasattr(ruler_shape, 'tick_interval') and ruler_shape.tick_interval > 0:
+            return self._intersects_with_interval_ticks(eraser_point, ruler_shape, eraser_radius)
+        
         return False
+    
+    def _intersects_with_interval_ticks(self, eraser_point, ruler_shape, eraser_radius):
+        """检查与按间隔绘制的刻度线的相交"""
+        import math
+        
+        # 获取标尺的实际长度和像素长度
+        dx = ruler_shape.end_point.x() - ruler_shape.start_point.x()
+        dy = ruler_shape.end_point.y() - ruler_shape.start_point.y()
+        total_pixel_length = math.sqrt(dx * dx + dy * dy)
+        
+        if total_pixel_length == 0:
+            return False
+        
+        # 计算单位向量
+        unit_x = dx / total_pixel_length
+        unit_y = dy / total_pixel_length
+        perp_unit_x = -unit_y
+        perp_unit_y = unit_x
+        
+        # 计算刻度间隔对应的像素距离
+        scale_factor = ruler_shape.get_scale_factor()
+        pixel_interval = ruler_shape.tick_interval / scale_factor
+        
+        # 检查起点刻度
+        if self._check_single_tick_intersection(eraser_point, ruler_shape.start_point, perp_unit_x, perp_unit_y, True, eraser_radius, ruler_shape.thickness):
+            return True
+        
+        # 检查中间刻度
+        current_distance = pixel_interval
+        tick_index = 1
+        
+        while current_distance < total_pixel_length:
+            tick_x = ruler_shape.start_point.x() + unit_x * current_distance
+            tick_y = ruler_shape.start_point.y() + unit_y * current_distance
+            tick_pos = QPointF(tick_x, tick_y)
+            
+            # 判断是否为主刻度
+            actual_distance = current_distance * scale_factor
+            is_major = (tick_index % 5 == 0) or (abs(actual_distance - round(actual_distance)) < 0.01)
+            
+            if self._check_single_tick_intersection(eraser_point, tick_pos, perp_unit_x, perp_unit_y, is_major, eraser_radius, ruler_shape.thickness):
+                return True
+            
+            current_distance += pixel_interval
+            tick_index += 1
+        
+        # 检查终点刻度
+        if total_pixel_length - (current_distance - pixel_interval) > pixel_interval * 0.1:
+            if self._check_single_tick_intersection(eraser_point, ruler_shape.end_point, perp_unit_x, perp_unit_y, True, eraser_radius, ruler_shape.thickness):
+                return True
+        
+        return False
+    
+    def _check_single_tick_intersection(self, eraser_point, tick_pos, perp_unit_x, perp_unit_y, is_major, eraser_radius, thickness):
+        """检查单个刻度线的相交"""
+        # 刻度线长度
+        tick_length = 8 if is_major else 4
+        half_length = tick_length / 2
+        
+        # 计算刻度线端点
+        start_x = tick_pos.x() - perp_unit_x * half_length
+        start_y = tick_pos.y() - perp_unit_y * half_length
+        end_x = tick_pos.x() + perp_unit_x * half_length
+        end_y = tick_pos.y() + perp_unit_y * half_length
+        
+        tick_start = QPointF(start_x, start_y)
+        tick_end = QPointF(end_x, end_y)
+        
+        # 检查与刻度线的相交
+        return self._point_to_line_distance(eraser_point, tick_start, tick_end) <= eraser_radius + thickness
     
     def _point_to_line_distance(self, point, line_start, line_end):
         """计算点到线段的最短距离"""
