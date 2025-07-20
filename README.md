@@ -88,12 +88,12 @@
 | 文本工具 | Ctrl+8 |
 | 橡皮擦工具 | Ctrl+9 |
 | **属性调整** | |
-| 增加线条粗细 | Ctrl++ |
-| 减少线条粗细 | Ctrl+- |
-| 增加绘制不透明度 | Ctrl+Alt++ |
-| 减少绘制不透明度 | Ctrl+Alt+- |
-| 增加画布不透明度 | Ctrl+Shift++ |
-| 减少画布不透明度 | Ctrl+Shift+- |
+| 增加线条粗细 | Ctrl+q |
+| 减少线条粗细 | Ctrl+w |
+| 增加绘制不透明度 | Ctrl+Alt+q |
+| 减少绘制不透明度 | Ctrl+Alt+w |
+| 增加画布不透明度 | Ctrl+Shift+q |
+| 减少画布不透明度 | Ctrl+Shift+w |
 
 ## 系统要求
 
