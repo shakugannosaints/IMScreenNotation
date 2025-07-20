@@ -6,6 +6,13 @@ from PyQt5.QtWidgets import QInputDialog
 from shapes import Line, Rectangle, Circle, Arrow, Freehand, Point, LaserPointer, FilledFreehand, Text, Eraser, LineRuler, CircleRuler
 from .types import ShapeType
 
+# 导入文本编辑对话框
+try:
+    from text_edit import TextEditDialog
+except ImportError:
+    # 如果导入失败，使用 None 作为标记
+    TextEditDialog = None
+
 
 class CanvasEventHandler:
     """处理画布的鼠标事件"""
@@ -16,15 +23,23 @@ class CanvasEventHandler:
     def handle_mouse_press(self, event):
         """处理鼠标按下事件"""
         if event.button() == Qt.LeftButton:
+            # 检查是否是文本工具且点击了现有文本
+            if self.canvas.properties.current_tool == 'text':
+                clicked_text = self._find_text_at_position(event.pos())
+                if clicked_text:
+                    # 编辑现有文本
+                    self._edit_existing_text(clicked_text)
+                    return
+                else:
+                    # 创建新文本
+                    self._create_text_annotation(event.pos())
+                    return
+            
             self.canvas.drawing = True
             self.canvas.start_point = event.pos()
             self.canvas.end_point = event.pos()
             
-            if self.canvas.properties.current_tool == 'text':
-                # 文本工具：弹出输入对话框
-                self._create_text_annotation(event.pos())
-                return
-            elif self.canvas.properties.current_tool == 'freehand':
+            if self.canvas.properties.current_tool == 'freehand':
                 # 保存状态到撤销栈（在创建新shape前）
                 self.canvas.state_manager.save_state_to_undo_stack()
                 self.canvas.current_shape = Freehand(
@@ -210,8 +225,18 @@ class CanvasEventHandler:
     def _create_text_annotation(self, position):
         """创建文本标注"""
         try:
-            # 弹出文本输入对话框
-            text, ok = QInputDialog.getText(self.canvas, '输入文本', '请输入要标注的文本:')
+            # 使用多行文本编辑对话框
+            if TextEditDialog:
+                text, ok = TextEditDialog.get_text_input(
+                    self.canvas, 
+                    "创建文本标注", 
+                    "请输入要标注的文本:", 
+                    ""
+                )
+            else:
+                # 回退到原始的单行输入对话框
+                text, ok = QInputDialog.getText(self.canvas, '输入文本', '请输入要标注的文本:')
+            
             if ok and text:
                 # 保存状态到撤销栈
                 self.canvas.state_manager.save_state_to_undo_stack()
@@ -255,6 +280,85 @@ class CanvasEventHandler:
             # 重置绘制状态
             self.canvas.drawing = False
             self.canvas.current_shape = None
+    
+    def _find_text_at_position(self, position):
+        """查找指定位置的文本标注
+        
+        Args:
+            position: 点击位置 (QPoint)
+            
+        Returns:
+            Text 对象或 None
+        """
+        # 从后往前遍历（最新绘制的在前面）
+        for shape in reversed(self.canvas.shapes):
+            if isinstance(shape, Text):
+                # 检查点击位置是否在文本区域内
+                if hasattr(shape, 'contains_point') and shape.contains_point(QPointF(position)):
+                    return shape
+                # 如果没有 contains_point 方法，使用简单的距离检测
+                elif hasattr(shape, 'position'):
+                    distance = ((position.x() - shape.position.x())**2 + 
+                               (position.y() - shape.position.y())**2)**0.5
+                    # 使用一个合理的点击范围（考虑文本大小）
+                    click_range = max(50, shape.font_size * 2) if hasattr(shape, 'font_size') else 50
+                    if distance <= click_range:
+                        return shape
+        return None
+    
+    def _edit_existing_text(self, text_shape):
+        """编辑现有的文本标注
+        
+        Args:
+            text_shape: 要编辑的文本对象
+        """
+        try:
+            # 保存状态到撤销栈（在修改前）
+            self.canvas.state_manager.save_state_to_undo_stack()
+            
+            # 获取当前文本内容
+            current_text = text_shape.text if hasattr(text_shape, 'text') else ""
+            
+            # 使用多行文本编辑对话框
+            if TextEditDialog:
+                new_text, ok = TextEditDialog.get_text_input(
+                    self.canvas, 
+                    "编辑文本标注", 
+                    "请编辑文本内容:", 
+                    current_text
+                )
+            else:
+                # 回退到原始的单行输入对话框
+                new_text, ok = QInputDialog.getText(
+                    self.canvas, 
+                    '编辑文本', 
+                    '请编辑文本内容:', 
+                    text=current_text
+                )
+            
+            if ok:
+                if new_text == "":
+                    # 如果文本为空，删除该文本标注
+                    if text_shape in self.canvas.shapes:
+                        self.canvas.shapes.remove(text_shape)
+                        print("文本标注已删除")
+                else:
+                    # 更新文本内容
+                    if hasattr(text_shape, 'set_text'):
+                        text_shape.set_text(new_text)
+                    else:
+                        text_shape.text = new_text
+                        # 如果有边界计算方法，重新计算
+                        if hasattr(text_shape, '_calculate_bounds'):
+                            text_shape._calculate_bounds()
+                    
+                    print(f"文本标注已更新: {new_text}")
+                
+                # 更新显示
+                self.canvas.update()
+            
+        except Exception as e:
+            print(f"Error editing text annotation: {e}")
 
     def _perform_erase_operation(self, eraser_shape):
         """执行橡皮擦操作 - 删除与橡皮擦相交的形状"""

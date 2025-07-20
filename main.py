@@ -28,6 +28,12 @@ except ImportError as e:
     print(f"Warning: text_style module not found: {e}")
 
 try:
+    import text_edit
+    print("Successfully imported text_edit")
+except ImportError as e:
+    print(f"Warning: text_edit module not found: {e}")
+
+try:
     from PyQt5.QtWidgets import QColorDialog, QInputDialog, QFontDialog
     print("Successfully imported PyQt5 dialog modules")
 except ImportError as e:
@@ -101,6 +107,9 @@ class AnnotationTool(QMainWindow):
         self.toolbar: AnnotationToolbar
         self.toolbar_timer: QTimer
         
+        # 文本对话框状态标志，用于防止焦点抢夺
+        self._text_dialog_active: bool = False
+        
         # 透明度相关属性
         self.passthrough_opacity: float
         self.non_passthrough_opacity: float
@@ -129,9 +138,13 @@ class AnnotationTool(QMainWindow):
         self.toolbar_timer.timeout.connect(self.window_manager.ensure_toolbar_on_top)
         # 只在非穿透模式下启动定时器，避免在穿透模式下抢夺焦点
         if not getattr(self, 'passthrough_state', False):
-            self.toolbar_timer.start(TOOLBAR_CHECK_INTERVAL)  # 每秒检查一次
+            self.toolbar_timer.start(TOOLBAR_CHECK_INTERVAL)  # 使用更长的检查间隔
         
-        # 安装应用程序级别的事件过滤器，用于处理对话框关闭事件
+        # 记录最后用户活动时间，用于智能工具栏管理
+        self._last_user_activity = 0
+        self._user_idle_threshold = 5000  # 5秒无活动后认为用户空闲
+        
+        # 安装应用程序级别的事件过滤器，用于处理对话框关闭事件和用户活动检测
         from PyQt5.QtWidgets import QApplication
         app = QApplication.instance()
         if app:
@@ -277,6 +290,12 @@ class AnnotationTool(QMainWindow):
 
     def eventFilter(self, obj: QWidget, event: QEvent) -> bool:
         """事件过滤器"""
+        # 追踪用户活动，用于智能工具栏管理
+        if event.type() in (QEvent.MouseButtonPress, QEvent.MouseButtonRelease, 
+                           QEvent.KeyPress, QEvent.KeyRelease, QEvent.Wheel):
+            import time
+            self._last_user_activity = int(time.time() * 1000)  # 毫秒时间戳
+        
         # 监听对话框关闭事件，确保工具栏回到最前面
         if (event.type() == QEvent.Close and 
             hasattr(obj, 'isModal') and 

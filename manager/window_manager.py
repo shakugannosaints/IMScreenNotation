@@ -119,6 +119,22 @@ class WindowManager:
             self.main_window.toolbar and 
             not self.main_window.toolbar_completely_hidden):
             
+            # 检查是否有文本对话框正在活动中
+            if getattr(self.main_window, '_text_dialog_active', False):
+                return
+            
+            # 检查是否有任何文本输入控件获得焦点
+            if self._is_text_input_active():
+                return
+            
+            # 检查用户是否在近期有活动，如果用户空闲则不要抢夺焦点
+            if self._is_user_idle():
+                # 用户空闲时只确保工具栏可见，不抢夺焦点
+                if not self.main_window.toolbar.isVisible():
+                    self.main_window.toolbar.show()
+                self.main_window.toolbar.raise_()
+                return
+            
             # 首先确保工具栏可见
             if not self.main_window.toolbar.isVisible():
                 self.main_window.toolbar.show()
@@ -127,7 +143,41 @@ class WindowManager:
             self.main_window.toolbar.raise_()
             self.main_window.toolbar.repaint()  # 强制重绘
             
-            # 只在非穿透模式下才激活窗口，避免在穿透模式下抢夺焦点
-            if not getattr(self.main_window, 'passthrough_state', False):
+            # 只在非穿透模式下且确实需要时才激活窗口
+            if (not getattr(self.main_window, 'passthrough_state', False) and 
+                not self.main_window.toolbar.isActiveWindow()):
                 self.main_window.toolbar.activateWindow()
                 self.main_window.toolbar.setFocus()  # 确保获得焦点
+    
+    def _is_user_idle(self) -> bool:
+        """检查用户是否处于空闲状态"""
+        try:
+            import time
+            current_time = int(time.time() * 1000)
+            last_activity = getattr(self.main_window, '_last_user_activity', 0)
+            idle_threshold = getattr(self.main_window, '_user_idle_threshold', 5000)
+            
+            return (current_time - last_activity) > idle_threshold
+        except Exception as e:
+            print(f"Error checking user idle status: {e}")
+            return False
+    
+    def _is_text_input_active(self) -> bool:
+        """检查是否有文本输入控件处于活动状态"""
+        try:
+            from PyQt5.QtWidgets import QApplication, QLineEdit, QTextEdit, QPlainTextEdit
+            
+            app = QApplication.instance()
+            if not app:
+                return False
+            
+            # 获取当前焦点窗口 - 使用类型注解帮助IDE理解
+            focused_widget = app.focusWidget()  # type: ignore
+            if not focused_widget:
+                return False
+            
+            # 检查焦点是否在文本输入控件上
+            return isinstance(focused_widget, (QLineEdit, QTextEdit, QPlainTextEdit))
+        except Exception as e:
+            print(f"Error checking text input status: {e}")
+            return False
