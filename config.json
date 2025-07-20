@@ -22,7 +22,13 @@
         "tool_line_ruler": "<ctrl>+<shift>+1",
         "tool_circle_ruler": "<ctrl>+<shift>+2",
         "ruler_settings": "<f6>",
-        "ruler_calibration": "<f7>"
+        "ruler_calibration": "<f7>",
+        "thickness_increase": "<ctrl>+q",
+        "thickness_decrease": "<ctrl>+w",
+        "drawing_opacity_increase": "<ctrl>+<alt>+q",
+        "drawing_opacity_decrease": "<ctrl>+<alt>+w",
+        "canvas_opacity_increase": "<ctrl>+<shift>+q",
+        "canvas_opacity_decrease": "<ctrl>+<shift>+w"
     },
     "current_color": [
         255,
@@ -30,17 +36,17 @@
         0,
         255
     ],
-    "current_thickness": 3,
-    "current_opacity": 1.0,
+    "current_thickness": 10,
+    "current_opacity": 0.45,
     "canvas_color": [
         0,
         0,
         0,
-        1
+        186
     ],
-    "canvas_opacity": 0.0,
-    "passthrough_opacity": 0.0,
-    "non_passthrough_opacity": 0.0,
+    "canvas_opacity": 0.73,
+    "passthrough_opacity": 0.1,
+    "non_passthrough_opacity": 0.73,
     "toolbar_font_size": 11,
     "text_font_family": "Arial",
     "text_font_size": 16,

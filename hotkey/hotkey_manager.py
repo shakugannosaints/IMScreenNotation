@@ -38,26 +38,30 @@ class HotkeyManager(QObject):
         try:
             if not hotkey_str or not hotkey_str.strip():
                 return set(), None
-                
-            parts = hotkey_str.lower().split('+')
-            modifiers = set()
-            main_key = None
             
-            for part in parts:
-                part = part.strip()
-                # 移除尖括号
-                if part.startswith('<') and part.endswith('>'):
-                    part = part[1:-1]
-                
-                if part in ['ctrl']:
-                    modifiers.add('ctrl')
-                elif part in ['alt']:
-                    modifiers.add('alt')
-                elif part in ['shift']:
-                    modifiers.add('shift')
-                else:
-                    # 这是主键
-                    main_key = part
+            # 特殊处理带有特殊字符的热键
+            original_str = hotkey_str.lower()
+            
+            # 首先检查是否有尖括号包围的修饰键
+            modifiers = set()
+            remaining_str = original_str
+            
+            # 查找并移除修饰键
+            if '<ctrl>' in remaining_str:
+                modifiers.add('ctrl')
+                remaining_str = remaining_str.replace('<ctrl>', '')
+            if '<alt>' in remaining_str:
+                modifiers.add('alt')
+                remaining_str = remaining_str.replace('<alt>', '')
+            if '<shift>' in remaining_str:
+                modifiers.add('shift')
+                remaining_str = remaining_str.replace('<shift>', '')
+            
+            # 移除多余的+号和空格
+            remaining_str = remaining_str.strip('+').strip()
+            
+            # 剩下的就是主键
+            main_key = remaining_str if remaining_str else None
             
             # 特殊处理一些主键
             if main_key and main_key.startswith('f') and main_key[1:].isdigit():
@@ -152,12 +156,8 @@ class HotkeyManager(QObject):
                 if key in self.modifier_keys:
                     current_modifiers.add(self.modifier_keys[key])
             
-            # 检查修饰键是否匹配（当前按下的修饰键必须包含所有需要的修饰键）
-            modifiers_match = required_modifiers.issubset(current_modifiers)
-            
-            # 调试输出
-            if current_modifiers or main_key:
-                print(f"检查热键 '{hotkey_str}': 需要修饰键={required_modifiers}, 当前修饰键={current_modifiers}, 主键={main_key}, 修饰键匹配={modifiers_match}")
+            # 检查修饰键是否严格匹配（必须完全相等）
+            modifiers_match = required_modifiers == current_modifiers
             
             return modifiers_match
         except Exception as e:
@@ -185,9 +185,7 @@ class HotkeyManager(QObject):
             else:
                 # 普通键的比较
                 match = key_str == main_key
-            
-            # 增加调试信息
-            
+
             return match
         except Exception as e:
             print(f"Error in check_main_key_match: {e}")
@@ -252,7 +250,8 @@ class HotkeyManager(QObject):
                         if mod_key in self.modifier_keys:
                             current_modifiers.add(self.modifier_keys[mod_key])
                     
-                    modifiers_matched = required_modifiers.issubset(current_modifiers)
+                    # 修饰键必须完全匹配，而不是子集匹配
+                    modifiers_matched = required_modifiers == current_modifiers
 
                     # 如果主键和修饰键都匹配，触发回调
                     if key_matched and modifiers_matched:

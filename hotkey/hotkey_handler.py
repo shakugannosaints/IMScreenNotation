@@ -99,6 +99,159 @@ class HotkeyHandler:
                 else:
                     print("警告: single_draw_mode_btn 未初始化")
             self.main_window.hotkey_manager.register_hotkey(hotkeys["single_draw_mode"], toggle_single_draw)
+        
+        # 注册属性调整热键
+        self._register_property_adjustment_hotkeys(hotkeys)
+    
+    def _register_property_adjustment_hotkeys(self, hotkeys: dict) -> None:
+        """注册属性调整热键（粗细、绘制不透明度、画布不透明度）"""
+        # 线条粗细调整热键
+        if hotkeys.get("thickness_increase"):
+            self.main_window.hotkey_manager.register_hotkey(
+                hotkeys["thickness_increase"],
+                lambda: self._adjust_thickness(increase=True)
+            )
+        
+        if hotkeys.get("thickness_decrease"):
+            self.main_window.hotkey_manager.register_hotkey(
+                hotkeys["thickness_decrease"],
+                lambda: self._adjust_thickness(increase=False)
+            )
+        
+        # 绘制不透明度调整热键
+        if hotkeys.get("drawing_opacity_increase"):
+            self.main_window.hotkey_manager.register_hotkey(
+                hotkeys["drawing_opacity_increase"],
+                lambda: self._adjust_drawing_opacity(increase=True)
+            )
+        
+        if hotkeys.get("drawing_opacity_decrease"):
+            self.main_window.hotkey_manager.register_hotkey(
+                hotkeys["drawing_opacity_decrease"],
+                lambda: self._adjust_drawing_opacity(increase=False)
+            )
+        
+        # 画布不透明度调整热键
+        if hotkeys.get("canvas_opacity_increase"):
+            self.main_window.hotkey_manager.register_hotkey(
+                hotkeys["canvas_opacity_increase"],
+                lambda: self._adjust_canvas_opacity(increase=True)
+            )
+        
+        if hotkeys.get("canvas_opacity_decrease"):
+            self.main_window.hotkey_manager.register_hotkey(
+                hotkeys["canvas_opacity_decrease"],
+                lambda: self._adjust_canvas_opacity(increase=False)
+            )
+    
+    def _adjust_thickness(self, increase: bool) -> None:
+        """调整线条粗细"""
+        try:
+            current = self.main_window.canvas.properties.current_thickness
+            
+            if increase:
+                new_value = min(current + 1, 20)  # 最大粗细限制为20
+            else:
+                new_value = max(current - 1, 1)   # 最小粗细限制为1
+            
+            if new_value != current:
+                # 更新画布属性
+                self.main_window.canvas.set_current_thickness(new_value)
+                
+                # 更新工具栏滑块和标签
+                if hasattr(self.main_window, 'toolbar') and self.main_window.toolbar:
+                    if hasattr(self.main_window.toolbar, 'thickness_slider') and self.main_window.toolbar.thickness_slider:
+                        self.main_window.toolbar.thickness_slider.blockSignals(True)
+                        self.main_window.toolbar.thickness_slider.setValue(new_value)
+                        self.main_window.toolbar.thickness_slider.blockSignals(False)
+                    
+                    if hasattr(self.main_window.toolbar, 'thickness_label') and self.main_window.toolbar.thickness_label:
+                        self.main_window.toolbar.thickness_label.setText(f"粗细: {new_value}")
+                
+                # 显示状态消息
+                self.main_window._status_bar.showMessage(f"线条粗细: {new_value}", STATUS_MESSAGE_TIMEOUT_LONG)
+                print(f"线条粗细调整为: {new_value}")
+        except Exception as e:
+            print(f"调整线条粗细时出错: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def _adjust_drawing_opacity(self, increase: bool) -> None:
+        """调整绘制不透明度"""
+        try:
+            current = self.main_window.canvas.properties.current_opacity
+            current_percentage = int(current * 100)
+            
+            if increase:
+                new_percentage = min(current_percentage + 5, 100)  # 每次增加5%
+            else:
+                new_percentage = max(current_percentage - 5, 0)    # 每次减少5%
+            
+            new_opacity = new_percentage / 100.0
+            
+            if abs(new_opacity - current) > 0.01:  # 避免浮点数误差
+                # 更新画布属性
+                self.main_window.canvas.set_current_opacity(new_opacity)
+                
+                # 更新工具栏滑块和标签
+                if hasattr(self.main_window, 'toolbar') and self.main_window.toolbar:
+                    if hasattr(self.main_window.toolbar, 'drawing_opacity_slider') and self.main_window.toolbar.drawing_opacity_slider:
+                        self.main_window.toolbar.drawing_opacity_slider.blockSignals(True)
+                        self.main_window.toolbar.drawing_opacity_slider.setValue(new_percentage)
+                        self.main_window.toolbar.drawing_opacity_slider.blockSignals(False)
+                    
+                    if hasattr(self.main_window.toolbar, 'drawing_opacity_label') and self.main_window.toolbar.drawing_opacity_label:
+                        self.main_window.toolbar.drawing_opacity_label.setText(f"绘制不透明度: {new_percentage}%")
+                
+                # 显示状态消息
+                self.main_window._status_bar.showMessage(f"绘制不透明度: {new_percentage}%", STATUS_MESSAGE_TIMEOUT_LONG)
+                print(f"绘制不透明度调整为: {new_percentage}%")
+        except Exception as e:
+            print(f"调整绘制不透明度时出错: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def _adjust_canvas_opacity(self, increase: bool) -> None:
+        """调整画布不透明度"""
+        try:
+            current = self.main_window.canvas.properties.canvas_opacity
+            current_percentage = int(current * 100)
+            
+            if increase:
+                new_percentage = min(current_percentage + 5, 100)  # 每次增加5%
+            else:
+                new_percentage = max(current_percentage - 5, 0)    # 每次减少5%
+            
+            new_opacity = new_percentage / 100.0
+            
+            if abs(new_opacity - current) > 0.01:  # 避免浮点数误差
+                # 更新画布属性
+                self.main_window.canvas.set_canvas_opacity(new_opacity)
+                
+                # 记住当前模式下的用户设置
+                if hasattr(self.main_window, 'passthrough_state'):
+                    if self.main_window.passthrough_state:
+                        self.main_window.user_passthrough_opacity = new_opacity
+                    else:
+                        self.main_window.user_non_passthrough_opacity = new_opacity
+                
+                # 更新工具栏滑块和标签
+                if hasattr(self.main_window, 'toolbar') and self.main_window.toolbar:
+                    if hasattr(self.main_window.toolbar, 'canvas_opacity_slider') and self.main_window.toolbar.canvas_opacity_slider:
+                        self.main_window.toolbar.canvas_opacity_slider.blockSignals(True)
+                        self.main_window.toolbar.canvas_opacity_slider.setValue(new_percentage)
+                        self.main_window.toolbar.canvas_opacity_slider.blockSignals(False)
+                    
+                    if hasattr(self.main_window.toolbar, 'canvas_opacity_label') and self.main_window.toolbar.canvas_opacity_label:
+                        self.main_window.toolbar.canvas_opacity_label.setText(f"画布不透明度: {new_percentage}%")
+                
+                # 显示状态消息
+                self.main_window._status_bar.showMessage(f"画布不透明度: {new_percentage}%", STATUS_MESSAGE_TIMEOUT_LONG)
+                print(f"画布不透明度调整为: {new_percentage}%")
+        except Exception as e:
+            print(f"调整画布不透明度时出错: {e}")
+            import traceback
+            traceback.print_exc()
     
     def _register_tool_hotkeys(self, hotkeys: dict) -> None:
         """注册工具切换热键"""

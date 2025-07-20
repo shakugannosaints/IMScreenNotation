@@ -68,7 +68,14 @@ def load_config():
                 "tool_line_ruler": "<ctrl>+<shift>+1",
                 "tool_circle_ruler": "<ctrl>+<shift>+2",
                 "ruler_settings": "<f6>",
-                "ruler_calibration": "<f7>"
+                "ruler_calibration": "<f7>",
+                # 属性调整热键
+                "thickness_increase": "<ctrl>+q",
+                "thickness_decrease": "<ctrl>+w",
+                "drawing_opacity_increase": "<ctrl>+<alt>+q",
+                "drawing_opacity_decrease": "<ctrl>+<alt>+w",
+                "canvas_opacity_increase": "<ctrl>+<shift>+q",
+                "canvas_opacity_decrease": "<ctrl>+<shift>+w"
             },
             "current_color": QColor(255, 0, 0, 255),  # RGBA for red
             "current_thickness": 3,
@@ -118,7 +125,14 @@ def load_config():
                 "tool_line_ruler": "<ctrl>+<shift>+1",
                 "tool_circle_ruler": "<ctrl>+<shift>+2",
                 "ruler_settings": "<f6>",
-                "ruler_calibration": "<f7>"
+                "ruler_calibration": "<f7>",
+                # 属性调整热键
+                "thickness_increase": "<ctrl>+=",
+                "thickness_decrease": "<ctrl>+-",
+                "drawing_opacity_increase": "<ctrl>+<alt>+=",
+                "drawing_opacity_decrease": "<ctrl>+<alt>+-",
+                "canvas_opacity_increase": "<ctrl>+<shift>+=",
+                "canvas_opacity_decrease": "<ctrl>+<shift>+-"
             },
             "current_color": QColor(255, 0, 0, 255),  # RGBA for red
             "current_thickness": 3,

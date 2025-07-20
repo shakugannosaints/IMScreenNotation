@@ -101,6 +101,33 @@ class HotkeySettingsDialog(QDialog):
         
         scroll_layout.addWidget(draw_group)
         
+        # 属性调整组
+        property_group = QGroupBox("属性调整")
+        property_layout = QGridLayout(property_group)
+        
+        property_hotkeys = [
+            ("thickness_increase", "增加线条粗细"),
+            ("thickness_decrease", "减少线条粗细"),
+            ("drawing_opacity_increase", "增加绘制不透明度"),
+            ("drawing_opacity_decrease", "减少绘制不透明度"),
+            ("canvas_opacity_increase", "增加画布不透明度"),
+            ("canvas_opacity_decrease", "减少画布不透明度")
+        ]
+        
+        for i, (key, label) in enumerate(property_hotkeys):
+            property_layout.addWidget(QLabel(label + ":"), i, 0)
+            input_field = QLineEdit()
+            if "thickness" in key:
+                input_field.setPlaceholderText("例如: <ctrl>+q")
+            elif "drawing_opacity" in key:
+                input_field.setPlaceholderText("例如: <ctrl>+<alt>+q")
+            elif "canvas_opacity" in key:
+                input_field.setPlaceholderText("例如: <ctrl>+<shift>+q")
+            self.hotkey_inputs[key] = input_field
+            property_layout.addWidget(input_field, i, 1)
+        
+        scroll_layout.addWidget(property_group)
+        
         # 工具选择组
         tool_group = QGroupBox("工具选择")
         tool_layout = QGridLayout(tool_group)
@@ -226,7 +253,14 @@ class HotkeySettingsDialog(QDialog):
             "tool_line_ruler": "<ctrl>+<shift>+1",
             "tool_circle_ruler": "<ctrl>+<shift>+2",
             "ruler_settings": "<f6>",
-            "ruler_calibration": "<f7>"
+            "ruler_calibration": "<f7>",
+            # 属性调整热键
+            "thickness_increase": "<ctrl>+q",
+            "thickness_decrease": "<ctrl>+w",
+            "drawing_opacity_increase": "<ctrl>+<alt>+q",
+            "drawing_opacity_decrease": "<ctrl>+<alt>+w",
+            "canvas_opacity_increase": "<ctrl>+<shift>+q",
+            "canvas_opacity_decrease": "<ctrl>+<shift>+w"
         }
         
         for key, hotkey in default_hotkeys.items():
