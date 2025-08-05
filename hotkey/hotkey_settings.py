@@ -143,7 +143,8 @@ class HotkeySettingsDialog(QDialog):
             ("tool_text", "文本工具"),
             ("tool_eraser", "橡皮擦工具"),
             ("tool_line_ruler", "直线标尺"),
-            ("tool_circle_ruler", "圆形标尺")
+            ("tool_circle_ruler", "圆形标尺"),
+            ("tool_image", "图片工具")
         ]
         
         for i, (key, label) in enumerate(tool_hotkeys):

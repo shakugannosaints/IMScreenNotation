@@ -3,7 +3,7 @@ Canvas event handling (mouse events, etc.)
 """
 from PyQt5.QtCore import Qt, QPoint, QRect, QPointF
 from PyQt5.QtWidgets import QInputDialog
-from shapes import Line, Rectangle, Circle, Arrow, Freehand, Point, LaserPointer, FilledFreehand, Text, Eraser, LineRuler, CircleRuler
+from shapes import Line, Rectangle, Circle, Arrow, Freehand, Point, LaserPointer, FilledFreehand, Text, Eraser, LineRuler, CircleRuler, Image
 from .types import ShapeType
 
 # 导入文本编辑对话框
@@ -12,6 +12,12 @@ try:
 except ImportError:
     # 如果导入失败，使用 None 作为标记
     TextEditDialog = None
+
+# 导入图片设置对话框
+try:
+    from image_settings_dialog import ImageSettingsDialog
+except ImportError:
+    ImageSettingsDialog = None
 
 
 class CanvasEventHandler:
@@ -33,6 +39,18 @@ class CanvasEventHandler:
                 else:
                     # 创建新文本
                     self._create_text_annotation(event.pos())
+                    return
+            
+            # 检查是否是图片工具
+            if self.canvas.properties.current_tool == 'image':
+                clicked_image = self._find_image_at_position(event.pos())
+                if clicked_image:
+                    # 编辑现有图片
+                    self._edit_existing_image(clicked_image)
+                    return
+                else:
+                    # 创建新图片
+                    self._create_image_annotation(event.pos())
                     return
             
             self.canvas.drawing = True
@@ -383,3 +401,116 @@ class CanvasEventHandler:
                 self.canvas.shapes.remove(shape)
         
         print(f"橡皮擦删除了 {len(shapes_to_remove)} 个形状")
+
+    def _find_image_at_position(self, position):
+        """查找指定位置的图片标注
+        
+        Args:
+            position: 点击位置 (QPoint)
+            
+        Returns:
+            Image 对象或 None
+        """
+        # 从后往前遍历（最新绘制的在前面）
+        for shape in reversed(self.canvas.shapes):
+            if isinstance(shape, Image):
+                # 检查点击位置是否在图片的选择区域内
+                if hasattr(shape, 'contains_point') and shape.contains_point(QPointF(position)):
+                    return shape
+        return None
+    
+    def _create_image_annotation(self, position):
+        """创建图片标注"""
+        try:
+            # 打开图片设置对话框
+            if ImageSettingsDialog:
+                settings = ImageSettingsDialog.get_image_settings(self.canvas)
+                if settings:
+                    # 保存状态到撤销栈
+                    self.canvas.state_manager.save_state_to_undo_stack()
+                    
+                    # 创建图片对象
+                    image_shape = Image(
+                        position=QPointF(position),
+                        image_path=settings['image_path'],
+                        scale_factor=settings['scale_factor'],
+                        color=self.canvas.properties.current_color,
+                        thickness=self.canvas.properties.current_thickness,
+                        opacity=self.canvas.properties.current_opacity
+                    )
+                    
+                    # 添加到形状列表
+                    self.canvas.shapes.append(image_shape)
+                    
+                    # 如果是单次绘制模式，清空其他形状
+                    if self.canvas.properties.single_draw_mode:
+                        self.canvas.shapes = [image_shape]
+                        self.canvas.state_manager.undo_stack.clear()
+                    
+                    # 更新显示
+                    self.canvas.update()
+                    print(f"图片标注已创建: {settings['image_path']}")
+            else:
+                # 回退到简单的文件选择
+                image_path = Image.select_image_file(self.canvas)
+                if image_path:
+                    # 保存状态到撤销栈
+                    self.canvas.state_manager.save_state_to_undo_stack()
+                    
+                    # 创建图片对象（使用默认设置）
+                    image_shape = Image(
+                        position=QPointF(position),
+                        image_path=image_path,
+                        scale_factor=1.0,
+                        color=self.canvas.properties.current_color,
+                        thickness=self.canvas.properties.current_thickness,
+                        opacity=self.canvas.properties.current_opacity
+                    )
+                    
+                    # 添加到形状列表
+                    self.canvas.shapes.append(image_shape)
+                    
+                    # 如果是单次绘制模式，清空其他形状
+                    if self.canvas.properties.single_draw_mode:
+                        self.canvas.shapes = [image_shape]
+                        self.canvas.state_manager.undo_stack.clear()
+                    
+                    # 更新显示
+                    self.canvas.update()
+                    print(f"图片标注已创建: {image_path}")
+            
+            # 重置绘制状态
+            self.canvas.drawing = False
+            self.canvas.current_shape = None
+            
+        except Exception as e:
+            print(f"Error creating image annotation: {e}")
+            # 重置绘制状态
+            self.canvas.drawing = False
+            self.canvas.current_shape = None
+    
+    def _edit_existing_image(self, image_shape):
+        """编辑现有图片标注"""
+        try:
+            # 打开图片设置对话框，传入现有图片进行编辑
+            if ImageSettingsDialog:
+                settings = ImageSettingsDialog.get_image_settings(self.canvas, image_shape)
+                if settings:
+                    # 保存状态到撤销栈（用于撤销编辑操作）
+                    self.canvas.state_manager.save_state_to_undo_stack()
+                    
+                    # 更新图片属性
+                    image_shape.image_path = settings['image_path']
+                    image_shape.scale_factor = settings['scale_factor']
+                    
+                    # 重新加载图片（如果路径改变了）
+                    image_shape.load_image()
+                    
+                    # 更新显示
+                    self.canvas.update()
+                    print(f"图片标注已更新: {settings['image_path']}")
+            else:
+                print("图片设置对话框不可用，无法编辑图片")
+            
+        except Exception as e:
+            print(f"Error editing image annotation: {e}")

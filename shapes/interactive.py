@@ -358,6 +358,7 @@ class Eraser(Shape):
         from .basic import Point, Line, Rectangle, Circle
         from .advanced import Freehand, FilledFreehand, Arrow
         from .ruler import LineRuler, CircleRuler
+        from .image import Image
         
         if isinstance(shape, Point):
             return self._intersects_with_point(shape, eraser_radius)
@@ -377,6 +378,8 @@ class Eraser(Shape):
             return self._intersects_with_line_ruler(shape, eraser_radius)
         elif isinstance(shape, CircleRuler):
             return self._intersects_with_circle_ruler(shape, eraser_radius)
+        elif isinstance(shape, Image):
+            return self._intersects_with_image(shape, eraser_radius)
         else:
             return False
     
@@ -594,3 +597,20 @@ class Eraser(Shape):
         dy = max(0, max(rect.top() - point.y(), point.y() - rect.bottom()))
         
         return (dx**2 + dy**2)**0.5
+    
+    def _intersects_with_image(self, image_shape, eraser_radius):
+        """检查与图片的相交"""
+        # 获取图片的边界矩形
+        image_rect = image_shape.get_bounding_rect()
+        
+        # 如果图片没有有效的边界矩形，不相交
+        if image_rect.isNull() or image_rect.isEmpty():
+            return False
+        
+        # 检查橡皮擦的每个点是否与图片区域相交
+        for eraser_point in self.points:
+            distance = self._point_to_rect_distance(eraser_point, image_rect)
+            if distance <= eraser_radius:
+                return True
+        
+        return False

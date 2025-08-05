@@ -3,7 +3,7 @@ Canvas state management (undo/redo functionality)
 """
 import json
 from PyQt5.QtCore import QObject, pyqtSignal
-from shapes import Line, Rectangle, Circle, Arrow, Freehand, Point, LaserPointer, FilledFreehand, Text, Eraser, LineRuler, CircleRuler
+from shapes import Line, Rectangle, Circle, Arrow, Freehand, Point, LaserPointer, FilledFreehand, Text, Eraser, LineRuler, CircleRuler, Image
 from .types import ShapeType
 
 
@@ -99,6 +99,8 @@ class CanvasStateManager(QObject):
                 shape = LineRuler.from_dict(shape_dict)
             elif shape_type == "CircleRuler":
                 shape = CircleRuler.from_dict(shape_dict)
+            elif shape_type == "Image":
+                shape = Image.from_dict(shape_dict)
             elif shape_type == "LaserPointer":
                 # 跳过激光笔，因为它不应该被保存/恢复
                 continue

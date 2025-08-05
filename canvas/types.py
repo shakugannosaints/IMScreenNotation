@@ -2,7 +2,7 @@
 Canvas types and type definitions
 """
 from typing import List, Union
-from shapes import Line, Rectangle, Circle, Arrow, Freehand, Point, LaserPointer, FilledFreehand, Text, Eraser
+from shapes import Line, Rectangle, Circle, Arrow, Freehand, Point, LaserPointer, FilledFreehand, Text, Eraser, Image
 
 # 定义Shape类型联合
-ShapeType = Union[Line, Rectangle, Circle, Arrow, Freehand, Point, LaserPointer, FilledFreehand, Text, Eraser]
+ShapeType = Union[Line, Rectangle, Circle, Arrow, Freehand, Point, LaserPointer, FilledFreehand, Text, Eraser, Image]

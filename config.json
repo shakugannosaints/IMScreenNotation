@@ -37,16 +37,16 @@
         255
     ],
     "current_thickness": 10,
-    "current_opacity": 0.45,
+    "current_opacity": 0.43,
     "canvas_color": [
         0,
         0,
         0,
-        186
+        1
     ],
-    "canvas_opacity": 0.73,
+    "canvas_opacity": 0.0,
     "passthrough_opacity": 0.1,
-    "non_passthrough_opacity": 0.73,
+    "non_passthrough_opacity": 0.0,
     "toolbar_font_size": 11,
     "text_font_family": "Arial",
     "text_font_size": 16,

@@ -116,7 +116,8 @@ class ToolbarWidgetBuilder:
             ("文本", "text"),
             ("橡皮擦", "eraser"),
             ("直线标尺", "line_ruler"),
-            ("圆形标尺", "circle_ruler")
+            ("圆形标尺", "circle_ruler"),
+            ("图片", "image")
         ]
     
     def _create_tool_button_rows(self, layout: QVBoxLayout, tool_buttons: List[Tuple[str, str]]) -> None:

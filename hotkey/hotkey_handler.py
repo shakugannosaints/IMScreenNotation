@@ -267,7 +267,8 @@ class HotkeyHandler:
             "tool_text": "text",
             "tool_eraser": "eraser",
             "tool_line_ruler": "line_ruler",
-            "tool_circle_ruler": "circle_ruler"
+            "tool_circle_ruler": "circle_ruler",
+            "tool_image": "image"
         }
         
         for hotkey_name, tool_name in tool_hotkeys.items():

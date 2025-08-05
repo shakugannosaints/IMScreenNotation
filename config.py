@@ -67,6 +67,7 @@ def load_config():
                 "tool_eraser": "<ctrl>+9",
                 "tool_line_ruler": "<ctrl>+<shift>+1",
                 "tool_circle_ruler": "<ctrl>+<shift>+2",
+                "tool_image": "<ctrl>+0",
                 "ruler_settings": "<f6>",
                 "ruler_calibration": "<f7>",
                 # 属性调整热键
@@ -124,6 +125,7 @@ def load_config():
                 "tool_eraser": "<ctrl>+9",
                 "tool_line_ruler": "<ctrl>+<shift>+1",
                 "tool_circle_ruler": "<ctrl>+<shift>+2",
+                "tool_image": "<ctrl>+0",
                 "ruler_settings": "<f6>",
                 "ruler_calibration": "<f7>",
                 # 属性调整热键

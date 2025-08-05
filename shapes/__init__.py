@@ -9,6 +9,7 @@ from .basic import Line, Rectangle, Circle, Point
 from .advanced import Arrow, Freehand, FilledFreehand
 from .interactive import Text, LaserPointer, Eraser
 from .ruler import LineRuler, CircleRuler
+from .image import Image
 
 # 导出所有类，保持向后兼容
 __all__ = [
@@ -24,5 +25,6 @@ __all__ = [
     'LaserPointer', 
     'Eraser',
     'LineRuler',
-    'CircleRuler'
+    'CircleRuler',
+    'Image'
 ]
