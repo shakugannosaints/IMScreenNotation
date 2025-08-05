@@ -151,6 +151,7 @@ AGPL-3.0
 
 ## 致谢
 - manus
+- github copilot
 - claude sonnet 4
 - 感谢PyQt5提供的强大GUI库
 - 感谢pynput库提供的全局热键支持
