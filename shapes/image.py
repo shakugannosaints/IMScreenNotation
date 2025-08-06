@@ -11,11 +11,12 @@ from .base import Shape
 class Image(Shape):
     """图片标注形状"""
     
-    def __init__(self, position, image_path="", scale_factor=1.0, **kwargs):
+    def __init__(self, position, image_path="", scale_factor=1.0, rotation=0, **kwargs):
         super().__init__(**kwargs)
         self.position = position  # 图片左上角位置
         self.image_path = image_path  # 图片文件路径
         self.scale_factor = scale_factor  # 缩放比例
+        self.rotation = rotation  # 旋转角度（度）
         self.pixmap = None  # 缓存的QPixmap对象
         self.original_size = None  # 原始尺寸
         self.scaled_size = None  # 缩放后尺寸
@@ -44,6 +45,10 @@ class Image(Shape):
         """设置缩放比例"""
         self.scale_factor = max(0.1, min(5.0, scale_factor))  # 限制在0.1到5.0之间
         self.update_scaled_size()
+    
+    def set_rotation(self, rotation):
+        """设置旋转角度"""
+        self.rotation = rotation % 360  # 限制在0-359度之间
     
     def contains_point(self, point):
         """检查点是否在图片区域内（用于编辑检测）"""
@@ -81,22 +86,31 @@ class Image(Shape):
         
         # 保存当前状态
         old_opacity = painter.opacity()
+        old_transform = painter.transform()
         
         # 设置不透明度（使用基类的opacity属性）
         painter.setOpacity(self.opacity)
         
-        # 计算绘制矩形
+        # 计算绘制矩形的中心点（旋转中心）
         draw_rect = QRectF(
             self.position.x(),
             self.position.y(),
             self.scaled_size.width(),
             self.scaled_size.height()
         )
+        center = draw_rect.center()
+        
+        # 应用旋转变换
+        if self.rotation != 0:
+            painter.translate(center)
+            painter.rotate(self.rotation)
+            painter.translate(-center)
         
         # 绘制图片
         painter.drawPixmap(draw_rect.toRect(), self.pixmap)
         
-        # 恢复不透明度
+        # 恢复状态
+        painter.setTransform(old_transform)
         painter.setOpacity(old_opacity)
     
     def _draw_placeholder(self, painter):
@@ -149,7 +163,8 @@ class Image(Shape):
         data.update({
             'position': [self.position.x(), self.position.y()],
             'image_path': self.image_path,
-            'scale_factor': self.scale_factor
+            'scale_factor': self.scale_factor,
+            'rotation': self.rotation
         })
         return data
     
@@ -159,6 +174,7 @@ class Image(Shape):
         position = QPointF(data['position'][0], data['position'][1])
         image_path = data.get('image_path', '')
         scale_factor = data.get('scale_factor', 1.0)
+        rotation = data.get('rotation', 0)
         
         # 创建基础属性
         color = QColor(*data["color"])
@@ -169,6 +185,7 @@ class Image(Shape):
             position=position,
             image_path=image_path,
             scale_factor=scale_factor,
+            rotation=rotation,
             color=color,
             thickness=thickness,
             opacity=opacity

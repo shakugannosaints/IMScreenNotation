@@ -434,6 +434,7 @@ class CanvasEventHandler:
                         position=QPointF(position),
                         image_path=settings['image_path'],
                         scale_factor=settings['scale_factor'],
+                        rotation=settings['rotation'],
                         color=self.canvas.properties.current_color,
                         thickness=self.canvas.properties.current_thickness,
                         opacity=self.canvas.properties.current_opacity
@@ -502,6 +503,7 @@ class CanvasEventHandler:
                     # 更新图片属性
                     image_shape.image_path = settings['image_path']
                     image_shape.scale_factor = settings['scale_factor']
+                    image_shape.rotation = settings['rotation']
                     
                     # 重新加载图片（如果路径改变了）
                     image_shape.load_image()

@@ -57,13 +57,25 @@ class ImageSettingsDialog(QDialog):
         props_layout.addWidget(QLabel("缩放比例:"), 0, 0)
         self.scale_label = QLabel("100%")
         props_layout.addWidget(self.scale_label, 0, 1)
-        
+
         self.scale_slider = QSlider(Qt.Horizontal)
         self.scale_slider.setMinimum(10)  # 10%
         self.scale_slider.setMaximum(500)  # 500%
         self.scale_slider.setValue(100)  # 100%
         self.scale_slider.valueChanged.connect(self.update_scale_label)
         props_layout.addWidget(self.scale_slider, 1, 0, 1, 2)
+
+        # 旋转角度控制
+        props_layout.addWidget(QLabel("旋转角度:"), 2, 0)
+        self.rotation_label = QLabel("0°")
+        props_layout.addWidget(self.rotation_label, 2, 1)
+
+        self.rotation_slider = QSlider(Qt.Horizontal)
+        self.rotation_slider.setMinimum(0)  # 0度
+        self.rotation_slider.setMaximum(360)  # 360度
+        self.rotation_slider.setValue(0)  # 0度
+        self.rotation_slider.valueChanged.connect(self.update_rotation_label)
+        props_layout.addWidget(self.rotation_slider, 3, 0, 1, 2)
         
         layout.addWidget(props_group)
         
@@ -93,6 +105,10 @@ class ImageSettingsDialog(QDialog):
     def update_scale_label(self, value):
         """更新缩放比例标签"""
         self.scale_label.setText(f"{value}%")
+
+    def update_rotation_label(self, value):
+        """更新旋转角度标签"""
+        self.rotation_label.setText(f"{value}°")
     
     def load_current_settings(self):
         """加载当前图片的设置"""
@@ -105,6 +121,11 @@ class ImageSettingsDialog(QDialog):
             scale_percent = int(self.image_shape.scale_factor * 100)
             self.scale_slider.setValue(scale_percent)
             self.scale_label.setText(f"{scale_percent}%")
+            
+            # 设置旋转角度
+            rotation_angle = int(self.image_shape.rotation)
+            self.rotation_slider.setValue(rotation_angle)
+            self.rotation_label.setText(f"{rotation_angle}°")
     
     def get_settings(self):
         """获取设置结果"""
@@ -113,7 +134,8 @@ class ImageSettingsDialog(QDialog):
         
         return {
             'image_path': self.selected_image_path,
-            'scale_factor': self.scale_slider.value() / 100.0
+            'scale_factor': self.scale_slider.value() / 100.0,
+            'rotation': self.rotation_slider.value()
         }
     
     def accept(self):
