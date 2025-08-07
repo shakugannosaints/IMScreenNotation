@@ -57,6 +57,12 @@ class HotkeyManager(QObject):
                 modifiers.add('shift')
                 remaining_str = remaining_str.replace('<shift>', '')
             
+            # 处理功能键的尖括号格式 (<f1> 到 <f12>)
+            for i in range(1, 13):
+                f_key = f'<f{i}>'
+                if f_key in remaining_str:
+                    remaining_str = remaining_str.replace(f_key, f'f{i}')
+            
             # 移除多余的+号和空格
             remaining_str = remaining_str.strip('+').strip()
             
