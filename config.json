@@ -43,11 +43,11 @@
         0,
         0,
         0,
-        1
+        26
     ],
-    "canvas_opacity": 0.0,
+    "canvas_opacity": 0.1,
     "passthrough_opacity": 0.1,
-    "non_passthrough_opacity": 0.0,
+    "non_passthrough_opacity": 0.1,
     "toolbar_font_size": 11,
     "text_font_family": "Arial",
     "text_font_size": 16,

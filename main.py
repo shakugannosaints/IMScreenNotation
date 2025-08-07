@@ -212,24 +212,13 @@ class AnnotationTool(QMainWindow):
         self.tray_manager.show_from_tray()
 
     def toggle_toolbar_complete_hide(self) -> None:
-        """完全隐藏/显示工具栏（不影响画布）"""
+        """完全隐藏/显示程序到系统托盘"""
         if self.toolbar_completely_hidden:
-            # 当前完全隐藏，需要显示工具栏
-            if hasattr(self, 'toolbar'):
-                self.toolbar.show()
-                self.toolbar_completely_hidden = False
-                # 确保工具栏在最前面
-                self.toolbar.raise_()
-                # 只在非穿透模式下激活工具栏，避免抢夺焦点
-                if not getattr(self, 'passthrough_state', False):
-                    self.toolbar.activateWindow()
-                self._status_bar.showMessage("工具栏已显示", STATUS_MESSAGE_TIMEOUT)
+            # 当前完全隐藏在托盘，需要从托盘恢复显示
+            self.tray_manager.show_from_tray()
         else:
-            # 当前显示，需要完全隐藏工具栏
-            if hasattr(self, 'toolbar'):
-                self.toolbar.hide()
-                self.toolbar_completely_hidden = True
-                self._status_bar.showMessage("工具栏已隐藏", STATUS_MESSAGE_TIMEOUT)
+            # 当前显示，需要完全隐藏到系统托盘
+            self.tray_manager.hide_to_tray()
 
     def toggle_single_draw_mode(self, checked: bool) -> None:
         """切换单次绘制模式"""
