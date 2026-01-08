@@ -92,6 +92,12 @@ class AnnotationToolbar(QWidget):
         self.settings_btn: Optional[QPushButton] = None
         self.save_config_btn: Optional[QPushButton] = None
         self.text_style_btn: Optional[QPushButton] = None
+
+        # 自由绘制线条纠正开关
+        self.auto_correct_freehand_btn: Optional[QPushButton] = None
+
+        # 全局填充模式开关
+        self.fill_mode_btn: Optional[QPushButton] = None
         
         # 标尺相关按钮
         self.ruler_settings_btn: Optional[QPushButton] = None

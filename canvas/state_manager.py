@@ -3,7 +3,7 @@ Canvas state management (undo/redo functionality)
 """
 import json
 from PyQt5.QtCore import QObject, pyqtSignal
-from shapes import Line, Rectangle, Circle, Arrow, Freehand, Point, LaserPointer, FilledFreehand, Text, Eraser, LineRuler, CircleRuler, Image
+from shapes import Line, Rectangle, Circle, Arrow, Freehand, Point, LaserPointer, FilledFreehand, Text, Eraser, LineRuler, CircleRuler, Image, Polygon
 from .types import ShapeType
 
 
@@ -83,6 +83,8 @@ class CanvasStateManager(QObject):
                 shape = Line.from_dict(shape_dict)
             elif shape_type == "Rectangle":
                 shape = Rectangle.from_dict(shape_dict)
+            elif shape_type == "Polygon":
+                shape = Polygon.from_dict(shape_dict)
             elif shape_type == "Circle":
                 shape = Circle.from_dict(shape_dict)
             elif shape_type == "Arrow":

@@ -7,6 +7,7 @@ shapes 包 - 统一导入接口
 from .base import Shape
 from .basic import Line, Rectangle, Circle, Point
 from .advanced import Arrow, Freehand, FilledFreehand
+from .polygon import Polygon
 from .interactive import Text, LaserPointer, Eraser
 from .ruler import LineRuler, CircleRuler
 from .image import Image
@@ -21,6 +22,7 @@ __all__ = [
     'Arrow', 
     'Freehand', 
     'FilledFreehand',
+    'Polygon',
     'Text', 
     'LaserPointer', 
     'Eraser',

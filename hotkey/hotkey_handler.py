@@ -102,6 +102,19 @@ class HotkeyHandler:
         
         # 注册属性调整热键
         self._register_property_adjustment_hotkeys(hotkeys)
+
+        # 全局填充模式开关热键（新）；兼容旧的 tool_filled_freehand
+        fill_hotkey = hotkeys.get("toggle_fill_mode") or hotkeys.get("tool_filled_freehand")
+        if fill_hotkey:
+            def toggle_fill_mode():
+                btn = getattr(self.main_window.toolbar, 'fill_mode_btn', None)
+                if btn:
+                    btn.click()
+                else:
+                    # 兜底：直接切换属性
+                    current = bool(getattr(self.main_window.canvas.properties, 'fill_mode_enabled', False))
+                    self.main_window.canvas.set_fill_mode_enabled(not current)
+            self.main_window.hotkey_manager.register_hotkey(fill_hotkey, toggle_fill_mode)
     
     def _register_property_adjustment_hotkeys(self, hotkeys: dict) -> None:
         """注册属性调整热键（粗细、绘制不透明度、画布不透明度）"""
@@ -257,11 +270,10 @@ class HotkeyHandler:
         """注册工具切换热键"""
         tool_hotkeys = {
             "tool_line": "line",
-            "tool_rectangle": "rectangle",
+            "tool_rectangle": "polygon",
             "tool_circle": "circle", 
             "tool_arrow": "arrow",
             "tool_freehand": "freehand",
-            "tool_filled_freehand": "filled_freehand",
             "tool_point": "point",
             "tool_laser_pointer": "laser_pointer",
             "tool_text": "text",

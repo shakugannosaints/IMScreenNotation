@@ -106,11 +106,10 @@ class ToolbarWidgetBuilder:
         """获取工具按钮定义列表"""
         return [
             ("直线", "line"),
-            ("矩形", "rectangle"), 
+            ("多边形", "polygon"), 
             ("圆形", "circle"),
             ("箭头", "arrow"),
             ("自由绘制", "freehand"),
-            ("填充绘制", "filled_freehand"),
             ("点", "point"),
             ("激光笔", "laser_pointer"),
             ("文本", "text"),
@@ -196,6 +195,8 @@ class ToolbarWidgetBuilder:
         self._create_drawing_opacity_control(attrs_layout)
         self._create_canvas_opacity_control(attrs_layout)
         self._create_text_style_control(attrs_layout)
+        self._create_fill_mode_control(attrs_layout)
+        self._create_freehand_auto_correct_control(attrs_layout)
         
         main_layout.addWidget(attrs_card)
     
@@ -301,6 +302,101 @@ class ToolbarWidgetBuilder:
         text_style_layout.addWidget(text_style_label)
         text_style_layout.addWidget(self.toolbar.text_style_btn)
         layout.addWidget(text_style_container)
+
+    def _create_freehand_auto_correct_control(self, layout: QVBoxLayout) -> None:
+        """创建自由绘制线条纠正开关（仅影响 freehand / filled_freehand）"""
+        container = QWidget()
+        row = QHBoxLayout(container)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(8)
+
+        label = QLabel("线条纠正")
+        label.setMinimumWidth(50)
+        label.setMaximumWidth(60)
+
+        self.toolbar.auto_correct_freehand_btn = QPushButton("🧲 开启")
+        self.toolbar.auto_correct_freehand_btn.setProperty("class", "action")
+        self.toolbar.auto_correct_freehand_btn.setMinimumHeight(32)
+        self.toolbar.auto_correct_freehand_btn.setCheckable(True)
+        self.toolbar.auto_correct_freehand_btn.setToolTip(
+            "仅对【自由绘制/填充绘制】生效：\n"
+            "- 抖动直线会被简化为笔直线段\n"
+            "- 多边形会被简化为直线边"
+        )
+
+        # 初始化状态
+        enabled = bool(getattr(self.canvas.properties, 'auto_correct_freehand', False))
+        self.toolbar.auto_correct_freehand_btn.setChecked(enabled)
+        if enabled:
+            self.toolbar.auto_correct_freehand_btn.setText("🧲 已开启")
+            self.toolbar.auto_correct_freehand_btn.setProperty("class", "action active")
+
+        def _toggle(checked: bool) -> None:
+            self.canvas.set_auto_correct_freehand(checked)
+            if checked:
+                self.toolbar.auto_correct_freehand_btn.setText("🧲 已开启")
+                self.toolbar.auto_correct_freehand_btn.setProperty("class", "action active")
+            else:
+                self.toolbar.auto_correct_freehand_btn.setText("🧲 开启")
+                self.toolbar.auto_correct_freehand_btn.setProperty("class", "action")
+            # 刷新按钮样式
+            style = self.toolbar.auto_correct_freehand_btn.style()
+            if style:
+                style.unpolish(self.toolbar.auto_correct_freehand_btn)
+                style.polish(self.toolbar.auto_correct_freehand_btn)
+
+        self.toolbar.auto_correct_freehand_btn.toggled.connect(_toggle)
+
+        row.addWidget(label)
+        row.addWidget(self.toolbar.auto_correct_freehand_btn)
+        layout.addWidget(container)
+
+    def _create_fill_mode_control(self, layout: QVBoxLayout) -> None:
+        """创建全局填充模式开关"""
+        container = QWidget()
+        row = QHBoxLayout(container)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(8)
+
+        label = QLabel("填充")
+        label.setMinimumWidth(50)
+        label.setMaximumWidth(60)
+
+        self.toolbar.fill_mode_btn = QPushButton("🪣 关闭")
+        self.toolbar.fill_mode_btn.setProperty("class", "action")
+        self.toolbar.fill_mode_btn.setMinimumHeight(32)
+        self.toolbar.fill_mode_btn.setCheckable(True)
+        self.toolbar.fill_mode_btn.setToolTip(
+            "开启后：\n"
+            "- 自由绘制：自动变为填充绘制\n"
+            "- 多边形/圆形：自动绘制填充形状\n"
+            "关闭后恢复为原来的描边效果。"
+        )
+
+        enabled = bool(getattr(self.canvas.properties, 'fill_mode_enabled', False))
+        self.toolbar.fill_mode_btn.setChecked(enabled)
+        if enabled:
+            self.toolbar.fill_mode_btn.setText("🪣 已开启")
+            self.toolbar.fill_mode_btn.setProperty("class", "action active")
+
+        def _toggle(checked: bool) -> None:
+            self.canvas.set_fill_mode_enabled(checked)
+            if checked:
+                self.toolbar.fill_mode_btn.setText("🪣 已开启")
+                self.toolbar.fill_mode_btn.setProperty("class", "action active")
+            else:
+                self.toolbar.fill_mode_btn.setText("🪣 关闭")
+                self.toolbar.fill_mode_btn.setProperty("class", "action")
+            style = self.toolbar.fill_mode_btn.style()
+            if style:
+                style.unpolish(self.toolbar.fill_mode_btn)
+                style.polish(self.toolbar.fill_mode_btn)
+
+        self.toolbar.fill_mode_btn.toggled.connect(_toggle)
+
+        row.addWidget(label)
+        row.addWidget(self.toolbar.fill_mode_btn)
+        layout.addWidget(container)
 
     def setup_actions_section(self, main_layout: QVBoxLayout) -> None:
         """设置操作按钮区域"""
@@ -504,6 +600,8 @@ class ToolbarWidgetBuilder:
         self._create_drawing_opacity_control(layout)
         self._create_canvas_opacity_control(layout)
         self._create_text_style_control(layout)
+        self._create_fill_mode_control(layout)
+        self._create_freehand_auto_correct_control(layout)
     
     def setup_actions_section_for_scrollable(self, container_widget: QWidget) -> None:
         """为可滚动区域设置操作功能区域"""

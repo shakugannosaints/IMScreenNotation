@@ -7,6 +7,7 @@
 TOOL_NAMES = {
     "line": "直线",
     "rectangle": "矩形", 
+    "polygon": "多边形",
     "circle": "圆形",
     "arrow": "箭头",
     "freehand": "自由绘制",
@@ -25,7 +26,11 @@ DEFAULT_CONFIG = {
     "text_font_italic": False,
     "text_border_enabled": True,
     "text_border_width": 1,
-    "text_padding": 5
+    "text_padding": 5,
+    # 自由绘制线条纠正开关（默认关闭）
+    "auto_correct_freehand": False,
+    # 全局填充模式（默认关闭）
+    "fill_mode_enabled": False
 }
 
 # 系统托盘相关常量

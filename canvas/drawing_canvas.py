@@ -68,6 +68,14 @@ class DrawingCanvas(QWidget):
         self.properties.set_canvas_opacity(opacity)
         self.update()
 
+    def set_auto_correct_freehand(self, enabled: bool) -> None:
+        """设置自由绘制线条纠正开关"""
+        self.properties.set_auto_correct_freehand(enabled)
+
+    def set_fill_mode_enabled(self, enabled: bool) -> None:
+        """设置全局填充模式开关"""
+        self.properties.set_fill_mode_enabled(enabled)
+
     # 文本相关属性设置方法的代理
     def set_text_font_family(self, font_family: str) -> None:
         """设置文本字体族"""

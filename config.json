@@ -29,7 +29,8 @@
         "tool_circle_ruler": "<ctrl>+<shift>+2",
         "tool_image": "",
         "ruler_settings": "<f6>",
-        "ruler_calibration": "<f7>"
+        "ruler_calibration": "<f7>",
+        "toggle_fill_mode": "<ctrl>+<shift>+5"
     },
     "current_color": [
         255,
@@ -38,16 +39,16 @@
         255
     ],
     "current_thickness": 4,
-    "current_opacity": 0.43,
+    "current_opacity": 1.0,
     "canvas_color": [
         0,
         0,
         0,
-        26
+        48
     ],
-    "canvas_opacity": 0.1,
+    "canvas_opacity": 0.19,
     "passthrough_opacity": 0.1,
-    "non_passthrough_opacity": 0.1,
+    "non_passthrough_opacity": 0.19,
     "toolbar_font_size": 11,
     "text_font_family": "Arial",
     "text_font_size": 16,
@@ -63,5 +64,7 @@
     "text_border_color": null,
     "text_border_enabled": true,
     "text_border_width": 1,
-    "text_padding": 5
+    "text_padding": 5,
+    "auto_correct_freehand": true,
+    "fill_mode_enabled": false
 }

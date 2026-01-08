@@ -17,6 +17,19 @@ class ToolManager:
     
     def select_tool(self, tool: str) -> None:
         """选择工具并更新按钮状态"""
+
+        # 兼容旧工具：矩形绘制 -> 多边形绘制
+        if tool == 'rectangle':
+            tool = 'polygon'
+
+        # 兼容旧工具：填充绘制 -> 自由绘制 + 打开全局填充
+        if tool == 'filled_freehand':
+            try:
+                if hasattr(self.main_window, 'canvas'):
+                    self.main_window.canvas.set_fill_mode_enabled(True)
+            except Exception:
+                pass
+            tool = 'freehand'
         
         # 检查工具名称是否有效
         if not tool:

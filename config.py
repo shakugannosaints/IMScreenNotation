@@ -40,6 +40,20 @@ def load_config():
         for key, default_value in text_defaults.items():
             if key not in config:
                 config[key] = default_value
+
+        # 自由绘制线条纠正开关（默认关闭）
+        if "auto_correct_freehand" not in config:
+            config["auto_correct_freehand"] = False
+
+        # 全局填充模式（默认关闭）
+        if "fill_mode_enabled" not in config:
+            config["fill_mode_enabled"] = False
+
+        # 热键兼容：老版本使用 tool_filled_freehand 作为填充绘制；新版本用 toggle_fill_mode
+        if "hotkeys" in config and isinstance(config.get("hotkeys"), dict):
+            hk = config["hotkeys"]
+            if not hk.get("toggle_fill_mode") and hk.get("tool_filled_freehand"):
+                hk["toggle_fill_mode"] = hk.get("tool_filled_freehand")
             
         return config
     except FileNotFoundError:
@@ -60,7 +74,7 @@ def load_config():
                 "tool_circle": "<ctrl>+3",
                 "tool_arrow": "<ctrl>+4",
                 "tool_freehand": "<ctrl>+5",
-                "tool_filled_freehand": "<ctrl>+<shift>+5",
+                "toggle_fill_mode": "<ctrl>+<shift>+5",
                 "tool_point": "<ctrl>+6",
                 "tool_laser_pointer": "<ctrl>+7",
                 "tool_text": "<ctrl>+8",
@@ -96,7 +110,11 @@ def load_config():
             "text_border_color": None,  # 无边框
             "text_border_enabled": True,  # 边框默认启用
             "text_border_width": 1,
-            "text_padding": 5
+            "text_padding": 5,
+            # 自由绘制线条纠正开关（默认关闭）
+            "auto_correct_freehand": False,
+            # 全局填充模式（默认关闭）
+            "fill_mode_enabled": False
         }
         return default_config
     except json.JSONDecodeError:
@@ -118,7 +136,7 @@ def load_config():
                 "tool_circle": "<ctrl>+3",
                 "tool_arrow": "<ctrl>+4",
                 "tool_freehand": "<ctrl>+5",
-                "tool_filled_freehand": "<ctrl>+<shift>+5",
+                "toggle_fill_mode": "<ctrl>+<shift>+5",
                 "tool_point": "<ctrl>+6",
                 "tool_laser_pointer": "<ctrl>+7",
                 "tool_text": "<ctrl>+8",
@@ -154,7 +172,11 @@ def load_config():
             "text_border_color": None,  # 无边框
             "text_border_enabled": True,  # 边框默认启用
             "text_border_width": 1,
-            "text_padding": 5
+            "text_padding": 5,
+            # 自由绘制线条纠正开关（默认关闭）
+            "auto_correct_freehand": False,
+            # 全局填充模式（默认关闭）
+            "fill_mode_enabled": False
         }
         return default_config
 

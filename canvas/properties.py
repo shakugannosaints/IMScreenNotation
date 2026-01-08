@@ -19,6 +19,12 @@ class CanvasProperties(QObject):
         self.canvas_color = QColor(0, 0, 0, 0)  # Default transparent background
         self.canvas_opacity = 0.0  # Default fully transparent
         self.single_draw_mode = False  # New attribute for single draw mode
+
+        # 自由绘制线条纠正（可选）：将抖动轨迹简化为直线段
+        self.auto_correct_freehand = False
+
+        # 全局填充模式（可选）：自由绘制/矩形/圆形将自动填充
+        self.fill_mode_enabled = False
         
         # 文本相关属性
         self.text_font_family = "Arial"
@@ -151,3 +157,11 @@ class CanvasProperties(QObject):
             self.canvas_color.setAlphaF(0.003)  # 几乎完全透明，但仍可接收鼠标事件
         else:
             self.canvas_color.setAlphaF(self.canvas_opacity)
+
+    def set_auto_correct_freehand(self, enabled: bool) -> None:
+        """设置自由绘制线条纠正开关"""
+        self.auto_correct_freehand = bool(enabled)
+
+    def set_fill_mode_enabled(self, enabled: bool) -> None:
+        """设置全局填充模式开关"""
+        self.fill_mode_enabled = bool(enabled)

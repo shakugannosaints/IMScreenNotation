@@ -89,7 +89,8 @@ class HotkeySettingsDialog(QDialog):
             ("clear_canvas", "清空画布"),
             ("undo", "撤销"),
             ("redo", "重做"),
-            ("single_draw_mode", "单次绘制模式")
+            ("single_draw_mode", "单次绘制模式"),
+            ("toggle_fill_mode", "填充开关")
         ]
         
         for i, (key, label) in enumerate(draw_hotkeys):
@@ -133,11 +134,10 @@ class HotkeySettingsDialog(QDialog):
         tool_layout = QGridLayout(tool_group)
         tool_hotkeys = [
             ("tool_line", "直线工具"),
-            ("tool_rectangle", "矩形工具"),
+            ("tool_rectangle", "多边形工具"),
             ("tool_circle", "圆形工具"),
             ("tool_arrow", "箭头工具"),
             ("tool_freehand", "自由绘制"),
-            ("tool_filled_freehand", "填充绘制"),
             ("tool_point", "点工具"),
             ("tool_laser_pointer", "激光笔"),
             ("tool_text", "文本工具"),
@@ -241,12 +241,12 @@ class HotkeySettingsDialog(QDialog):
             "undo": "<ctrl>+z",
             "redo": "<ctrl>+y",
             "single_draw_mode": "<ctrl>+<alt>+s",
+            "toggle_fill_mode": "<ctrl>+<shift>+5",
             "tool_line": "<ctrl>+1",
             "tool_rectangle": "<ctrl>+2",
             "tool_circle": "<ctrl>+3",
             "tool_arrow": "<ctrl>+4",
             "tool_freehand": "<ctrl>+5",
-            "tool_filled_freehand": "<ctrl>+<shift>+5",
             "tool_point": "<ctrl>+6",
             "tool_laser_pointer": "<ctrl>+7",
             "tool_text": "<ctrl>+8",

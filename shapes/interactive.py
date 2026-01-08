@@ -2,6 +2,7 @@
 交互式形状类 - 文本、激光笔、橡皮擦
 """
 from PyQt5.QtGui import QColor, QPen, QBrush, QFont, QFontMetrics
+from PyQt5.QtGui import QPolygonF
 from PyQt5.QtCore import QPointF, QRectF, QDateTime, Qt
 from .base import Shape
 
@@ -357,6 +358,7 @@ class Eraser(Shape):
         # 对于不同类型的形状，使用不同的相交检测算法
         from .basic import Point, Line, Rectangle, Circle
         from .advanced import Freehand, FilledFreehand, Arrow
+        from .polygon import Polygon
         from .ruler import LineRuler, CircleRuler
         from .image import Image
         
@@ -368,6 +370,8 @@ class Eraser(Shape):
             return self._intersects_with_line(shape, eraser_radius)
         elif isinstance(shape, Rectangle):
             return self._intersects_with_rectangle(shape, eraser_radius)
+        elif isinstance(shape, Polygon):
+            return self._intersects_with_polygon(shape, eraser_radius)
         elif isinstance(shape, Circle):
             return self._intersects_with_circle(shape, eraser_radius)
         elif isinstance(shape, Arrow):
@@ -418,6 +422,30 @@ class Eraser(Shape):
             if (rect.contains(eraser_point) or 
                 self._point_to_rect_distance(eraser_point, rect) <= eraser_radius + rect_shape.thickness):
                 return True
+        return False
+
+    def _intersects_with_polygon(self, polygon_shape, eraser_radius):
+        """检查与多边形的相交"""
+        pts = getattr(polygon_shape, 'points', None) or []
+        if len(pts) < 2:
+            return False
+
+        # 填充多边形：先做内点检测
+        if bool(getattr(polygon_shape, 'fill', False)) and bool(getattr(polygon_shape, 'closed', True)) and len(pts) >= 3:
+            qpoly = QPolygonF(pts)
+            for eraser_point in self.points:
+                if qpoly.containsPoint(QPointF(eraser_point), Qt.OddEvenFill):
+                    return True
+
+        # 边缘距离检测（包含闭合边）
+        closed = bool(getattr(polygon_shape, 'closed', True)) and len(pts) >= 3
+        edge_count = len(pts) if closed else (len(pts) - 1)
+        for eraser_point in self.points:
+            for i in range(edge_count):
+                a = pts[i]
+                b = pts[(i + 1) % len(pts)]
+                if self._point_to_line_distance(QPointF(eraser_point), QPointF(a), QPointF(b)) <= eraser_radius + polygon_shape.thickness:
+                    return True
         return False
     
     def _intersects_with_circle(self, circle_shape, eraser_radius):

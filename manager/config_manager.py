@@ -26,6 +26,12 @@ class ConfigManager:
         config["current_opacity"] = self.main_window.canvas.properties.current_opacity
         config["canvas_color"] = self.main_window.canvas.properties.canvas_color
         config["canvas_opacity"] = self.main_window.canvas.properties.canvas_opacity
+
+        # 保存自由绘制线条纠正开关
+        config["auto_correct_freehand"] = bool(getattr(self.main_window.canvas.properties, 'auto_correct_freehand', False))
+
+        # 保存全局填充模式开关
+        config["fill_mode_enabled"] = bool(getattr(self.main_window.canvas.properties, 'fill_mode_enabled', False))
         
         # 保存透明度设置
         if hasattr(self.main_window, 'user_passthrough_opacity'):
@@ -75,6 +81,12 @@ class ConfigManager:
         canvas.set_current_opacity(config["current_opacity"])
         canvas.set_canvas_color(config["canvas_color"])
         canvas.set_canvas_opacity(config["canvas_opacity"])
+
+        # 自由绘制线条纠正开关（兼容旧配置）
+        canvas.set_auto_correct_freehand(config.get("auto_correct_freehand", False))
+
+        # 全局填充模式（兼容旧配置）
+        canvas.set_fill_mode_enabled(config.get("fill_mode_enabled", False))
     
     def _apply_text_config(self, config: Dict[str, Any]) -> None:
         """应用文本配置"""
